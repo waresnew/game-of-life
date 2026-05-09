@@ -105,6 +105,7 @@ canvas.addEventListener("wheel", (event) => {
 	];
 	world.zoom = newZoom;
 });
+canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 let prevMouseX = -1,
 	prevMouseY = -1;
 canvas.addEventListener("mousemove", (event) => {
@@ -112,7 +113,7 @@ canvas.addEventListener("mousemove", (event) => {
 	const mouseX = event.clientX - dims.x;
 	const mouseY = event.clientY - dims.y;
 	worldCursor = inverseTransform([mouseX, mouseY]);
-	if (event.buttons == 1) {
+	if (event.buttons == 2) {
 		if (prevMouseX != -1 && prevMouseY != -1) {
 			world.centre = [
 				-(mouseX - prevMouseX) + world.centre[0],
