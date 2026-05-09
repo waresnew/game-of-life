@@ -2,21 +2,32 @@ type Point = [number, number];
 class World {
 	centre: Point = [0, 0];
 	alive: Set<string> = new Set();
+	renderedCnt = 0;
 	zoom = 1;
 }
 
 const world = new World();
 const canvas = document.getElementById("grid") as HTMLCanvasElement;
 let worldCursor: Point = [-1, -1];
-const CELL_SIZE = 10;
+const CELL_SIZE = 50;
 function updateStats() {
-	document.getElementById("stats-centre")!.textContent =
-		`Centre: (${Math.floor(world.centre[0])},${Math.floor(world.centre[1])})`;
+	document.getElementById("debug-centre")!.textContent =
+		`Centre: (${Math.floor(world.centre[0] / CELL_SIZE)},${Math.floor(world.centre[1] / CELL_SIZE)})`;
 	document.getElementById("stats-zoom")!.textContent =
 		`Zoom: ${world.zoom.toPrecision(3)}`;
 	document.getElementById("stats-cursor")!.textContent =
 		`Cursor: (${Math.floor(worldCursor[0] / CELL_SIZE)},${Math.floor(worldCursor[1] / CELL_SIZE)})`;
+	document.getElementById("debug-rendered")!.textContent =
+		`Rendered: ${world.renderedCnt}`;
 }
+document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
+	const debug = document.getElementById("debug")!;
+	if (debug.style.visibility == "hidden") {
+		debug.style.visibility = "visible";
+	} else {
+		debug.style.visibility = "hidden";
+	}
+});
 function repaint() {
 	updateStats();
 	const ctx = canvas.getContext("2d")!;
@@ -30,36 +41,44 @@ function repaint() {
 		-world.centre[0] + canvas.width / 2,
 		-world.centre[1] + canvas.height / 2,
 	);
-	const tl = inverseTransform([0, 0]);
-	const tr = inverseTransform([canvas.width, 0]);
-	const bl = inverseTransform([0, canvas.height]);
-	const br = inverseTransform([canvas.width, canvas.height]);
+	const tl = inverseTransform([0, 0]).map((x) =>
+		Math.floor(x / CELL_SIZE),
+	) as Point;
+	const tr = inverseTransform([canvas.width, 0]).map((x) =>
+		Math.floor(x / CELL_SIZE),
+	) as Point;
+	const bl = inverseTransform([0, canvas.height]).map((x) =>
+		Math.floor(x / CELL_SIZE),
+	) as Point;
+	const br = inverseTransform([canvas.width, canvas.height]).map((x) =>
+		Math.floor(x / CELL_SIZE),
+	) as Point;
+	let renderedCnt = 0;
 	for (const s of world.alive) {
 		const [x, y] = s.split(" ").map((x) => parseInt(x)) as Point;
-		ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+		const tl_inside = tl[0] <= x && x <= tr[0] && bl[1] <= y && y <= tl[1];
+		const br_inside =
+			tl[0] <= x + 1 && x + 1 <= tr[0] && bl[1] <= y - 1 && y - 1 <= tl[1];
+		if (tl_inside || br_inside) {
+			ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+			++renderedCnt;
+		}
 	}
+	world.renderedCnt = renderedCnt;
 	if (CELL_SIZE * world.zoom >= 1) {
-		for (
-			let i = Math.ceil(tl[0] / CELL_SIZE) * CELL_SIZE;
-			i <= Math.floor(tr[0] / CELL_SIZE) * CELL_SIZE;
-			i += CELL_SIZE
-		) {
+		for (let i = tl[0]; i <= tr[0]; ++i) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#f0f0f0";
-			ctx.moveTo(i, tl[1]);
-			ctx.lineTo(i, bl[1]);
+			ctx.moveTo(i * CELL_SIZE, tl[1] * CELL_SIZE);
+			ctx.lineTo(i * CELL_SIZE, bl[1] * CELL_SIZE);
 			ctx.stroke();
 			ctx.closePath();
 		}
-		for (
-			let j = Math.ceil(bl[1] / CELL_SIZE) * CELL_SIZE;
-			j <= Math.floor(tl[1] / CELL_SIZE) * CELL_SIZE;
-			j += CELL_SIZE
-		) {
+		for (let j = bl[1]; j <= tl[1]; ++j) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#f0f0f0";
-			ctx.moveTo(tl[0], j);
-			ctx.lineTo(tr[0], j);
+			ctx.moveTo(tl[0] * CELL_SIZE, j * CELL_SIZE);
+			ctx.lineTo(tr[0] * CELL_SIZE, j * CELL_SIZE);
 			ctx.stroke();
 			ctx.closePath();
 		}
@@ -78,10 +97,11 @@ canvas.addEventListener("wheel", (event) => {
 
 	const mouseDelta = -event.deltaY * 0.001;
 	const zoomFactor = Math.exp(mouseDelta);
-	const newZoom = world.zoom * zoomFactor;
+	let newZoom = world.zoom * zoomFactor;
+	newZoom = Math.min(1, newZoom);
 	world.centre = [
 		newZoom * worldCursor[0] - world.zoom * worldCursor[0] + world.centre[0],
-		newZoom * worldCursor[1] - world.zoom * worldCursor[1] + world.centre[1],
+		-newZoom * worldCursor[1] + world.zoom * worldCursor[1] + world.centre[1],
 	];
 	world.zoom = newZoom;
 });
@@ -107,8 +127,8 @@ canvas.addEventListener("mousemove", (event) => {
 });
 canvas.addEventListener("click", (event) => {
 	const cell: Point = [
-		Math.floor(worldCursor[0] / CELL_SIZE) * CELL_SIZE,
-		Math.floor(worldCursor[1] / CELL_SIZE) * CELL_SIZE,
+		Math.floor(worldCursor[0] / CELL_SIZE),
+		Math.floor(worldCursor[1] / CELL_SIZE),
 	];
 	if (world.alive.has(cell.join(" "))) {
 		world.alive.delete(cell.join(" "));
