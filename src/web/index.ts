@@ -69,16 +69,16 @@ function repaint() {
 		for (let i = tl[0]; i <= tr[0]; ++i) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#f0f0f0";
-			ctx.moveTo(i * CELL_SIZE, tl[1] * CELL_SIZE);
-			ctx.lineTo(i * CELL_SIZE, bl[1] * CELL_SIZE);
+			ctx.moveTo(i * CELL_SIZE, (tl[1] + 1) * CELL_SIZE);
+			ctx.lineTo(i * CELL_SIZE, (bl[1] - 1) * CELL_SIZE);
 			ctx.stroke();
 			ctx.closePath();
 		}
 		for (let j = bl[1]; j <= tl[1]; ++j) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#f0f0f0";
-			ctx.moveTo(tl[0] * CELL_SIZE, j * CELL_SIZE);
-			ctx.lineTo(tr[0] * CELL_SIZE, j * CELL_SIZE);
+			ctx.moveTo((tl[0] - 1) * CELL_SIZE, j * CELL_SIZE);
+			ctx.lineTo((tr[0] + 1) * CELL_SIZE, j * CELL_SIZE);
 			ctx.stroke();
 			ctx.closePath();
 		}
