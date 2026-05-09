@@ -157,10 +157,23 @@ fn solve_4x4(cur: Quadtree, dict: &HashMap<u64, Quadtree>) -> Quadtree {
         count: tl.count + tr.count + bl.count + br.count,
     }
 }
-pub fn solve(alive: Vec<(i64, i64)>, start_pos: (i64, i64), height: u32) -> Vec<(i64, i64)> {
+fn calc_start_pos(alive: &Vec<(i64, i64)>) -> (i64, i64) {
+    let mut min_x = i64::MAX;
+    let mut min_y = i64::MAX;
+    for &(x, y) in alive {
+        min_x = min_x.min(x);
+        min_y = min_y.min(y);
+    }
+    (min_x - 1, min_y - 1) //bc of edge cells
+}
+pub fn solve(alive: Vec<(i64, i64)>, height: u32) -> Vec<(i64, i64)> {
+    if height < 1 {
+        panic!("height must be >=1");
+    }
     let mut dict = HashMap::new();
+    let start_pos = calc_start_pos(&alive);
     let qt = Quadtree::from_alive(&alive, start_pos, height, &mut dict);
+    dbg!(&qt, &dict);
     let res = next_step(add_border(qt, &mut dict), &mut dict);
-    dbg!(&res, &dict);
     res.to_alive(start_pos, &dict)
 }
