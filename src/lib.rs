@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-
 use crate::quadtree::Quadtree;
+use std::collections::HashMap;
+use wasm_bindgen::prelude::*;
 
 mod quadtree;
 
@@ -158,22 +158,55 @@ fn solve_4x4(cur: Quadtree, dict: &HashMap<u64, Quadtree>) -> Quadtree {
     }
 }
 fn calc_start_pos(alive: &Vec<(i64, i64)>) -> (i64, i64) {
+    if alive.is_empty() {
+        return (0, 0);
+    }
     let mut min_x = i64::MAX;
     let mut min_y = i64::MAX;
     for &(x, y) in alive {
         min_x = min_x.min(x);
         min_y = min_y.min(y);
     }
-    (min_x - 1, min_y - 1) //bc of edge cells
+    (min_x, min_y)
 }
-pub fn solve(alive: Vec<(i64, i64)>, height: u32) -> Vec<(i64, i64)> {
-    if height < 1 {
-        panic!("height must be >=1");
+fn calc_height(alive: &Vec<(i64, i64)>) -> u32 {
+    if alive.is_empty() {
+        return 1;
     }
+    let mut min_x = i64::MAX;
+    let mut min_y = i64::MAX;
+    let mut max_x = i64::MIN;
+    let mut max_y = i64::MIN;
+    for &(x, y) in alive {
+        min_x = min_x.min(x);
+        min_y = min_y.min(y);
+        max_x = max_x.max(x);
+        max_y = max_y.max(y);
+    }
+    let dim = (max_x - min_x).max(max_y - min_y) + 1;
+    if dim == 0 { 1 } else { dim.ilog2() + 1 }
+}
+#[wasm_bindgen]
+pub fn solve_wasm(flat_alive: Vec<i64>, gens: u64) -> Vec<i64> {
+    solve(
+        flat_alive.chunks_exact(2).map(|x| (x[0], x[1])).collect(),
+        gens,
+    )
+    .iter()
+    .flat_map(|&(x, y)| [x, y])
+    .collect()
+}
+pub fn solve(alive: Vec<(i64, i64)>, gens: u64) -> Vec<(i64, i64)> {
     let mut dict = HashMap::new();
-    let start_pos = calc_start_pos(&alive);
+    let mut start_pos = calc_start_pos(&alive);
+    start_pos = (start_pos.0 - gens as i64, start_pos.1 - gens as i64);
+    let height = calc_height(&alive) + (gens.ilog2() + 1);
+    dbg!(start_pos, height);
     let qt = Quadtree::from_alive(&alive, start_pos, height, &mut dict);
-    dbg!(&qt, &dict);
     let res = next_step(add_border(qt, &mut dict), &mut dict);
     res.to_alive(start_pos, &dict)
+}
+#[wasm_bindgen(start, private)]
+pub fn init_panic_hook() {
+    console_error_panic_hook::set_once();
 }
