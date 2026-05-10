@@ -14,8 +14,9 @@ class World {
 	renderedCnt = 0;
 	zoom = 1;
 	ticking = false;
-	prevTickTime = 0;
-	tickHistory: number[] = [];
+	frameCounter = 0;
+	prevTpsTime = 0;
+	tps = 0;
 	dragSession: Set<string> = new Set();
 }
 
@@ -31,8 +32,9 @@ function updateStats() {
 		`Cursor: (${Math.floor(worldCursor[0] / CELL_SIZE)},${Math.floor(worldCursor[1] / CELL_SIZE)})`;
 	document.getElementById("debug-rendered")!.textContent =
 		`Rendered: ${world.renderedCnt}`;
-	document.getElementById("stats-tps")!.textContent =
-		`TPS: ${world.tickHistory.length > 0 ? Math.round(world.tickHistory.reduce((b, x) => b + x, 0) / world.tickHistory.length) : ""}`;
+	document.getElementById("stats-tps")!.textContent = `TPS: ${world.tps}`;
+	document.getElementById("stats-alive")!.textContent =
+		`Alive: ${world.alive.size}`;
 }
 document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
 	const debug = document.getElementById("debug")!;
@@ -43,21 +45,16 @@ document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
 	}
 });
 function repaint(time: DOMHighResTimeStamp) {
+	++world.frameCounter;
+	if (time - world.prevTpsTime >= 1000) {
+		world.tps = world.frameCounter;
+		world.frameCounter = 0;
+		world.prevTpsTime = time;
+	}
 	if (world.ticking) {
-		const dt = time - world.prevTickTime;
-		if (dt >= 1000 / TPS) {
-			next_step();
-			if (world.prevTickTime != 0) {
-				world.tickHistory.push(1000 / dt);
-			}
-			world.prevTickTime = time;
-		}
-	} else {
-		world.tickHistory = [];
+		next_step();
 	}
-	if (world.tickHistory.length > 2 * TPS) {
-		world.tickHistory.shift();
-	}
+
 	updateStats();
 	const ctx = canvas.getContext("2d")!;
 	ctx.resetTransform();
@@ -207,7 +204,4 @@ playButton.addEventListener("click", (event) => {
 		world.ticking = false;
 		playButton.textContent = "Play";
 	}
-});
-document.getElementById("jump")!.addEventListener("click", (event) => {
-	next_step();
 });
