@@ -1,5 +1,5 @@
-import init, { solve_wasm } from "../../pkg/game_of_life.js";
-import wasmUrl from "../../pkg/game_of_life_bg.wasm";
+import init, { solve_wasm } from "../pkg/game_of_life.js";
+import wasmUrl from "../pkg/game_of_life_bg.wasm";
 
 await init(wasmUrl);
 
