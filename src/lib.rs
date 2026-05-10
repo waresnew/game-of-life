@@ -1,8 +1,9 @@
-use crate::quadtree::Quadtree;
+use crate::{quadtree::Quadtree, utils::Timer};
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 mod quadtree;
+mod utils;
 
 fn join(
     tl: Quadtree,
@@ -34,69 +35,81 @@ fn join_with_u64(
 ) -> Quadtree {
     join(dict[&tl], dict[&tr], dict[&bl], dict[&br], dict)
 }
-fn next_step(cur: Quadtree, dict: &mut HashMap<u64, Quadtree>) -> Quadtree {
-    if cur.height == 2 {
-        return solve_4x4(cur, dict);
+fn next_step(
+    cur: Quadtree,
+    dict: &mut HashMap<u64, Quadtree>,
+    dp: &mut HashMap<u64, Quadtree>,
+) -> Quadtree {
+    if !dp.contains_key(&cur.calc_hash()) {
+        if cur.height == 2 {
+            return solve_4x4(cur, dict);
+        }
+        let next_tl = next_step(dict[&cur.tl], dict, dp);
+        let next_tm = next_step(
+            join_with_u64(
+                dict[&cur.tl].tr,
+                dict[&cur.tr].tl,
+                dict[&cur.tl].br,
+                dict[&cur.tr].bl,
+                dict,
+            ),
+            dict,
+            dp,
+        );
+        let next_tr = next_step(dict[&cur.tr], dict, dp);
+        let next_ml = next_step(
+            join_with_u64(
+                dict[&cur.tl].bl,
+                dict[&cur.tl].br,
+                dict[&cur.bl].tl,
+                dict[&cur.bl].tr,
+                dict,
+            ),
+            dict,
+            dp,
+        );
+        let next_mm = next_step(
+            join_with_u64(
+                dict[&cur.tl].br,
+                dict[&cur.tr].bl,
+                dict[&cur.bl].tr,
+                dict[&cur.br].tl,
+                dict,
+            ),
+            dict,
+            dp,
+        );
+        let next_mr = next_step(
+            join_with_u64(
+                dict[&cur.tr].bl,
+                dict[&cur.tr].br,
+                dict[&cur.br].tl,
+                dict[&cur.br].tr,
+                dict,
+            ),
+            dict,
+            dp,
+        );
+        let next_bl = next_step(dict[&cur.bl], dict, dp);
+        let next_bm = next_step(
+            join_with_u64(
+                dict[&cur.bl].tr,
+                dict[&cur.br].tl,
+                dict[&cur.bl].br,
+                dict[&cur.br].bl,
+                dict,
+            ),
+            dict,
+            dp,
+        );
+        let next_br = next_step(dict[&cur.br], dict, dp);
+        let ans_tl = join_with_u64(next_tl.br, next_tm.bl, next_ml.tr, next_mm.tl, dict);
+        let ans_tr = join_with_u64(next_tm.br, next_tr.bl, next_mm.tr, next_mr.tl, dict);
+        let ans_bl = join_with_u64(next_ml.br, next_mm.bl, next_bl.tr, next_bm.tl, dict);
+        let ans_br = join_with_u64(next_mm.br, next_mr.bl, next_bm.tr, next_br.tl, dict);
+        dp.insert(cur.calc_hash(), join(ans_tl, ans_tr, ans_bl, ans_br, dict));
     }
-    let next_tl = next_step(dict[&cur.tl], dict);
-    let next_tm = next_step(
-        join_with_u64(
-            dict[&cur.tl].tr,
-            dict[&cur.tr].tl,
-            dict[&cur.tl].br,
-            dict[&cur.tr].bl,
-            dict,
-        ),
-        dict,
-    );
-    let next_tr = next_step(dict[&cur.tr], dict);
-    let next_ml = next_step(
-        join_with_u64(
-            dict[&cur.tl].bl,
-            dict[&cur.tl].br,
-            dict[&cur.bl].tl,
-            dict[&cur.bl].tr,
-            dict,
-        ),
-        dict,
-    );
-    let next_mm = next_step(
-        join_with_u64(
-            dict[&cur.tl].br,
-            dict[&cur.tr].bl,
-            dict[&cur.bl].tr,
-            dict[&cur.br].tl,
-            dict,
-        ),
-        dict,
-    );
-    let next_mr = next_step(
-        join_with_u64(
-            dict[&cur.tr].bl,
-            dict[&cur.tr].br,
-            dict[&cur.br].tl,
-            dict[&cur.br].tr,
-            dict,
-        ),
-        dict,
-    );
-    let next_bl = next_step(dict[&cur.bl], dict);
-    let next_bm = next_step(
-        join_with_u64(
-            dict[&cur.bl].tr,
-            dict[&cur.br].tl,
-            dict[&cur.bl].br,
-            dict[&cur.br].bl,
-            dict,
-        ),
-        dict,
-    );
-    let next_br = next_step(dict[&cur.br], dict);
-    let ans_tl = join_with_u64(next_tl.br, next_tm.bl, next_ml.tr, next_mm.tl, dict);
-    let ans_tr = join_with_u64(next_tm.br, next_tr.bl, next_mm.tr, next_mr.tl, dict);
-    let ans_bl = join_with_u64(next_ml.br, next_mm.bl, next_bl.tr, next_bm.tl, dict);
-    let ans_br = join_with_u64(next_mm.br, next_mr.bl, next_bm.tr, next_br.tl, dict);
-    join(ans_tl, ans_tr, ans_bl, ans_br, dict)
+    *dp.get(&cur.calc_hash()).unwrap()
 }
 fn update_dict(t: Quadtree, dict: &mut HashMap<u64, Quadtree>) -> u64 {
     let hash = t.calc_hash();
@@ -197,13 +210,15 @@ pub fn solve_wasm(flat_alive: Vec<i64>, gens: u64) -> Vec<i64> {
     .collect()
 }
 pub fn solve(alive: Vec<(i64, i64)>, gens: u64) -> Vec<(i64, i64)> {
+    let _timer = Timer::start("solve");
     let mut dict = HashMap::new();
+    let mut dp = HashMap::new();
     let mut start_pos = calc_start_pos(&alive);
     start_pos = (start_pos.0 - gens as i64, start_pos.1 - gens as i64);
     let height = calc_height(&alive) + (gens.ilog2() + 1);
     dbg!(start_pos, height);
     let qt = Quadtree::from_alive(&alive, start_pos, height, &mut dict);
-    let res = next_step(add_border(qt, &mut dict), &mut dict);
+    let res = next_step(add_border(qt, &mut dict), &mut dict, &mut dp);
     res.to_alive(start_pos, &dict)
 }
 #[wasm_bindgen(start, private)]
