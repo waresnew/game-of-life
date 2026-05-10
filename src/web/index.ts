@@ -9,12 +9,18 @@ class World {
 	alive: Set<string> = new Set();
 	renderedCnt = 0;
 	zoom = 1;
+	ticking = false;
+	prevTickTime = 0;
+	tps = 0;
+	tickAccum = 0;
+	prevReportTpsTime = 0;
 }
 
 const world = new World();
 const canvas = document.getElementById("grid") as HTMLCanvasElement;
 let worldCursor: Point = [-1, -1];
 const CELL_SIZE = 50;
+const TPS = 60;
 function updateStats() {
 	document.getElementById("debug-centre")!.textContent =
 		`Centre: (${Math.floor(world.centre[0] / CELL_SIZE)},${Math.floor(world.centre[1] / CELL_SIZE)})`;
@@ -24,6 +30,7 @@ function updateStats() {
 		`Cursor: (${Math.floor(worldCursor[0] / CELL_SIZE)},${Math.floor(worldCursor[1] / CELL_SIZE)})`;
 	document.getElementById("debug-rendered")!.textContent =
 		`Rendered: ${world.renderedCnt}`;
+	document.getElementById("stats-tps")!.textContent = `TPS: ${world.tps}`;
 }
 document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
 	const debug = document.getElementById("debug")!;
@@ -33,7 +40,21 @@ document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
 		debug.style.visibility = "hidden";
 	}
 });
-function repaint() {
+function repaint(time: DOMHighResTimeStamp) {
+	if (world.ticking) {
+		if (time - world.prevReportTpsTime >= 1000) {
+			world.tps = world.tickAccum;
+			world.tickAccum = 0;
+			world.prevReportTpsTime = time;
+		}
+		if (time - world.prevTickTime >= 1000 / TPS) {
+			++world.tickAccum;
+			next_step();
+			world.prevTickTime = time;
+		}
+	} else {
+		world.tickAccum = world.tps = 0;
+	}
 	updateStats();
 	const ctx = canvas.getContext("2d")!;
 	ctx.resetTransform();
@@ -88,9 +109,9 @@ function repaint() {
 			ctx.closePath();
 		}
 	}
-	requestAnimationFrame(() => repaint());
+	requestAnimationFrame(repaint);
 }
-requestAnimationFrame(() => repaint());
+requestAnimationFrame(repaint);
 function inverseTransform(p: Point): Point {
 	return [
 		(p[0] + world.centre[0] - canvas.width / 2) / world.zoom,
@@ -142,7 +163,7 @@ canvas.addEventListener("click", (event) => {
 		world.alive.add(cell.join(" "));
 	}
 });
-document.getElementById("submit")?.addEventListener("click", (event) => {
+function next_step() {
 	const flattened = BigInt64Array.from(
 		Array.from(world.alive).flatMap((s) => {
 			const [x, y] = s.split(" ") as [string, string];
@@ -155,4 +176,17 @@ document.getElementById("submit")?.addEventListener("click", (event) => {
 	for (let i = 0; i < res.length; i += 2) {
 		world.alive.add([res[i], res[i + 1]].join(" "));
 	}
+}
+const playButton = document.getElementById("play")!;
+playButton.addEventListener("click", (event) => {
+	if (playButton.textContent == "Play") {
+		world.ticking = true;
+		playButton.textContent = "Stop";
+	} else {
+		world.ticking = false;
+		playButton.textContent = "Play";
+	}
+});
+document.getElementById("jump")!.addEventListener("click", (event) => {
+	next_step();
 });
