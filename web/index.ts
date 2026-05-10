@@ -4,6 +4,10 @@ import wasmUrl from "../pkg/game_of_life_bg.wasm";
 await init(wasmUrl);
 
 type Point = [number, number];
+
+const CELL_SIZE = 50;
+const TPS = 60;
+
 class World {
 	centre: Point = [0, 0];
 	alive: Set<string> = new Set();
@@ -11,17 +15,13 @@ class World {
 	zoom = 1;
 	ticking = false;
 	prevTickTime = 0;
-	tps = 0;
-	tickAccum = 0;
-	prevReportTpsTime = 0;
+	tickHistory: number[] = [];
 	dragSession: Set<string> = new Set();
 }
 
 const world = new World();
 const canvas = document.getElementById("grid") as HTMLCanvasElement;
 let worldCursor: Point = [-1, -1];
-const CELL_SIZE = 50;
-const TPS = 60;
 function updateStats() {
 	document.getElementById("debug-centre")!.textContent =
 		`Centre: (${Math.floor(world.centre[0] / CELL_SIZE)},${Math.floor(world.centre[1] / CELL_SIZE)})`;
@@ -31,7 +31,8 @@ function updateStats() {
 		`Cursor: (${Math.floor(worldCursor[0] / CELL_SIZE)},${Math.floor(worldCursor[1] / CELL_SIZE)})`;
 	document.getElementById("debug-rendered")!.textContent =
 		`Rendered: ${world.renderedCnt}`;
-	document.getElementById("stats-tps")!.textContent = `TPS: ${world.tps}`;
+	document.getElementById("stats-tps")!.textContent =
+		`TPS: ${world.tickHistory.length > 0 ? Math.round(world.tickHistory.reduce((b, x) => b + x, 0) / world.tickHistory.length) : ""}`;
 }
 document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
 	const debug = document.getElementById("debug")!;
@@ -43,18 +44,19 @@ document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
 });
 function repaint(time: DOMHighResTimeStamp) {
 	if (world.ticking) {
-		if (time - world.prevReportTpsTime >= 1000) {
-			world.tps = world.tickAccum;
-			world.tickAccum = 0;
-			world.prevReportTpsTime = time;
-		}
-		if (time - world.prevTickTime >= 1000 / TPS) {
-			++world.tickAccum;
+		const dt = time - world.prevTickTime;
+		if (dt >= 1000 / TPS) {
 			next_step();
+			if (world.prevTickTime != 0) {
+				world.tickHistory.push(1000 / dt);
+			}
 			world.prevTickTime = time;
 		}
 	} else {
-		world.tickAccum = world.tps = 0;
+		world.tickHistory = [];
+	}
+	if (world.tickHistory.length > 2 * TPS) {
+		world.tickHistory.shift();
 	}
 	updateStats();
 	const ctx = canvas.getContext("2d")!;
@@ -156,22 +158,30 @@ canvas.addEventListener("mousemove", (event) => {
 canvas.addEventListener("mouseup", (event) => {
 	world.dragSession.clear();
 });
+function doDrag() {
+	const cell: Point = [
+		Math.floor(worldCursor[0] / CELL_SIZE),
+		Math.floor(worldCursor[1] / CELL_SIZE),
+	];
+	const strCell = cell.join(" ");
+	if (world.dragSession.has(strCell)) {
+		return;
+	}
+	world.dragSession.add(strCell);
+	if (world.alive.has(strCell)) {
+		world.alive.delete(strCell);
+	} else {
+		world.alive.add(strCell);
+	}
+}
 canvas.addEventListener("mousemove", (event) => {
 	if (event.buttons == 1) {
-		const cell: Point = [
-			Math.floor(worldCursor[0] / CELL_SIZE),
-			Math.floor(worldCursor[1] / CELL_SIZE),
-		];
-		const strCell = cell.join(" ");
-		if (world.dragSession.has(strCell)) {
-			return;
-		}
-		world.dragSession.add(strCell);
-		if (world.alive.has(strCell)) {
-			world.alive.delete(strCell);
-		} else {
-			world.alive.add(strCell);
-		}
+		doDrag();
+	}
+});
+canvas.addEventListener("mousedown", (event) => {
+	if (event.button == 0) {
+		doDrag();
 	}
 });
 function next_step() {
