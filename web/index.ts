@@ -14,6 +14,7 @@ class World {
 	tps = 0;
 	tickAccum = 0;
 	prevReportTpsTime = 0;
+	dragSession: Set<string> = new Set();
 }
 
 const world = new World();
@@ -152,15 +153,25 @@ canvas.addEventListener("mousemove", (event) => {
 		prevMouseX = prevMouseY = -1;
 	}
 });
-canvas.addEventListener("click", (event) => {
-	const cell: Point = [
-		Math.floor(worldCursor[0] / CELL_SIZE),
-		Math.floor(worldCursor[1] / CELL_SIZE),
-	];
-	if (world.alive.has(cell.join(" "))) {
-		world.alive.delete(cell.join(" "));
-	} else {
-		world.alive.add(cell.join(" "));
+canvas.addEventListener("mouseup", (event) => {
+	world.dragSession.clear();
+});
+canvas.addEventListener("mousemove", (event) => {
+	if (event.buttons == 1) {
+		const cell: Point = [
+			Math.floor(worldCursor[0] / CELL_SIZE),
+			Math.floor(worldCursor[1] / CELL_SIZE),
+		];
+		const strCell = cell.join(" ");
+		if (world.dragSession.has(strCell)) {
+			return;
+		}
+		world.dragSession.add(strCell);
+		if (world.alive.has(strCell)) {
+			world.alive.delete(strCell);
+		} else {
+			world.alive.add(strCell);
+		}
 	}
 });
 function next_step() {
