@@ -120,25 +120,35 @@ impl Quadtree {
     }
     pub fn to_alive(
         self,
-        (start_x, start_y): (i64, i64),
         dict: &HashMap<u64, Quadtree>,
+        dp: &mut HashMap<u64, Vec<(i64, i64)>>,
     ) -> Vec<(i64, i64)> {
         if self.height == 0 {
             assert!(self.count <= 1);
             if self.count == 1 {
-                return vec![(start_x, start_y)];
+                return vec![(0, 0)];
             } else {
                 return vec![];
             }
         }
-        let mid = 2_i64.pow(self.height - 1);
-        let mut tl_ans = dict[&self.tl].to_alive((start_x, start_y + mid), dict);
-        let tr_ans = dict[&self.tr].to_alive((start_x + mid, start_y + mid), dict);
-        let bl_ans = dict[&self.bl].to_alive((start_x, start_y), dict);
-        let br_ans = dict[&self.br].to_alive((start_x + mid, start_y), dict);
-        tl_ans.extend(tr_ans);
-        tl_ans.extend(bl_ans);
-        tl_ans.extend(br_ans);
-        tl_ans
+        if !dp.contains_key(&self.calc_hash()) {
+            let mid = 2_i64.pow(self.height - 1);
+            let tl_ans = dict[&self.tl]
+                .to_alive(dict, dp)
+                .into_iter()
+                .map(|(x, y)| (x, y + mid));
+            let tr_ans = dict[&self.tr]
+                .to_alive(dict, dp)
+                .into_iter()
+                .map(|(x, y)| (x + mid, y + mid));
+            let bl_ans = dict[&self.bl].to_alive(dict, dp);
+            let br_ans = dict[&self.br]
+                .to_alive(dict, dp)
+                .into_iter()
+                .map(|(x, y)| (x + mid, y));
+            let ans = tl_ans.chain(tr_ans).chain(bl_ans).chain(br_ans).collect();
+            dp.insert(self.calc_hash(), ans);
+        }
+        dp[&self.calc_hash()].clone()
     }
 }

@@ -216,18 +216,22 @@ pub fn solve(mut alive: Vec<(i64, i64)>, gens: u64) -> Vec<(i64, i64)> {
     /* #[cfg(target_arch = "wasm32")]
     let _timer = Timer::start("solve"); */
     let mut dict = HashMap::new();
-    let mut start_pos = calc_start_pos(&alive);
-    start_pos = (start_pos.0 - gens as i64, start_pos.1 - gens as i64);
+    let (mut start_x, mut start_y) = calc_start_pos(&alive);
+    start_x -= gens as i64;
+    start_y -= gens as i64;
     let height = calc_height(&alive) + (gens.ilog2() + 1);
     let qt = Quadtree::from_alive(
         &mut alive,
-        start_pos,
+        (start_x, start_y),
         height,
         &mut dict,
         &mut HashMap::new(),
     );
     let res = next_step(add_border(qt, &mut dict), &mut dict, &mut HashMap::new());
-    res.to_alive(start_pos, &dict)
+    res.to_alive(&dict, &mut HashMap::new())
+        .into_iter()
+        .map(|(x, y)| (x + start_x, y + start_y))
+        .collect()
 }
 #[wasm_bindgen(start, private)]
 pub fn init_panic_hook() {
