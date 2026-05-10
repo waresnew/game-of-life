@@ -1,6 +1,9 @@
-use crate::{quadtree::Quadtree, utils::Timer};
+use crate::quadtree::Quadtree;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
+
+#[cfg(target_arch = "wasm32")]
+use crate::utils::web::*;
 
 mod quadtree;
 mod utils;
@@ -210,6 +213,7 @@ pub fn solve_wasm(flat_alive: Vec<i64>, gens: u64) -> Vec<i64> {
     .collect()
 }
 pub fn solve(alive: Vec<(i64, i64)>, gens: u64) -> Vec<(i64, i64)> {
+    #[cfg(target_arch = "wasm32")]
     let _timer = Timer::start("solve");
     let mut dict = HashMap::new();
     let mut dp = HashMap::new();
