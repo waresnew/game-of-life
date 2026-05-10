@@ -25,7 +25,7 @@ impl Quadtree {
         hasher.finish()
     }
     pub fn zeros(height: u32, dict: &mut HashMap<u64, Quadtree>) -> Self {
-        Self::from_alive(&Vec::new(), (0, 0), height, dict)
+        Self::from_alive(&mut Vec::new(), (0, 0), height, dict, &mut HashMap::new())
     }
     pub fn alive_cell() -> Self {
         Self {
@@ -37,10 +37,11 @@ impl Quadtree {
         Self::default()
     }
     pub fn from_alive(
-        alive: &Vec<(i64, i64)>,
+        alive: &mut Vec<(i64, i64)>,
         start_pos: (i64, i64),
         height: u32,
         dict: &mut HashMap<u64, Quadtree>,
+        dp: &mut HashMap<u64, Quadtree>,
     ) -> Quadtree {
         if height == 0 {
             assert!(alive.len() <= 1, "alive len: {}", alive.len());
@@ -50,37 +51,54 @@ impl Quadtree {
                 return Self::dead_cell();
             }
         }
-        let mid_x = start_pos.0 + 2_i64.pow(height - 1);
-        let mid_y = start_pos.1 + 2_i64.pow(height - 1);
-        let mut tl_alive = Vec::new();
-        let mut tr_alive = Vec::new();
-        let mut bl_alive = Vec::new();
-        let mut br_alive = Vec::new();
-        for &(x, y) in alive {
-            if x < mid_x && y >= mid_y {
-                tl_alive.push((x, y));
-            } else if x >= mid_x && y >= mid_y {
-                tr_alive.push((x, y));
-            } else if x < mid_x && y < mid_y {
-                bl_alive.push((x, y));
-            } else if x >= mid_x && y < mid_y {
-                br_alive.push((x, y));
-            } else {
-                unreachable!("cell not placed in quadrant");
+        /// will mutate the arg to avoid a clone
+        fn calc_hash(alive: &mut Vec<(i64, i64)>, height: u32) -> u64 {
+            alive.sort_unstable();
+            let mut hasher = DefaultHasher::new();
+            for x in alive {
+                x.hash(&mut hasher);
             }
+            height.hash(&mut hasher);
+            hasher.finish()
         }
-        let tl = Self::from_alive(&tl_alive, (start_pos.0, mid_y), height - 1, dict);
-        let tr = Self::from_alive(&tr_alive, (mid_x, mid_y), height - 1, dict);
-        let bl = Self::from_alive(&bl_alive, start_pos, height - 1, dict);
-        let br = Self::from_alive(&br_alive, (mid_x, start_pos.1), height - 1, dict);
-        Self {
-            tl: update_dict(tl, dict),
-            tr: update_dict(tr, dict),
-            bl: update_dict(bl, dict),
-            br: update_dict(br, dict),
-            count: tl.count + tr.count + bl.count + br.count,
-            height,
+        let hash = calc_hash(alive, height);
+        if !dp.contains_key(&hash) {
+            let mid_x = start_pos.0 + 2_i64.pow(height - 1);
+            let mid_y = start_pos.1 + 2_i64.pow(height - 1);
+            let mut tl_alive = Vec::new();
+            let mut tr_alive = Vec::new();
+            let mut bl_alive = Vec::new();
+            let mut br_alive = Vec::new();
+            for &mut (x, y) in alive {
+                if x < mid_x && y >= mid_y {
+                    tl_alive.push((x, y));
+                } else if x >= mid_x && y >= mid_y {
+                    tr_alive.push((x, y));
+                } else if x < mid_x && y < mid_y {
+                    bl_alive.push((x, y));
+                } else if x >= mid_x && y < mid_y {
+                    br_alive.push((x, y));
+                } else {
+                    unreachable!("cell not placed in quadrant");
+                }
+            }
+            let tl = Self::from_alive(&mut tl_alive, (start_pos.0, mid_y), height - 1, dict, dp);
+            let tr = Self::from_alive(&mut tr_alive, (mid_x, mid_y), height - 1, dict, dp);
+            let bl = Self::from_alive(&mut bl_alive, start_pos, height - 1, dict, dp);
+            let br = Self::from_alive(&mut br_alive, (mid_x, start_pos.1), height - 1, dict, dp);
+            dp.insert(
+                hash,
+                Self {
+                    tl: update_dict(tl, dict),
+                    tr: update_dict(tr, dict),
+                    bl: update_dict(bl, dict),
+                    br: update_dict(br, dict),
+                    count: tl.count + tr.count + bl.count + br.count,
+                    height,
+                },
+            );
         }
+        dp[&hash]
     }
     pub fn to_array(self, dict: &HashMap<u64, Quadtree>) -> Vec<u8> {
         if self.height == 0 {
