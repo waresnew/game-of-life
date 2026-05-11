@@ -18,6 +18,7 @@ class World {
 	prevTpsTime = 0;
 	tps = 0;
 	dragSession: Set<string> = new Set();
+	stepSize = 1n;
 }
 
 const world = new World();
@@ -190,13 +191,33 @@ function next_step() {
 		BigInt,
 	);
 	const res = solve_wasm(flattened, 1n);
+	const res = solve(formatted, world.stepSize);
 	world.alive.clear();
 	for (let i = 0; i < res.length; i += 2) {
 		world.alive.add([res[i], res[i + 1]].join(" "));
+function updateStepSize() {
+	const input = document.getElementById("stepsize") as HTMLInputElement;
+	try {
+		const x = BigInt(input.value);
+		if (x < 1n) {
+			alert("Step size must be positive");
+			return;
+		} else if (x > 18_446_744_073_709_551_615n) {
+			alert("Step size must be smaller than 2^64-1");
+		}
+		world.stepSize = x;
+	} catch (e) {
+		alert("Step size must be an integer");
 	}
 }
+document.getElementById("once")!.addEventListener("click", (event) => {
+	updateStepSize();
+	world.ticking = false;
+	next_step();
+});
 const playButton = document.getElementById("play")!;
 playButton.addEventListener("click", (event) => {
+	updateStepSize();
 	if (playButton.textContent == "Play") {
 		world.ticking = true;
 		playButton.textContent = "Stop";

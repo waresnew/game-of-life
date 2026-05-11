@@ -74,17 +74,19 @@
 			</div>
 			<div id="display">
 				<div id="stats">
+					<span id="stats-alive"></span>
+					<span id="stats-tps"></span>
 					<span id="stats-cursor"></span>
 					<span id="stats-zoom"></span>
-					<span id="stats-tps"></span>
 					<button id="toggle-debug">Debug info</button>
 				</div>
 				<canvas height="500" width="500" id="grid">Game of Life grid</canvas>
 			</div>
 			<div id="controls">
+				<label for="stepsize">Step size</label>
+				<input type="number" id="stepsize" pattern="[0-9]*" value="1">
+				<button id="once">Run once</button>
 				<button id="play">Play</button>
-				<input>
-				<button id="jump">Jump</button>
 			</div>
 		</div>
 		<script type="module" src="./index.ts"></script>
