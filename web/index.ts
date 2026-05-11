@@ -1,4 +1,9 @@
-import init, { solve_wasm } from "../pkg/game_of_life.js";
+import init, {
+	PerfStats,
+	Point as RustPoint,
+	SolveOutput,
+	solve,
+} from "../pkg/game_of_life.js";
 import wasmUrl from "../pkg/game_of_life_bg.wasm";
 
 await init(wasmUrl);
@@ -183,18 +188,17 @@ canvas.addEventListener("mousedown", (event) => {
 	}
 });
 function next_step() {
-	const flattened = BigInt64Array.from(
-		Array.from(world.alive).flatMap((s) => {
-			const [x, y] = s.split(" ") as [string, string];
-			return [parseInt(x), parseInt(y)];
-		}),
-		BigInt,
-	);
-	const res = solve_wasm(flattened, 1n);
+	const formatted = Array.from(world.alive).map((s) => {
+		const [x, y] = s.split(" ") as [string, string];
+		return new RustPoint(BigInt(parseInt(x)), BigInt(parseInt(y)));
+	});
+
 	const res = solve(formatted, world.stepSize);
 	world.alive.clear();
-	for (let i = 0; i < res.length; i += 2) {
-		world.alive.add([res[i], res[i + 1]].join(" "));
+	for (const coord of res.alive) {
+		world.alive.add([coord.x, coord.y].join(" "));
+	}
+}
 function updateStepSize() {
 	const input = document.getElementById("stepsize") as HTMLInputElement;
 	try {
