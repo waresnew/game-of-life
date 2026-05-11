@@ -14,7 +14,7 @@ pub fn next_step(
     fn calc_key(cur: Quadtree, k: u32) -> u64 {
         let mut hasher = AHasher::default();
         cur.hash(&mut hasher);
-        // k.hash(&mut hasher);
+        k.hash(&mut hasher);
         hasher.finish()
     }
     let key = calc_key(cur, k);
@@ -122,45 +122,53 @@ pub fn next_step(
     *dp.get(&key).unwrap()
 }
 fn solve_4x4(cur: Quadtree, dict: &AHashMap<u64, Quadtree>) -> Quadtree {
-    let grid = cur.to_array(dict);
-    assert!(grid.len() == 16);
-    fn apply_gol(cur_i: usize, cur_j: usize, grid: &[u8]) -> Quadtree {
-        let cur = grid[4 * cur_i + cur_j];
+    fn apply_gol(i: usize, j: usize, grid: &[[u64; 4]; 4]) -> Quadtree {
+        let alive = Quadtree::alive_cell();
+        let dead = Quadtree::dead_cell();
+        let alive_hash = alive.calc_hash();
         let mut alive_neighbours = 0;
-        for di in -1_isize..=1 {
-            for dj in -1_isize..=1 {
+        for di in -1..=1 {
+            for dj in -1..=1 {
                 if di == 0 && dj == 0 {
                     continue;
                 }
-                let ni = (cur_i as isize + di) as usize;
-                let nj = (cur_j as isize + dj) as usize;
-                if grid[4 * ni + nj] == 1 {
+                if grid[(i as isize + di) as usize][(j as isize + dj) as usize] == alive_hash {
                     alive_neighbours += 1;
                 }
             }
         }
-        if cur == 1 {
+        if grid[i][j] == alive_hash {
             if !(2..=3).contains(&alive_neighbours) {
-                Quadtree::dead_cell()
+                dead
             } else {
-                Quadtree::alive_cell()
+                alive
             }
         } else if alive_neighbours == 3 {
-            Quadtree::alive_cell()
+            alive
         } else {
-            Quadtree::dead_cell()
+            dead
         }
     }
-    let tl = apply_gol(1, 1, &grid);
-    let tr = apply_gol(1, 2, &grid);
-    let bl = apply_gol(2, 1, &grid);
-    let br = apply_gol(2, 2, &grid);
+    let tl = dict[&cur.tl];
+    let tr = dict[&cur.tr];
+    let bl = dict[&cur.bl];
+    let br = dict[&cur.br];
+    let grid: [[u64; 4]; 4] = [
+        [tl.tl, tl.tr, tr.tl, tr.tr],
+        [tl.bl, tl.br, tr.bl, tr.br],
+        [bl.tl, bl.tr, br.tl, br.tr],
+        [bl.bl, bl.br, br.bl, br.br],
+    ];
+    let ans_tl = apply_gol(1, 1, &grid);
+    let ans_tr = apply_gol(1, 2, &grid);
+    let ans_bl = apply_gol(2, 1, &grid);
+    let ans_br = apply_gol(2, 2, &grid);
     Quadtree {
-        tl: tl.calc_hash(),
-        tr: tr.calc_hash(),
-        bl: bl.calc_hash(),
-        br: br.calc_hash(),
+        tl: ans_tl.calc_hash(),
+        tr: ans_tr.calc_hash(),
+        bl: ans_bl.calc_hash(),
+        br: ans_br.calc_hash(),
         height: 1,
-        count: tl.count + tr.count + bl.count + br.count,
+        count: ans_tl.count + ans_tr.count + ans_bl.count + ans_br.count,
     }
 }

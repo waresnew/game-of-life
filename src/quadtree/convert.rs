@@ -87,6 +87,7 @@ impl Quadtree {
         }
         dp[&key]
     }
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn to_array(self, dict: &AHashMap<u64, Quadtree>) -> Vec<u8> {
         if self.height == 0 {
             return vec![self.count as u8];

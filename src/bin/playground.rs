@@ -13,6 +13,7 @@ fn main() {
     .into_iter()
     .map(|x| Point::from_tuple(x))
     .collect();
-    let res = solve(alive, 4000);
+    let res = solve(alive, 5206);
+    assert_eq!(res.alive.len(), 633);
     dbg!(res.alive.len(), res.stats);
 }
