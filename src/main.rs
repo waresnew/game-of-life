@@ -13,5 +13,6 @@ fn main() {
     .into_iter()
     .map(|x| Point::from_tuple(x))
     .collect();
-    solve(alive, 4000);
+    let res = solve(alive, 4000);
+    dbg!(res.alive.len(), res.stats);
 }

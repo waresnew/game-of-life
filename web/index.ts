@@ -1,5 +1,5 @@
 import init, {
-	PerfStats,
+	type PerfStats,
 	Point as RustPoint,
 	SolveOutput,
 	solve,
@@ -24,6 +24,7 @@ class World {
 	tps = 0;
 	dragSession: Set<string> = new Set();
 	stepSize = 1n;
+	perfStats: PerfStats | null = null;
 }
 
 const world = new World();
@@ -41,6 +42,8 @@ function updateStats() {
 	document.getElementById("stats-tps")!.textContent = `TPS: ${world.tps}`;
 	document.getElementById("stats-alive")!.textContent =
 		`Alive: ${world.alive.size}`;
+	document.getElementById("debug-cache_hitrate")!.textContent =
+		`Cache hit rate: ${world.perfStats ? (world.perfStats.cache_hits * 100n) / (world.perfStats.cache_hits + world.perfStats.cache_misses) : "0"}%`;
 }
 document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
 	const debug = document.getElementById("debug")!;
@@ -198,6 +201,7 @@ function next_step() {
 	for (const coord of res.alive) {
 		world.alive.add([coord.x, coord.y].join(" "));
 	}
+	world.perfStats = res.stats;
 }
 function updateStepSize() {
 	const input = document.getElementById("stepsize") as HTMLInputElement;
