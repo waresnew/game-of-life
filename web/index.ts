@@ -6,7 +6,7 @@ import init, {
 } from "../pkg/game_of_life.js";
 import wasmUrl from "../pkg/game_of_life_bg.wasm";
 
-await init(wasmUrl);
+const wasm = await init(wasmUrl);
 
 type Point = [number, number];
 
@@ -44,6 +44,8 @@ function updateStats() {
 		`Alive: ${world.alive.size}`;
 	document.getElementById("debug-cache_hitrate")!.textContent =
 		`Cache hit rate: ${world.perfStats ? (world.perfStats.cache_hits * 100n) / (world.perfStats.cache_hits + world.perfStats.cache_misses) : "0"}%`;
+	document.getElementById("debug-memory")!.textContent =
+		`Wasm memory: ${Math.round(wasm.memory.buffer.byteLength / 1e6)} MB`;
 }
 document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
 	const debug = document.getElementById("debug")!;
