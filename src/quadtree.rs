@@ -1,7 +1,6 @@
-use std::{
-    collections::HashMap,
-    hash::{DefaultHasher, Hash, Hasher},
-};
+use std::hash::{Hash, Hasher};
+
+use ahash::{AHashMap, AHasher};
 
 use crate::Point;
 
@@ -28,7 +27,7 @@ impl Hash for Quadtree {
 }
 impl Quadtree {
     pub fn calc_hash(self) -> u64 {
-        let mut hasher = DefaultHasher::new();
+        let mut hasher = AHasher::default();
         self.tl.hash(&mut hasher);
         self.tr.hash(&mut hasher);
         self.bl.hash(&mut hasher);
@@ -36,13 +35,13 @@ impl Quadtree {
         self.count.hash(&mut hasher); //to distinguish dead/alive
         hasher.finish()
     }
-    pub fn zeros(height: u32, dict: &mut HashMap<u64, Quadtree>) -> Self {
+    pub fn zeros(height: u32, dict: &mut AHashMap<u64, Quadtree>) -> Self {
         Self::from_alive(
             &mut Vec::new(),
             Point::new(0, 0),
             height,
             dict,
-            &mut HashMap::new(),
+            &mut AHashMap::new(),
         )
     }
     pub fn alive_cell() -> Self {

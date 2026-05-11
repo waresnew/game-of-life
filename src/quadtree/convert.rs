@@ -1,7 +1,6 @@
-use std::{
-    collections::HashMap,
-    hash::{DefaultHasher, Hash, Hasher},
-};
+use std::hash::{Hash, Hasher};
+
+use ahash::{AHashMap, AHasher};
 
 use crate::{Point, quadtree::Quadtree, utils::update_dict};
 
@@ -10,8 +9,8 @@ impl Quadtree {
         alive: &mut Vec<Point>,
         start_pos: Point,
         height: u32,
-        dict: &mut HashMap<u64, Quadtree>,
-        dp: &mut HashMap<u64, Quadtree>,
+        dict: &mut AHashMap<u64, Quadtree>,
+        dp: &mut AHashMap<u64, Quadtree>,
     ) -> Quadtree {
         if height == 0 {
             assert!(alive.len() <= 1, "alive len: {}", alive.len());
@@ -24,7 +23,7 @@ impl Quadtree {
         /// will mutate the arg to avoid a clone
         fn calc_key(alive: &mut Vec<Point>, height: u32) -> u64 {
             alive.sort_unstable();
-            let mut hasher = DefaultHasher::new();
+            let mut hasher = AHasher::default();
             for x in alive {
                 x.hash(&mut hasher);
             }
@@ -88,7 +87,7 @@ impl Quadtree {
         }
         dp[&key]
     }
-    pub fn to_array(self, dict: &HashMap<u64, Quadtree>) -> Vec<u8> {
+    pub fn to_array(self, dict: &AHashMap<u64, Quadtree>) -> Vec<u8> {
         if self.height == 0 {
             return vec![self.count as u8];
         }
@@ -108,8 +107,8 @@ impl Quadtree {
     }
     pub fn to_alive(
         self,
-        dict: &HashMap<u64, Quadtree>,
-        dp: &mut HashMap<u64, Vec<Point>>,
+        dict: &AHashMap<u64, Quadtree>,
+        dp: &mut AHashMap<u64, Vec<Point>>,
     ) -> Vec<Point> {
         if self.height == 0 {
             assert!(self.count <= 1);

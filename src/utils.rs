@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use ahash::AHashMap;
 use wasm_bindgen::prelude::*;
 
 use crate::quadtree::Quadtree;
@@ -43,7 +42,7 @@ pub struct PerfStats {
     pub cache_hits: u64,
     pub cache_misses: u64,
 }
-pub fn update_dict(t: Quadtree, dict: &mut HashMap<u64, Quadtree>) -> u64 {
+pub fn update_dict(t: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> u64 {
     let hash = t.calc_hash();
     dict.insert(hash, t);
     hash

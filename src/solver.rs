@@ -1,21 +1,20 @@
-use std::{
-    collections::HashMap,
-    hash::{DefaultHasher, Hash, Hasher},
-};
+use std::hash::{Hash, Hasher};
+
+use ahash::{AHashMap, AHasher};
 
 use crate::{quadtree::Quadtree, utils::PerfStats};
 
 pub fn next_step(
     cur: Quadtree,
     k: u32,
-    dict: &mut HashMap<u64, Quadtree>,
-    dp: &mut HashMap<u64, Quadtree>,
+    dict: &mut AHashMap<u64, Quadtree>,
+    dp: &mut AHashMap<u64, Quadtree>,
     stats: &mut PerfStats,
 ) -> Quadtree {
     fn calc_key(cur: Quadtree, k: u32) -> u64 {
-        let mut hasher = DefaultHasher::new();
+        let mut hasher = AHasher::default();
         cur.hash(&mut hasher);
-        k.hash(&mut hasher);
+        // k.hash(&mut hasher);
         hasher.finish()
     }
     let key = calc_key(cur, k);
@@ -122,7 +121,7 @@ pub fn next_step(
     }
     *dp.get(&key).unwrap()
 }
-fn solve_4x4(cur: Quadtree, dict: &HashMap<u64, Quadtree>) -> Quadtree {
+fn solve_4x4(cur: Quadtree, dict: &AHashMap<u64, Quadtree>) -> Quadtree {
     let grid = cur.to_array(dict);
     assert!(grid.len() == 16);
     fn apply_gol(cur_i: usize, cur_j: usize, grid: &[u8]) -> Quadtree {

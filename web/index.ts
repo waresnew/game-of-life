@@ -218,9 +218,11 @@ function updateStepSize() {
 		alert("Step size must be an integer");
 	}
 }
+//TODO: updatestepsize after each update to the textbox, don't alert every time tho (report another way)
 document.getElementById("once")!.addEventListener("click", (event) => {
 	updateStepSize();
 	world.ticking = false;
+	playButton.textContent = "Play";
 	next_step();
 });
 const playButton = document.getElementById("play")!;

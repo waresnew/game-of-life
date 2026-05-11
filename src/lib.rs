@@ -3,7 +3,7 @@ use crate::{
     solver::next_step,
     utils::{PerfStats, decompose_bits},
 };
-use std::collections::HashMap;
+use ahash::AHashMap;
 use wasm_bindgen::prelude::*;
 
 #[cfg(target_arch = "wasm32")]
@@ -70,7 +70,7 @@ pub struct SolveOutput {
 pub fn solve(mut alive: Vec<Point>, n: u64) -> SolveOutput {
     /* #[cfg(target_arch = "wasm32")]
     let _timer = Timer::start("solve"); */
-    let mut dict = HashMap::new();
+    let mut dict = AHashMap::new();
     let Point {
         x: mut start_x,
         y: mut start_y,
@@ -83,9 +83,9 @@ pub fn solve(mut alive: Vec<Point>, n: u64) -> SolveOutput {
         Point::new(start_x, start_y),
         height,
         &mut dict,
-        &mut HashMap::new(),
+        &mut AHashMap::new(),
     );
-    let mut next_step_dp = HashMap::new();
+    let mut next_step_dp = AHashMap::new();
     let mut stats = PerfStats::default();
     for k in decompose_bits(n) {
         ans = next_step(
@@ -97,7 +97,7 @@ pub fn solve(mut alive: Vec<Point>, n: u64) -> SolveOutput {
         );
     }
     let new_alive = ans
-        .to_alive(&dict, &mut HashMap::new())
+        .to_alive(&dict, &mut AHashMap::new())
         .into_iter()
         .map(|Point { x, y }| Point::new(x + start_x, y + start_y))
         .collect();
