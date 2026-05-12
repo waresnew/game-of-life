@@ -17,7 +17,6 @@ impl Quadtree {
             bl: bl.calc_hash(),
             br: br.calc_hash(),
             height: tl.height + 1,
-            count: tl.count + tr.count + bl.count + br.count,
         };
         update_dict(ret, dict);
         ret
@@ -27,20 +26,15 @@ impl Quadtree {
         tr_hash: u64,
         bl_hash: u64,
         br_hash: u64,
+        new_height: u32,
         dict: &mut AHashMap<u64, Quadtree>,
     ) -> Quadtree {
-        let tl = dict[&tl_hash];
-        let tr = dict[&tr_hash];
-        let bl = dict[&bl_hash];
-        let br = dict[&br_hash];
-        assert!(tl.height == tr.height && tr.height == bl.height && bl.height == br.height);
         let ret = Quadtree {
             tl: tl_hash,
             tr: tr_hash,
             bl: bl_hash,
             br: br_hash,
-            height: tl.height + 1,
-            count: tl.count + tr.count + bl.count + br.count,
+            height: new_height,
         };
         update_dict(ret, dict);
         ret
@@ -53,7 +47,6 @@ impl Quadtree {
             bl: update_dict(Quadtree::join(zero, dict[&t.bl], zero, zero, dict), dict),
             br: update_dict(Quadtree::join(dict[&t.br], zero, zero, zero, dict), dict),
             height: t.height + 1,
-            count: t.count,
         }
     }
     pub fn get_centre(t: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> Quadtree {
@@ -62,6 +55,7 @@ impl Quadtree {
             dict[&t.tr].bl,
             dict[&t.bl].tr,
             dict[&t.br].tl,
+            t.height - 1,
             dict,
         )
     }

@@ -3,7 +3,7 @@ use std::fmt;
 use crate::{
     quadtree::Quadtree,
     solver::next_step,
-    utils::{PerfStats, decompose_bits, update_dict},
+    utils::{PerfStats, decompose_bits},
 };
 use ahash::AHashMap;
 use wasm_bindgen::prelude::*;

@@ -14,7 +14,6 @@ pub struct Quadtree {
     pub bl: u64,
     pub br: u64,
     pub height: u32,
-    pub count: usize,
 }
 impl Hash for Quadtree {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -22,7 +21,6 @@ impl Hash for Quadtree {
         self.tr.hash(state);
         self.bl.hash(state);
         self.br.hash(state);
-        self.count.hash(state);
     }
 }
 impl Quadtree {
@@ -32,7 +30,6 @@ impl Quadtree {
         self.tr.hash(&mut hasher);
         self.bl.hash(&mut hasher);
         self.br.hash(&mut hasher);
-        self.count.hash(&mut hasher); //to distinguish dead/alive
         hasher.finish()
     }
     pub fn zeros(height: u32, dict: &mut AHashMap<u64, Quadtree>) -> Self {
@@ -48,11 +45,20 @@ impl Quadtree {
     }
     pub fn alive_cell() -> Self {
         Self {
-            count: 1,
-            ..Default::default()
+            tl: 1,
+            tr: 1,
+            bl: 1,
+            br: 1,
+            height: 0,
         }
     }
     pub fn dead_cell() -> Self {
-        Self::default()
+        Self {
+            tl: 0,
+            tr: 0,
+            bl: 0,
+            br: 0,
+            height: 0,
+        }
     }
 }

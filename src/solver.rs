@@ -35,7 +35,7 @@ pub fn next_step(
         let br = dict[&cur.br];
         let next_tl = next_step(tl, k, dict, dp, stats);
         let next_tm = next_step(
-            Quadtree::join_with_u64(tl.tr, tr.tl, tl.br, tr.bl, dict),
+            Quadtree::join_with_u64(tl.tr, tr.tl, tl.br, tr.bl, cur.height - 1, dict),
             k,
             dict,
             dp,
@@ -43,21 +43,21 @@ pub fn next_step(
         );
         let next_tr = next_step(tr, k, dict, dp, stats);
         let next_ml = next_step(
-            Quadtree::join_with_u64(tl.bl, tl.br, bl.tl, bl.tr, dict),
+            Quadtree::join_with_u64(tl.bl, tl.br, bl.tl, bl.tr, cur.height - 1, dict),
             k,
             dict,
             dp,
             stats,
         );
         let next_mm = next_step(
-            Quadtree::join_with_u64(tl.br, tr.bl, bl.tr, br.tl, dict),
+            Quadtree::join_with_u64(tl.br, tr.bl, bl.tr, br.tl, cur.height - 1, dict),
             k,
             dict,
             dp,
             stats,
         );
         let next_mr = next_step(
-            Quadtree::join_with_u64(tr.bl, tr.br, br.tl, br.tr, dict),
+            Quadtree::join_with_u64(tr.bl, tr.br, br.tl, br.tr, cur.height - 1, dict),
             k,
             dict,
             dp,
@@ -65,7 +65,7 @@ pub fn next_step(
         );
         let next_bl = next_step(bl, k, dict, dp, stats);
         let next_bm = next_step(
-            Quadtree::join_with_u64(bl.tr, br.tl, bl.br, br.bl, dict),
+            Quadtree::join_with_u64(bl.tr, br.tl, bl.br, br.bl, cur.height - 1, dict),
             k,
             dict,
             dp,
@@ -147,6 +147,5 @@ fn solve_4x4(cur: Quadtree, dict: &AHashMap<u64, Quadtree>) -> Quadtree {
         bl: ans_bl.calc_hash(),
         br: ans_br.calc_hash(),
         height: 1,
-        count: ans_tl.count + ans_tr.count + ans_bl.count + ans_br.count,
     }
 }

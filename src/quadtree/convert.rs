@@ -78,7 +78,6 @@ impl Quadtree {
                 tr: update_dict(tr, dict),
                 bl: update_dict(bl, dict),
                 br: update_dict(br, dict),
-                count: tl.count + tr.count + bl.count + br.count,
                 height,
             };
             update_dict(ans, dict);
@@ -89,7 +88,7 @@ impl Quadtree {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn to_array(self, dict: &AHashMap<u64, Quadtree>) -> Vec<u8> {
         if self.height == 0 {
-            return vec![self.count as u8];
+            return vec![self.tl as u8];
         }
         let tl = dict[&self.tl].to_array(dict);
         let tr = dict[&self.tr].to_array(dict);
@@ -111,8 +110,13 @@ impl Quadtree {
         dp: &mut AHashMap<u64, Vec<Point>>,
     ) -> Vec<Point> {
         if self.height == 0 {
-            assert!(self.count <= 1);
-            if self.count == 1 {
+            assert!(
+                self.tl == self.tr
+                    && self.tr == self.bl
+                    && self.bl == self.br
+                    && (self.tl == 1 || self.tl == 0)
+            );
+            if self.tl == 1 {
                 return vec![Point::new(0, 0)];
             } else {
                 return vec![];
