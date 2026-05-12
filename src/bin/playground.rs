@@ -1,6 +1,7 @@
-use game_of_life::{Point, solve};
+use game_of_life::{Point, Solver};
 
 fn main() {
+    let mut solver = Solver::default();
     let alive = vec![
         (-2, 1),
         (-2, -1),
@@ -13,7 +14,6 @@ fn main() {
     .into_iter()
     .map(|x| Point::from_tuple(x))
     .collect();
-    let res = solve(alive, 5206);
-    assert_eq!(res.alive.len(), 633);
-    dbg!(res.alive.len(), res.stats);
+    let res = solver.solve(alive, 6000); //633 alive
+    dbg!(res.len(), solver.perf_stats);
 }

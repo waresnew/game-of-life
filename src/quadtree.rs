@@ -18,7 +18,6 @@ pub struct Quadtree {
     _private: (),
 }
 impl Hash for Quadtree {
-    //TODO: not needed?
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.hash.hash(state);
     }

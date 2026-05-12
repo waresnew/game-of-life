@@ -9,9 +9,10 @@ macro_rules! test_solve {
     ($input:expr, $n:expr, $output:expr) => {
         let mut output = crate::utils::convert_coords($output);
         let alive = crate::utils::convert_coords($input);
-        let mut res = game_of_life::solve(alive, $n);
-        res.alive.sort();
+        let mut solver = game_of_life::Solver::default();
+        let mut res = solver.solve(alive, $n);
+        res.sort();
         output.sort();
-        assert_eq!(res.alive, output);
+        assert_eq!(res, output);
     };
 }

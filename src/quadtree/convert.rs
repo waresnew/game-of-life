@@ -32,8 +32,8 @@ impl Quadtree {
         }
         let key = calc_key(alive, height);
         if !dp.contains_key(&key) {
-            let mid_x = start_pos.x + 2_i64.pow(height - 1);
-            let mid_y = start_pos.y + 2_i64.pow(height - 1);
+            let mid_x = start_pos.x + (1 << (height - 1));
+            let mid_y = start_pos.y + (1 << (height - 1));
             let mut tl_alive = Vec::new();
             let mut tr_alive = Vec::new();
             let mut bl_alive = Vec::new();
@@ -94,7 +94,7 @@ impl Quadtree {
                 .zip(right.chunks_exact(width))
                 .flat_map(|(x, y)| [x, y].concat())
         }
-        let width = 2_usize.pow(self.height - 1);
+        let width = 1 << (self.height - 1);
         let top = block_concat(&tl, &tr, width);
         let bottom = block_concat(&bl, &br, width);
         top.chain(bottom).collect()
@@ -118,7 +118,7 @@ impl Quadtree {
             }
         }
         if !dp.contains_key(&self.hash) {
-            let mid = 2_i64.pow(self.height - 1);
+            let mid = 1 << (self.height - 1);
             let tl_ans = dict[&self.tl]
                 .to_alive(dict, dp)
                 .into_iter()

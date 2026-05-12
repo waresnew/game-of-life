@@ -1,8 +1,8 @@
 use std::fmt;
 
 use crate::{
+    hashlife::next_step,
     quadtree::Quadtree,
-    solver::next_step,
     utils::{PerfStats, decompose_bits},
 };
 use ahash::AHashMap;
@@ -11,8 +11,8 @@ use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use crate::utils::web::*;
 
+mod hashlife;
 mod quadtree;
-mod solver;
 mod utils;
 
 #[wasm_bindgen]
@@ -68,52 +68,59 @@ fn calc_height(alive: &Vec<Point>) -> u32 {
     let dim = (max_x - min_x).max(max_y - min_y) + 1;
     if dim == 0 { 1 } else { dim.ilog2() + 1 }
 }
-#[wasm_bindgen(getter_with_clone)]
-pub struct SolveOutput {
-    pub alive: Vec<Point>,
-    pub stats: PerfStats,
-}
 #[wasm_bindgen]
-pub fn solve(mut alive: Vec<Point>, n: u64) -> SolveOutput {
-    /* #[cfg(target_arch = "wasm32")]
-    let _timer = Timer::start("solve"); */
-    let mut dict = AHashMap::new();
-    let Point {
-        x: mut start_x,
-        y: mut start_y,
-    } = calc_start_pos(&alive);
-    start_x -= n as i64;
-    start_y -= n as i64;
-    let height = calc_height(&alive) + (n.ilog2() + 1);
-    let mut cur = Quadtree::from_alive(
-        &mut alive,
-        Point::new(start_x, start_y),
-        height,
-        &mut dict,
-        &mut AHashMap::new(),
-    );
-    let mut next_step_dp = AHashMap::new();
-    let mut stats = PerfStats::default();
-    let bits = decompose_bits(n);
-    for k in bits {
-        cur = next_step(
-            Quadtree::add_border(cur, &mut dict),
-            k,
-            &mut dict,
-            &mut next_step_dp,
-            &mut stats,
-        );
+#[derive(Default)]
+pub struct Solver {
+    pub perf_stats: PerfStats,
+    dict: AHashMap<u64, Quadtree>,
+    next_step_dp: AHashMap<u64, Quadtree>,
+}
+
+#[wasm_bindgen]
+impl Solver {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self::default()
     }
-    let new_alive = cur
-        .to_alive(&dict, &mut AHashMap::new())
-        .into_iter()
-        .map(|Point { x, y }| Point::new(x + start_x, y + start_y))
-        .collect();
-    SolveOutput {
-        alive: new_alive,
-        stats,
+    pub fn reset(&mut self) {
+        self.perf_stats = PerfStats::default();
+        self.dict = AHashMap::new();
+        self.next_step_dp = AHashMap::new();
+    }
+    pub fn solve(&mut self, mut alive: Vec<Point>, n: u64) -> Vec<Point> {
+        let Point {
+            x: mut start_x,
+            y: mut start_y,
+        } = calc_start_pos(&alive);
+        start_x -= n as i64;
+        start_y -= n as i64;
+        let height = calc_height(&alive) + (n.ilog2() + 1);
+        let mut cur = Quadtree::from_alive(
+            &mut alive,
+            Point::new(start_x, start_y),
+            height,
+            &mut self.dict,
+            &mut AHashMap::new(),
+        );
+        let bits = decompose_bits(n);
+        for k in bits {
+            cur = next_step(
+                Quadtree::add_border(cur, &mut self.dict),
+                k,
+                &mut self.dict,
+                &mut self.next_step_dp,
+                &mut self.perf_stats,
+            );
+        }
+        let new_alive = cur
+            .to_alive(&self.dict, &mut AHashMap::new())
+            .into_iter()
+            .map(|Point { x, y }| Point::new(x + start_x, y + start_y))
+            .collect();
+        new_alive
     }
 }
+
 #[wasm_bindgen(start, private)]
 pub fn init_panic_hook() {
     console_error_panic_hook::set_once();

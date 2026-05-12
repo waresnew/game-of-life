@@ -1,8 +1,7 @@
 import init, {
 	type PerfStats,
 	Point as RustPoint,
-	SolveOutput,
-	solve,
+	Solver,
 } from "../pkg/game_of_life.js";
 import wasmUrl from "../pkg/game_of_life_bg.wasm";
 
@@ -24,11 +23,11 @@ class World {
 	tps = 0;
 	dragSession: Set<string> = new Set();
 	stepSize = 1n;
-	perfStats: PerfStats | null = null;
 	generation = 0n;
 }
 
 const world = new World();
+const solver = new Solver();
 const canvas = document.getElementById("grid") as HTMLCanvasElement;
 let worldCursor: Point = [-1, -1];
 function updateStats() {
@@ -43,8 +42,10 @@ function updateStats() {
 	document.getElementById("stats-tps")!.textContent = `TPS: ${world.tps}`;
 	document.getElementById("stats-alive")!.textContent =
 		`Alive: ${world.alive.size}`;
+	const totalCache =
+		solver.perf_stats.cache_hits + solver.perf_stats.cache_misses;
 	document.getElementById("debug-cache_hitrate")!.textContent =
-		`Cache hit rate: ${world.perfStats ? (world.perfStats.cache_hits * 100n) / (world.perfStats.cache_hits + world.perfStats.cache_misses) : "0"}%`;
+		`Cache hit rate: ${totalCache > 0 ? (solver.perf_stats.cache_hits * 100n) / totalCache : "0"}%`;
 	document.getElementById("debug-memory")!.textContent =
 		`Wasm memory: ${Math.round(wasm.memory.buffer.byteLength / 1e6)} MB`;
 	document.getElementById("stats-generation")!.textContent =
@@ -169,7 +170,14 @@ canvas.addEventListener("mousemove", (event) => {
 canvas.addEventListener("mouseup", (event) => {
 	world.dragSession.clear();
 });
+function reset() {
+	solver.reset();
+	world.generation = 0n;
+}
 function doDrag() {
+	if (world.generation > 0) {
+		reset();
+	}
 	const cell: Point = [
 		Math.floor(worldCursor[0] / CELL_SIZE),
 		Math.floor(worldCursor[1] / CELL_SIZE),
@@ -201,12 +209,11 @@ function next_step() {
 		return new RustPoint(BigInt(parseInt(x)), BigInt(parseInt(y)));
 	});
 
-	const res = solve(formatted, world.stepSize);
+	const res = solver.solve(formatted, world.stepSize);
 	world.alive.clear();
-	for (const coord of res.alive) {
+	for (const coord of res) {
 		world.alive.add([coord.x, coord.y].join(" "));
 	}
-	world.perfStats = res.stats;
 	world.generation += world.stepSize;
 }
 function updateStepSize() {
