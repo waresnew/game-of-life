@@ -11,27 +11,39 @@ impl Quadtree {
         dict: &mut AHashMap<u64, Quadtree>,
     ) -> Quadtree {
         assert!(tl.height == tr.height && tr.height == bl.height && bl.height == br.height);
-        update_dict(tl, dict);
-        update_dict(tr, dict);
-        update_dict(bl, dict);
-        update_dict(br, dict);
-        Quadtree {
+        let ret = Quadtree {
             tl: tl.calc_hash(),
             tr: tr.calc_hash(),
             bl: bl.calc_hash(),
             br: br.calc_hash(),
             height: tl.height + 1,
             count: tl.count + tr.count + bl.count + br.count,
-        }
+        };
+        update_dict(ret, dict);
+        ret
     }
     pub fn join_with_u64(
-        tl: u64,
-        tr: u64,
-        bl: u64,
-        br: u64,
+        tl_hash: u64,
+        tr_hash: u64,
+        bl_hash: u64,
+        br_hash: u64,
         dict: &mut AHashMap<u64, Quadtree>,
     ) -> Quadtree {
-        Quadtree::join(dict[&tl], dict[&tr], dict[&bl], dict[&br], dict)
+        let tl = dict[&tl_hash];
+        let tr = dict[&tr_hash];
+        let bl = dict[&bl_hash];
+        let br = dict[&br_hash];
+        assert!(tl.height == tr.height && tr.height == bl.height && bl.height == br.height);
+        let ret = Quadtree {
+            tl: tl_hash,
+            tr: tr_hash,
+            bl: bl_hash,
+            br: br_hash,
+            height: tl.height + 1,
+            count: tl.count + tr.count + bl.count + br.count,
+        };
+        update_dict(ret, dict);
+        ret
     }
     pub fn add_border(t: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> Quadtree {
         let zero = Quadtree::zeros(t.height - 1, dict);

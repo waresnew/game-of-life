@@ -2,7 +2,10 @@ use std::hash::{Hash, Hasher};
 
 use ahash::{AHashMap, AHasher};
 
-use crate::{quadtree::Quadtree, utils::PerfStats};
+use crate::{
+    quadtree::Quadtree,
+    utils::{PerfStats, update_dict},
+};
 
 pub fn next_step(
     cur: Quadtree,
@@ -22,78 +25,53 @@ pub fn next_step(
         stats.cache_misses += 1;
         if cur.height == 2 {
             let ans = solve_4x4(cur, dict);
+            update_dict(ans, dict);
             dp.insert(key, ans);
             return ans;
         }
-        let next_tl = next_step(dict[&cur.tl], k, dict, dp, stats);
+        let tl = dict[&cur.tl];
+        let tr = dict[&cur.tr];
+        let bl = dict[&cur.bl];
+        let br = dict[&cur.br];
+        let next_tl = next_step(tl, k, dict, dp, stats);
         let next_tm = next_step(
-            Quadtree::join_with_u64(
-                dict[&cur.tl].tr,
-                dict[&cur.tr].tl,
-                dict[&cur.tl].br,
-                dict[&cur.tr].bl,
-                dict,
-            ),
+            Quadtree::join_with_u64(tl.tr, tr.tl, tl.br, tr.bl, dict),
             k,
             dict,
             dp,
             stats,
         );
-        let next_tr = next_step(dict[&cur.tr], k, dict, dp, stats);
+        let next_tr = next_step(tr, k, dict, dp, stats);
         let next_ml = next_step(
-            Quadtree::join_with_u64(
-                dict[&cur.tl].bl,
-                dict[&cur.tl].br,
-                dict[&cur.bl].tl,
-                dict[&cur.bl].tr,
-                dict,
-            ),
+            Quadtree::join_with_u64(tl.bl, tl.br, bl.tl, bl.tr, dict),
             k,
             dict,
             dp,
             stats,
         );
         let next_mm = next_step(
-            Quadtree::join_with_u64(
-                dict[&cur.tl].br,
-                dict[&cur.tr].bl,
-                dict[&cur.bl].tr,
-                dict[&cur.br].tl,
-                dict,
-            ),
+            Quadtree::join_with_u64(tl.br, tr.bl, bl.tr, br.tl, dict),
             k,
             dict,
             dp,
             stats,
         );
         let next_mr = next_step(
-            Quadtree::join_with_u64(
-                dict[&cur.tr].bl,
-                dict[&cur.tr].br,
-                dict[&cur.br].tl,
-                dict[&cur.br].tr,
-                dict,
-            ),
+            Quadtree::join_with_u64(tr.bl, tr.br, br.tl, br.tr, dict),
             k,
             dict,
             dp,
             stats,
         );
-        let next_bl = next_step(dict[&cur.bl], k, dict, dp, stats);
+        let next_bl = next_step(bl, k, dict, dp, stats);
         let next_bm = next_step(
-            Quadtree::join_with_u64(
-                dict[&cur.bl].tr,
-                dict[&cur.br].tl,
-                dict[&cur.bl].br,
-                dict[&cur.br].bl,
-                dict,
-            ),
+            Quadtree::join_with_u64(bl.tr, br.tl, bl.br, br.bl, dict),
             k,
             dict,
             dp,
             stats,
         );
-        let next_br = next_step(dict[&cur.br], k, dict, dp, stats);
+        let next_br = next_step(br, k, dict, dp, stats);
         let intermediate_tl = Quadtree::join(next_tl, next_tm, next_ml, next_mm, dict);
         let intermediate_tr = Quadtree::join(next_tm, next_tr, next_mm, next_mr, dict);
         let intermediate_bl = Quadtree::join(next_ml, next_mm, next_bl, next_bm, dict);

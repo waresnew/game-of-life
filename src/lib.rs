@@ -1,7 +1,9 @@
+use std::fmt;
+
 use crate::{
     quadtree::Quadtree,
     solver::next_step,
-    utils::{PerfStats, decompose_bits},
+    utils::{PerfStats, decompose_bits, update_dict},
 };
 use ahash::AHashMap;
 use wasm_bindgen::prelude::*;
@@ -14,10 +16,15 @@ mod solver;
 mod utils;
 
 #[wasm_bindgen]
-#[derive(Hash, Eq, Ord, PartialEq, PartialOrd, Debug, Clone, Copy)]
+#[derive(Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
 pub struct Point {
     pub x: i64,
     pub y: i64,
+}
+impl fmt::Debug for Point {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
 }
 
 #[wasm_bindgen]
@@ -78,7 +85,7 @@ pub fn solve(mut alive: Vec<Point>, n: u64) -> SolveOutput {
     start_x -= n as i64;
     start_y -= n as i64;
     let height = calc_height(&alive) + (n.ilog2() + 1);
-    let mut ans = Quadtree::from_alive(
+    let mut cur = Quadtree::from_alive(
         &mut alive,
         Point::new(start_x, start_y),
         height,
@@ -87,16 +94,17 @@ pub fn solve(mut alive: Vec<Point>, n: u64) -> SolveOutput {
     );
     let mut next_step_dp = AHashMap::new();
     let mut stats = PerfStats::default();
-    for k in decompose_bits(n) {
-        ans = next_step(
-            Quadtree::add_border(ans, &mut dict),
+    let bits = decompose_bits(n);
+    for k in bits {
+        cur = next_step(
+            Quadtree::add_border(cur, &mut dict),
             k,
             &mut dict,
             &mut next_step_dp,
             &mut stats,
         );
     }
-    let new_alive = ans
+    let new_alive = cur
         .to_alive(&dict, &mut AHashMap::new())
         .into_iter()
         .map(|Point { x, y }| Point::new(x + start_x, y + start_y))

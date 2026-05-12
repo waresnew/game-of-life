@@ -25,6 +25,7 @@ class World {
 	dragSession: Set<string> = new Set();
 	stepSize = 1n;
 	perfStats: PerfStats | null = null;
+	generation = 0n;
 }
 
 const world = new World();
@@ -46,6 +47,8 @@ function updateStats() {
 		`Cache hit rate: ${world.perfStats ? (world.perfStats.cache_hits * 100n) / (world.perfStats.cache_hits + world.perfStats.cache_misses) : "0"}%`;
 	document.getElementById("debug-memory")!.textContent =
 		`Wasm memory: ${Math.round(wasm.memory.buffer.byteLength / 1e6)} MB`;
+	document.getElementById("stats-generation")!.textContent =
+		`Generation: ${world.generation}`;
 }
 document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
 	const debug = document.getElementById("debug")!;
@@ -204,6 +207,7 @@ function next_step() {
 		world.alive.add([coord.x, coord.y].join(" "));
 	}
 	world.perfStats = res.stats;
+	world.generation += world.stepSize;
 }
 function updateStepSize() {
 	const input = document.getElementById("stepsize") as HTMLInputElement;

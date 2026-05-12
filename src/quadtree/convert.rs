@@ -73,17 +73,16 @@ impl Quadtree {
                 dict,
                 dp,
             );
-            dp.insert(
-                key,
-                Self {
-                    tl: update_dict(tl, dict),
-                    tr: update_dict(tr, dict),
-                    bl: update_dict(bl, dict),
-                    br: update_dict(br, dict),
-                    count: tl.count + tr.count + bl.count + br.count,
-                    height,
-                },
-            );
+            let ans = Self {
+                tl: update_dict(tl, dict),
+                tr: update_dict(tr, dict),
+                bl: update_dict(bl, dict),
+                br: update_dict(br, dict),
+                count: tl.count + tr.count + bl.count + br.count,
+                height,
+            };
+            update_dict(ans, dict);
+            dp.insert(key, ans);
         }
         dp[&key]
     }

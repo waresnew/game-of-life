@@ -2,7 +2,7 @@ use std::hash::{Hash, Hasher};
 
 use ahash::{AHashMap, AHasher};
 
-use crate::Point;
+use crate::{Point, utils::update_dict};
 
 mod convert;
 mod manip;
@@ -36,13 +36,15 @@ impl Quadtree {
         hasher.finish()
     }
     pub fn zeros(height: u32, dict: &mut AHashMap<u64, Quadtree>) -> Self {
-        Self::from_alive(
+        let ret = Self::from_alive(
             &mut Vec::new(),
             Point::new(0, 0),
             height,
             dict,
             &mut AHashMap::new(),
-        )
+        );
+        update_dict(ret, dict);
+        ret
     }
     pub fn alive_cell() -> Self {
         Self {
