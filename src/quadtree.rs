@@ -18,12 +18,13 @@ pub struct Quadtree {
     _private: (),
 }
 impl Hash for Quadtree {
+    //TODO: not needed?
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.hash.hash(state);
     }
 }
 impl Quadtree {
-    pub fn new(
+    pub fn join(
         tl: u64,
         tr: u64,
         bl: u64,
@@ -63,9 +64,9 @@ impl Quadtree {
         ret
     }
     pub fn alive_cell(dict: &mut AHashMap<u64, Quadtree>) -> Self {
-        Self::new(1, 1, 1, 1, 0, dict)
+        Self::join(1, 1, 1, 1, 0, dict)
     }
     pub fn dead_cell(dict: &mut AHashMap<u64, Quadtree>) -> Self {
-        Self::new(0, 0, 0, 0, 0, dict)
+        Self::join(0, 0, 0, 0, 0, dict)
     }
 }

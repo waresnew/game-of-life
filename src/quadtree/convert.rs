@@ -75,7 +75,7 @@ impl Quadtree {
             );
             dp.insert(
                 key,
-                Self::new(tl.hash, tr.hash, bl.hash, br.hash, height, dict),
+                Self::join(tl.hash, tr.hash, bl.hash, br.hash, height, dict),
             );
         }
         dp[&key]

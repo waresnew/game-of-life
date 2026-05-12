@@ -35,7 +35,7 @@ pub fn next_step(
         let br = dict[&cur.br];
         let next_tl = next_step(tl, k, dict, dp, stats);
         let next_tm = next_step(
-            Quadtree::join_with_u64(tl.tr, tr.tl, tl.br, tr.bl, cur.height - 1, dict),
+            Quadtree::join(tl.tr, tr.tl, tl.br, tr.bl, cur.height - 1, dict),
             k,
             dict,
             dp,
@@ -43,21 +43,21 @@ pub fn next_step(
         );
         let next_tr = next_step(tr, k, dict, dp, stats);
         let next_ml = next_step(
-            Quadtree::join_with_u64(tl.bl, tl.br, bl.tl, bl.tr, cur.height - 1, dict),
+            Quadtree::join(tl.bl, tl.br, bl.tl, bl.tr, cur.height - 1, dict),
             k,
             dict,
             dp,
             stats,
         );
         let next_mm = next_step(
-            Quadtree::join_with_u64(tl.br, tr.bl, bl.tr, br.tl, cur.height - 1, dict),
+            Quadtree::join(tl.br, tr.bl, bl.tr, br.tl, cur.height - 1, dict),
             k,
             dict,
             dp,
             stats,
         );
         let next_mr = next_step(
-            Quadtree::join_with_u64(tr.bl, tr.br, br.tl, br.tr, cur.height - 1, dict),
+            Quadtree::join(tr.bl, tr.br, br.tl, br.tr, cur.height - 1, dict),
             k,
             dict,
             dp,
@@ -65,31 +65,61 @@ pub fn next_step(
         );
         let next_bl = next_step(bl, k, dict, dp, stats);
         let next_bm = next_step(
-            Quadtree::join_with_u64(bl.tr, br.tl, bl.br, br.bl, cur.height - 1, dict),
+            Quadtree::join(bl.tr, br.tl, bl.br, br.bl, cur.height - 1, dict),
             k,
             dict,
             dp,
             stats,
         );
         let next_br = next_step(br, k, dict, dp, stats);
-        let intermediate_tl = Quadtree::join(next_tl, next_tm, next_ml, next_mm, dict);
-        let intermediate_tr = Quadtree::join(next_tm, next_tr, next_mm, next_mr, dict);
-        let intermediate_bl = Quadtree::join(next_ml, next_mm, next_bl, next_bm, dict);
-        let intermediate_br = Quadtree::join(next_mm, next_mr, next_bm, next_br, dict);
+        let intermediate_tl = Quadtree::join(
+            next_tl.hash,
+            next_tm.hash,
+            next_ml.hash,
+            next_mm.hash,
+            cur.height - 1,
+            dict,
+        );
+        let intermediate_tr = Quadtree::join(
+            next_tm.hash,
+            next_tr.hash,
+            next_mm.hash,
+            next_mr.hash,
+            cur.height - 1,
+            dict,
+        );
+        let intermediate_bl = Quadtree::join(
+            next_ml.hash,
+            next_mm.hash,
+            next_bl.hash,
+            next_bm.hash,
+            cur.height - 1,
+            dict,
+        );
+        let intermediate_br = Quadtree::join(
+            next_mm.hash,
+            next_mr.hash,
+            next_bm.hash,
+            next_br.hash,
+            cur.height - 1,
+            dict,
+        );
         let ans = if cur.height - 2 > k {
             Quadtree::join(
-                Quadtree::get_centre(intermediate_tl, dict),
-                Quadtree::get_centre(intermediate_tr, dict),
-                Quadtree::get_centre(intermediate_bl, dict),
-                Quadtree::get_centre(intermediate_br, dict),
+                Quadtree::get_centre(intermediate_tl, dict).hash,
+                Quadtree::get_centre(intermediate_tr, dict).hash,
+                Quadtree::get_centre(intermediate_bl, dict).hash,
+                Quadtree::get_centre(intermediate_br, dict).hash,
+                cur.height - 1,
                 dict,
             )
         } else {
             Quadtree::join(
-                next_step(intermediate_tl, k, dict, dp, stats),
-                next_step(intermediate_tr, k, dict, dp, stats),
-                next_step(intermediate_bl, k, dict, dp, stats),
-                next_step(intermediate_br, k, dict, dp, stats),
+                next_step(intermediate_tl, k, dict, dp, stats).hash,
+                next_step(intermediate_tr, k, dict, dp, stats).hash,
+                next_step(intermediate_bl, k, dict, dp, stats).hash,
+                next_step(intermediate_br, k, dict, dp, stats).hash,
+                cur.height - 1,
                 dict,
             )
         };
@@ -145,5 +175,5 @@ fn solve_4x4(cur: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> Quadtree {
     let ans_tr = apply_gol(1, 2, &grid, dict);
     let ans_bl = apply_gol(2, 1, &grid, dict);
     let ans_br = apply_gol(2, 2, &grid, dict);
-    Quadtree::new(ans_tl.hash, ans_tr.hash, ans_bl.hash, ans_br.hash, 1, dict)
+    Quadtree::join(ans_tl.hash, ans_tr.hash, ans_bl.hash, ans_br.hash, 1, dict)
 }
