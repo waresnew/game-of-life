@@ -225,11 +225,14 @@ function updateStepSize() {
 	}
 }
 //TODO: updatestepsize after each update to the textbox, don't alert every time tho (report another way)
-document.getElementById("once")!.addEventListener("click", (event) => {
+document.getElementById("once-button")!.addEventListener("click", (event) => {
 	updateStepSize();
 	world.ticking = false;
 	playButton.textContent = "Play";
+	const start = performance.now();
 	next_step();
+	document.getElementById("once-runtime")!.textContent =
+		`Took ${(performance.now() - start) / 1000}s`;
 });
 const playButton = document.getElementById("play")!;
 playButton.addEventListener("click", (event) => {

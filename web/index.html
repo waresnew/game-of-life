@@ -64,6 +64,10 @@
 		#controls {
 			flex: 0 0 200px;
 		}
+		#once {
+			display: flex;
+			gap: 0.5rem;
+		}
 		</style>
 	</head>
 	<body>
@@ -88,7 +92,10 @@
 			<div id="controls">
 				<label for="stepsize">Step size</label>
 				<input type="number" id="stepsize" pattern="[0-9]*" value="1">
-				<button id="once">Run once</button>
+				<div id="once">
+					<button id="once-button">Run once</button>
+					<span id="once-runtime"></span>
+				</div>
 				<button id="play">Play</button>
 			</div>
 		</div>
