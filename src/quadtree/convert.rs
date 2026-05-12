@@ -2,7 +2,7 @@ use std::hash::{Hash, Hasher};
 
 use ahash::{AHashMap, AHasher};
 
-use crate::{Point, quadtree::Quadtree, utils::update_dict};
+use crate::{Point, quadtree::Quadtree};
 
 impl Quadtree {
     pub fn from_alive(
@@ -15,9 +15,9 @@ impl Quadtree {
         if height == 0 {
             assert!(alive.len() <= 1, "alive len: {}", alive.len());
             if alive.len() == 1 {
-                return Self::alive_cell();
+                return Self::alive_cell(dict);
             } else {
-                return Self::dead_cell();
+                return Self::dead_cell(dict);
             }
         }
         /// will mutate the arg to avoid a clone
@@ -73,15 +73,10 @@ impl Quadtree {
                 dict,
                 dp,
             );
-            let ans = Self {
-                tl: update_dict(tl, dict),
-                tr: update_dict(tr, dict),
-                bl: update_dict(bl, dict),
-                br: update_dict(br, dict),
-                height,
-            };
-            update_dict(ans, dict);
-            dp.insert(key, ans);
+            dp.insert(
+                key,
+                Self::new(tl.hash, tr.hash, bl.hash, br.hash, height, dict),
+            );
         }
         dp[&key]
     }
@@ -122,7 +117,7 @@ impl Quadtree {
                 return vec![];
             }
         }
-        if !dp.contains_key(&self.calc_hash()) {
+        if !dp.contains_key(&self.hash) {
             let mid = 2_i64.pow(self.height - 1);
             let tl_ans = dict[&self.tl]
                 .to_alive(dict, dp)
@@ -138,8 +133,8 @@ impl Quadtree {
                 .into_iter()
                 .map(|Point { x, y }| Point::new(x + mid, y));
             let ans = tl_ans.chain(tr_ans).chain(bl_ans).chain(br_ans).collect();
-            dp.insert(self.calc_hash(), ans);
+            dp.insert(self.hash, ans);
         }
-        dp[&self.calc_hash()].clone()
+        dp[&self.hash].clone()
     }
 }

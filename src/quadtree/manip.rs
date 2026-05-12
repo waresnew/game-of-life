@@ -1,6 +1,6 @@
 use ahash::AHashMap;
 
-use crate::{quadtree::Quadtree, utils::update_dict};
+use crate::quadtree::Quadtree;
 
 impl Quadtree {
     pub fn join(
@@ -11,15 +11,7 @@ impl Quadtree {
         dict: &mut AHashMap<u64, Quadtree>,
     ) -> Quadtree {
         assert!(tl.height == tr.height && tr.height == bl.height && bl.height == br.height);
-        let ret = Quadtree {
-            tl: tl.calc_hash(),
-            tr: tr.calc_hash(),
-            bl: bl.calc_hash(),
-            br: br.calc_hash(),
-            height: tl.height + 1,
-        };
-        update_dict(ret, dict);
-        ret
+        Quadtree::new(tl.hash, tr.hash, bl.hash, br.hash, tl.height + 1, dict)
     }
     pub fn join_with_u64(
         tl_hash: u64,
@@ -29,25 +21,18 @@ impl Quadtree {
         new_height: u32,
         dict: &mut AHashMap<u64, Quadtree>,
     ) -> Quadtree {
-        let ret = Quadtree {
-            tl: tl_hash,
-            tr: tr_hash,
-            bl: bl_hash,
-            br: br_hash,
-            height: new_height,
-        };
-        update_dict(ret, dict);
-        ret
+        Quadtree::new(tl_hash, tr_hash, bl_hash, br_hash, new_height, dict)
     }
     pub fn add_border(t: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> Quadtree {
         let zero = Quadtree::zeros(t.height - 1, dict);
-        Quadtree {
-            tl: update_dict(Quadtree::join(zero, zero, zero, dict[&t.tl], dict), dict),
-            tr: update_dict(Quadtree::join(zero, zero, dict[&t.tr], zero, dict), dict),
-            bl: update_dict(Quadtree::join(zero, dict[&t.bl], zero, zero, dict), dict),
-            br: update_dict(Quadtree::join(dict[&t.br], zero, zero, zero, dict), dict),
-            height: t.height + 1,
-        }
+        Quadtree::new(
+            Quadtree::join(zero, zero, zero, dict[&t.tl], dict).hash,
+            Quadtree::join(zero, zero, dict[&t.tr], zero, dict).hash,
+            Quadtree::join(zero, dict[&t.bl], zero, zero, dict).hash,
+            Quadtree::join(dict[&t.br], zero, zero, zero, dict).hash,
+            t.height + 1,
+            dict,
+        )
     }
     pub fn get_centre(t: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> Quadtree {
         Quadtree::join_with_u64(

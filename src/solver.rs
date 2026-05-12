@@ -99,23 +99,27 @@ pub fn next_step(
     }
     *dp.get(&key).unwrap()
 }
-fn solve_4x4(cur: Quadtree, dict: &AHashMap<u64, Quadtree>) -> Quadtree {
-    fn apply_gol(i: usize, j: usize, grid: &[[u64; 4]; 4]) -> Quadtree {
-        let alive = Quadtree::alive_cell();
-        let dead = Quadtree::dead_cell();
-        let alive_hash = alive.calc_hash();
+fn solve_4x4(cur: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> Quadtree {
+    fn apply_gol(
+        i: usize,
+        j: usize,
+        grid: &[[u64; 4]; 4],
+        dict: &mut AHashMap<u64, Quadtree>,
+    ) -> Quadtree {
+        let alive = Quadtree::alive_cell(dict);
+        let dead = Quadtree::dead_cell(dict);
         let mut alive_neighbours = 0;
         for di in -1..=1 {
             for dj in -1..=1 {
                 if di == 0 && dj == 0 {
                     continue;
                 }
-                if grid[(i as isize + di) as usize][(j as isize + dj) as usize] == alive_hash {
+                if grid[(i as isize + di) as usize][(j as isize + dj) as usize] == alive.hash {
                     alive_neighbours += 1;
                 }
             }
         }
-        if grid[i][j] == alive_hash {
+        if grid[i][j] == alive.hash {
             if !(2..=3).contains(&alive_neighbours) {
                 dead
             } else {
@@ -137,15 +141,9 @@ fn solve_4x4(cur: Quadtree, dict: &AHashMap<u64, Quadtree>) -> Quadtree {
         [bl.tl, bl.tr, br.tl, br.tr],
         [bl.bl, bl.br, br.bl, br.br],
     ];
-    let ans_tl = apply_gol(1, 1, &grid);
-    let ans_tr = apply_gol(1, 2, &grid);
-    let ans_bl = apply_gol(2, 1, &grid);
-    let ans_br = apply_gol(2, 2, &grid);
-    Quadtree {
-        tl: ans_tl.calc_hash(),
-        tr: ans_tr.calc_hash(),
-        bl: ans_bl.calc_hash(),
-        br: ans_br.calc_hash(),
-        height: 1,
-    }
+    let ans_tl = apply_gol(1, 1, &grid, dict);
+    let ans_tr = apply_gol(1, 2, &grid, dict);
+    let ans_bl = apply_gol(2, 1, &grid, dict);
+    let ans_br = apply_gol(2, 2, &grid, dict);
+    Quadtree::new(ans_tl.hash, ans_tr.hash, ans_bl.hash, ans_br.hash, 1, dict)
 }

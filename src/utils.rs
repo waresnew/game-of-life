@@ -43,7 +43,6 @@ pub struct PerfStats {
     pub cache_misses: u64,
 }
 pub fn update_dict(t: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> u64 {
-    let hash = t.calc_hash();
-    dict.insert(hash, t);
-    hash
+    dict.insert(t.hash, t);
+    t.hash
 }
