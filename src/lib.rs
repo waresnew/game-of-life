@@ -16,7 +16,7 @@ mod quadtree;
 mod utils;
 
 #[wasm_bindgen]
-#[derive(Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
+#[derive(Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
 pub struct Point {
     pub x: i64,
     pub y: i64,
@@ -51,57 +51,49 @@ fn calc_start_pos(alive: &Vec<Point>) -> Point {
     }
     Point::new(min_x, min_y)
 }
-fn calc_height(alive: &Vec<Point>) -> u32 {
-    if alive.is_empty() {
-        return 1;
-    }
-    let mut min_x = i64::MAX;
-    let mut min_y = i64::MAX;
-    let mut max_x = i64::MIN;
-    let mut max_y = i64::MIN;
-    for &Point { x, y } in alive {
-        min_x = min_x.min(x);
-        min_y = min_y.min(y);
-        max_x = max_x.max(x);
-        max_y = max_y.max(y);
-    }
-    let dim = (max_x - min_x).max(max_y - min_y) + 1;
-    if dim == 0 { 1 } else { dim.ilog2() + 1 }
-}
+const MAX_HEIGHT: u32 = 53;
+const MIN_POINT: Point = Point {
+    x: -1_000_000_000_000_000,
+    y: -1_000_000_000_000_000,
+};
 #[wasm_bindgen]
 #[derive(Default)]
 pub struct Solver {
     pub perf_stats: PerfStats,
     dict: AHashMap<u64, Quadtree>,
     next_step_dp: AHashMap<u64, Quadtree>,
+    quadtree: Option<Quadtree>,
 }
 
+impl Solver {
+    pub fn load_alive(&mut self, alive: &mut Vec<Point>) {
+        self.quadtree = Some(Quadtree::from_alive(
+            alive,
+            MIN_POINT,
+            MAX_HEIGHT,
+            &mut self.dict,
+            &mut AHashMap::new(),
+        ));
+    }
+}
 #[wasm_bindgen]
 impl Solver {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         Self::default()
     }
-    pub fn reset(&mut self) {
+    pub fn reset(&mut self, mut alive: Vec<Point>) {
         self.perf_stats = PerfStats::default();
         self.dict = AHashMap::new();
         self.next_step_dp = AHashMap::new();
+        self.load_alive(&mut alive);
     }
-    pub fn solve(&mut self, mut alive: Vec<Point>, n: u64) -> Vec<Point> {
-        let Point {
-            x: mut start_x,
-            y: mut start_y,
-        } = calc_start_pos(&alive);
-        start_x -= n as i64;
-        start_y -= n as i64;
-        let height = calc_height(&alive) + (n.ilog2() + 1);
-        let mut cur = Quadtree::from_alive(
-            &mut alive,
-            Point::new(start_x, start_y),
-            height,
-            &mut self.dict,
-            &mut AHashMap::new(),
-        );
+    pub fn solve(&mut self, n: u64) -> Vec<Point> {
+        self.perf_stats.cache_hits = 0;
+        self.perf_stats.cache_misses = 0;
+        let mut cur = self
+            .quadtree
+            .expect("call load_alive() at least once before solve()");
         let bits = decompose_bits(n);
         for k in bits {
             cur = next_step(
@@ -115,8 +107,9 @@ impl Solver {
         let new_alive = cur
             .to_alive(&self.dict, &mut AHashMap::new())
             .into_iter()
-            .map(|Point { x, y }| Point::new(x + start_x, y + start_y))
+            .map(|Point { x, y }| Point::new(x + MIN_POINT.x, y + MIN_POINT.y))
             .collect();
+        self.quadtree = Some(cur);
         new_alive
     }
 }

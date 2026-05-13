@@ -8,9 +8,10 @@ pub fn convert_coords(input: Vec<(i64, i64)>) -> Vec<Point> {
 macro_rules! test_solve {
     ($input:expr, $n:expr, $output:expr) => {
         let mut output = crate::utils::convert_coords($output);
-        let alive = crate::utils::convert_coords($input);
+        let mut alive = crate::utils::convert_coords($input);
         let mut solver = game_of_life::Solver::default();
-        let mut res = solver.solve(alive, $n);
+        solver.load_alive(&mut alive);
+        let mut res = solver.solve($n);
         res.sort();
         output.sort();
         assert_eq!(res, output);

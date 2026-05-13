@@ -2,10 +2,7 @@ use std::hash::{Hash, Hasher};
 
 use ahash::{AHashMap, AHasher};
 
-use crate::{
-    quadtree::Quadtree,
-    utils::{PerfStats, update_dict},
-};
+use crate::{quadtree::Quadtree, utils::PerfStats};
 
 pub fn next_step(
     cur: Quadtree,
@@ -25,7 +22,6 @@ pub fn next_step(
         stats.cache_misses += 1;
         if cur.height == 2 {
             let ans = solve_4x4(cur, dict);
-            update_dict(ans, dict);
             dp.insert(key, ans);
             return ans;
         }
@@ -127,7 +123,7 @@ pub fn next_step(
     } else {
         stats.cache_hits += 1;
     }
-    *dp.get(&key).unwrap()
+    dp[&key]
 }
 fn solve_4x4(cur: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> Quadtree {
     fn apply_gol(

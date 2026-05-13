@@ -80,23 +80,30 @@ impl Quadtree {
         }
         dp[&key]
     }
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn to_array(self, dict: &AHashMap<u64, Quadtree>) -> Vec<u8> {
+    pub fn to_string(self, dict: &AHashMap<u64, Quadtree>) -> String {
+        let grid = self.to_array(dict);
+        grid.iter()
+            .map(|row| {
+                row.iter()
+                    .map(|x| if *x == 1 { "*" } else { "." })
+                    .collect()
+            })
+            .collect::<Vec<String>>()
+            .join("\n")
+    }
+    fn to_array(self, dict: &AHashMap<u64, Quadtree>) -> Vec<Vec<u8>> {
         if self.height == 0 {
-            return vec![self.tl as u8];
+            return vec![vec![self.tl as u8]];
         }
         let tl = dict[&self.tl].to_array(dict);
         let tr = dict[&self.tr].to_array(dict);
         let bl = dict[&self.bl].to_array(dict);
         let br = dict[&self.br].to_array(dict);
-        fn block_concat(left: &[u8], right: &[u8], width: usize) -> impl Iterator<Item = u8> {
-            left.chunks_exact(width)
-                .zip(right.chunks_exact(width))
-                .flat_map(|(x, y)| [x, y].concat())
+        fn block_concat(left: Vec<Vec<u8>>, right: Vec<Vec<u8>>) -> impl Iterator<Item = Vec<u8>> {
+            left.into_iter().zip(right).map(|(x, y)| [x, y].concat())
         }
-        let width = 1 << (self.height - 1);
-        let top = block_concat(&tl, &tr, width);
-        let bottom = block_concat(&bl, &br, width);
+        let top = block_concat(tl, tr);
+        let bottom = block_concat(bl, br);
         top.chain(bottom).collect()
     }
     pub fn to_alive(

@@ -2,7 +2,7 @@ use std::hash::{Hash, Hasher};
 
 use ahash::{AHashMap, AHasher};
 
-use crate::{Point, utils::update_dict};
+use crate::Point;
 
 mod convert;
 mod manip;
@@ -17,6 +17,12 @@ pub struct Quadtree {
     pub hash: u64,
     _private: (),
 }
+impl PartialEq for Quadtree {
+    fn eq(&self, other: &Self) -> bool {
+        self.tl == other.tl && self.tr == other.tr && self.bl == other.bl && self.br == other.br
+    }
+}
+impl Eq for Quadtree {}
 impl Hash for Quadtree {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.hash.hash(state);
@@ -40,7 +46,7 @@ impl Quadtree {
             hash: Self::calc_hash(tl, tr, bl, br),
             _private: (),
         };
-        update_dict(ret, dict);
+        dict.insert(ret.hash, ret);
         ret
     }
     fn calc_hash(tl: u64, tr: u64, bl: u64, br: u64) -> u64 {
@@ -59,7 +65,6 @@ impl Quadtree {
             dict,
             &mut AHashMap::new(),
         );
-        update_dict(ret, dict);
         ret
     }
     pub fn alive_cell(dict: &mut AHashMap<u64, Quadtree>) -> Self {

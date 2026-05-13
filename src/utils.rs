@@ -1,7 +1,4 @@
-use ahash::AHashMap;
 use wasm_bindgen::prelude::*;
-
-use crate::quadtree::Quadtree;
 
 #[cfg(target_arch = "wasm32")]
 pub mod web {
@@ -41,8 +38,4 @@ pub fn decompose_bits(n: u64) -> Vec<u32> {
 pub struct PerfStats {
     pub cache_hits: u64,
     pub cache_misses: u64,
-}
-pub fn update_dict(t: Quadtree, dict: &mut AHashMap<u64, Quadtree>) -> u64 {
-    dict.insert(t.hash, t);
-    t.hash
 }

@@ -11,9 +11,10 @@ type Point = [number, number];
 
 const CELL_SIZE = 50;
 const TPS = 60;
+const WORLD_BOUND = 1e15;
 
 class World {
-	centre: Point = [0, 0];
+	#centre: Point = [0, 0];
 	alive: Set<string> = new Set();
 	renderedCnt = 0;
 	zoom = 1;
@@ -24,6 +25,16 @@ class World {
 	dragSession: Set<string> = new Set();
 	stepSize = 1n;
 	generation = 0n;
+	dirty = false;
+	get centre() {
+		return this.#centre;
+	}
+	set centre(p) {
+		this.#centre = [
+			Math.max(-WORLD_BOUND, Math.min(p[0], WORLD_BOUND)),
+			Math.max(-WORLD_BOUND, Math.min(p[1], WORLD_BOUND)),
+		];
+	}
 }
 
 const world = new World();
@@ -31,8 +42,6 @@ const solver = new Solver();
 const canvas = document.getElementById("grid") as HTMLCanvasElement;
 let worldCursor: Point = [-1, -1];
 function updateStats() {
-	document.getElementById("debug-centre")!.textContent =
-		`Centre: (${Math.floor(world.centre[0] / CELL_SIZE)},${Math.floor(world.centre[1] / CELL_SIZE)})`;
 	document.getElementById("stats-zoom")!.textContent =
 		`Zoom: ${world.zoom.toPrecision(3)}`;
 	document.getElementById("stats-cursor")!.textContent =
@@ -170,18 +179,22 @@ canvas.addEventListener("mousemove", (event) => {
 canvas.addEventListener("mouseup", (event) => {
 	world.dragSession.clear();
 });
-function reset() {
-	solver.reset();
-	world.generation = 0n;
-}
 function doDrag() {
-	if (world.generation > 0) {
-		reset();
-	}
+	world.dirty = true;
 	const cell: Point = [
 		Math.floor(worldCursor[0] / CELL_SIZE),
 		Math.floor(worldCursor[1] / CELL_SIZE),
 	];
+	if (
+		cell[0] > WORLD_BOUND ||
+		cell[0] < -WORLD_BOUND ||
+		cell[1] > WORLD_BOUND ||
+		cell[1] < -WORLD_BOUND
+	) {
+		alert(`Cannot draw if x or y is outside of [-1e15, 1e15]`);
+		world.dragSession.clear();
+		return;
+	}
 	const strCell = cell.join(" ");
 	if (world.dragSession.has(strCell)) {
 		return;
@@ -204,12 +217,16 @@ canvas.addEventListener("mousedown", (event) => {
 	}
 });
 function next_step() {
-	const formatted = Array.from(world.alive).map((s) => {
-		const [x, y] = s.split(" ") as [string, string];
-		return new RustPoint(BigInt(parseInt(x)), BigInt(parseInt(y)));
-	});
+	if (world.dirty) {
+		world.dirty = false;
+		const formatted = Array.from(world.alive).map((s) => {
+			const [x, y] = s.split(" ") as [string, string];
+			return new RustPoint(BigInt(parseInt(x)), BigInt(parseInt(y)));
+		});
+		solver.reset(formatted);
+	}
 
-	const res = solver.solve(formatted, world.stepSize);
+	const res = solver.solve(world.stepSize);
 	world.alive.clear();
 	for (const coord of res) {
 		world.alive.add([coord.x, coord.y].join(" "));
