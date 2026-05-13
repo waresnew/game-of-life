@@ -51,7 +51,7 @@ fn calc_start_pos(alive: &Vec<Point>) -> Point {
     }
     Point::new(min_x, min_y)
 }
-const MAX_HEIGHT: u32 = 53;
+const MAX_HEIGHT: u32 = 50;
 const MIN_POINT: Point = Point {
     x: -1_000_000_000_000_000,
     y: -1_000_000_000_000_000,

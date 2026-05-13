@@ -11,10 +11,14 @@ type Point = [number, number];
 
 const CELL_SIZE = 50;
 const TPS = 60;
-const WORLD_BOUND = 1e15;
+const WORLD_BORDER = 1e14;
+
+if (WORLD_BORDER * CELL_SIZE > Number.MAX_SAFE_INTEGER) {
+	throw "WORLD_BORDER*CELL_SIZE>max safe int";
+}
 
 class World {
-	#centre: Point = [0, 0];
+	centre: Point = [0, 0];
 	alive: Set<string> = new Set();
 	renderedCnt = 0;
 	zoom = 1;
@@ -26,15 +30,6 @@ class World {
 	stepSize = 1n;
 	generation = 0n;
 	dirty = false;
-	get centre() {
-		return this.#centre;
-	}
-	set centre(p) {
-		this.#centre = [
-			Math.max(-WORLD_BOUND, Math.min(p[0], WORLD_BOUND)),
-			Math.max(-WORLD_BOUND, Math.min(p[1], WORLD_BOUND)),
-		];
-	}
 }
 
 const world = new World();
@@ -136,6 +131,13 @@ function repaint(time: DOMHighResTimeStamp) {
 			ctx.closePath();
 		}
 	}
+	ctx.strokeStyle = "#000000";
+	ctx.strokeRect(
+		-WORLD_BORDER * CELL_SIZE,
+		-WORLD_BORDER * CELL_SIZE,
+		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
+		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
+	);
 	requestAnimationFrame(repaint);
 }
 requestAnimationFrame(repaint);
@@ -189,12 +191,14 @@ function doDrag() {
 		Math.floor(worldCursor[1] / CELL_SIZE),
 	];
 	if (
-		cell[0] > WORLD_BOUND ||
-		cell[0] < -WORLD_BOUND ||
-		cell[1] > WORLD_BOUND ||
-		cell[1] < -WORLD_BOUND
+		cell[0] > WORLD_BORDER ||
+		cell[0] < -WORLD_BORDER ||
+		cell[1] > WORLD_BORDER ||
+		cell[1] < -WORLD_BORDER
 	) {
-		alert(`Cannot draw if x or y is outside of [-1e15, 1e15]`);
+		alert(
+			`Cannot draw if x or y is outside of [-${WORLD_BORDER.toExponential()}, ${WORLD_BORDER.toExponential()}]`,
+		);
 		world.dragSession.clear();
 		return;
 	}
