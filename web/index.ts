@@ -76,7 +76,10 @@ function repaint(time: DOMHighResTimeStamp) {
 		world.prevTpsTime = time;
 	}
 	if (world.ticking) {
+		const start = performance.now();
 		next_step();
+		document.getElementById("play-runtime")!.textContent =
+			`Took ${(performance.now() - start) / 1000}s`;
 	}
 
 	updateStats();
@@ -258,7 +261,7 @@ document.getElementById("once-button")!.addEventListener("click", (event) => {
 	document.getElementById("once-runtime")!.textContent =
 		`Took ${(performance.now() - start) / 1000}s`;
 });
-const playButton = document.getElementById("play")!;
+const playButton = document.getElementById("play-button")!;
 playButton.addEventListener("click", (event) => {
 	updateStepSize();
 	if (playButton.textContent == "Play") {

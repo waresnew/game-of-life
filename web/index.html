@@ -64,7 +64,8 @@
 		#controls {
 			flex: 0 0 200px;
 		}
-		#once {
+		#once,
+		#play {
 			display: flex;
 			gap: 0.5rem;
 		}
@@ -95,7 +96,10 @@
 					<button id="once-button">Run once</button>
 					<span id="once-runtime"></span>
 				</div>
-				<button id="play">Play</button>
+				<div id="play">
+					<button id="play-button">Play</button>
+					<span id="play-runtime"></span>
+				</div>
 			</div>
 		</div>
 		<script type="module" src="./index.ts"></script>
