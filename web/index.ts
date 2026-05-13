@@ -10,7 +10,7 @@ const wasm = await init(wasmUrl);
 type Point = [number, number];
 
 const CELL_SIZE = 50;
-const TPS = 60;
+const FPS = 60;
 const WORLD_BORDER = 1e14;
 
 if (WORLD_BORDER * CELL_SIZE > Number.MAX_SAFE_INTEGER) {
@@ -24,8 +24,8 @@ class World {
 	zoom = 1;
 	ticking = false;
 	frameCounter = 0;
-	prevTpsTime = 0;
-	tps = 0;
+	prevFpsTime = 0;
+	fps = 0;
 	dragSession: Set<string> = new Set();
 	stepSize = 1n;
 	generation = 0n;
@@ -43,7 +43,7 @@ function updateStats() {
 		`Cursor: (${Math.floor(worldCursor[0] / CELL_SIZE)},${Math.floor(worldCursor[1] / CELL_SIZE)})`;
 	document.getElementById("debug-rendered")!.textContent =
 		`Rendered: ${world.renderedCnt}`;
-	document.getElementById("stats-tps")!.textContent = `TPS: ${world.tps}`;
+	document.getElementById("stats-fps")!.textContent = `FPS: ${world.fps}`;
 	document.getElementById("stats-alive")!.textContent =
 		`Alive: ${world.alive.size}`;
 	const totalCache =
@@ -55,26 +55,29 @@ function updateStats() {
 	document.getElementById("stats-generation")!.textContent =
 		`Generation: ${world.generation}`;
 }
-document.getElementById("toggle-debug")!.addEventListener("click", (event) => {
-	const debug = document.getElementById("debug")!;
+const debugButton = document.getElementById("toggle-debug")!;
+debugButton.addEventListener("click", (event) => {
+	const debug = document.getElementById("debug-content")!;
 	if (debug.style.visibility == "hidden") {
+		debugButton.textContent = "Hide debug info";
 		debug.style.visibility = "visible";
 	} else {
 		debug.style.visibility = "hidden";
+		debugButton.textContent = "Show debug info";
 	}
 });
 function repaint(time: DOMHighResTimeStamp) {
 	++world.frameCounter;
-	if (time - world.prevTpsTime >= 1000) {
-		world.tps = world.frameCounter;
+	if (time - world.prevFpsTime >= 1000) {
+		world.fps = world.frameCounter;
 		world.frameCounter = 0;
-		world.prevTpsTime = time;
+		world.prevFpsTime = time;
 	}
 	if (world.ticking) {
 		const start = performance.now();
 		next_step();
-		document.getElementById("play-runtime")!.textContent =
-			`Took ${(performance.now() - start) / 1000}s`;
+		const elapsed = (performance.now() - start) / 1000;
+		document.getElementById("play-runtime")!.textContent = `Took ${elapsed}s`;
 	}
 
 	updateStats();
@@ -233,12 +236,12 @@ function next_step() {
 		solver.reset(formatted);
 	}
 
-	const res = solver.solve(world.stepSize);
+	const res = solver.solve(BigInt(world.stepSize));
 	world.alive.clear();
 	for (const coord of res) {
 		world.alive.add([coord.x, coord.y].join(" "));
 	}
-	world.generation += world.stepSize;
+	world.generation += BigInt(world.stepSize);
 }
 function updateStepSize() {
 	const input = document.getElementById("stepsize") as HTMLInputElement;
@@ -262,13 +265,13 @@ document.getElementById("once-button")!.addEventListener("click", (event) => {
 	playButton.textContent = "Play";
 	const start = performance.now();
 	next_step();
-	document.getElementById("once-runtime")!.textContent =
-		`Took ${(performance.now() - start) / 1000}s`;
+	const elapsed = (performance.now() - start) / 1000;
+	document.getElementById("once-runtime")!.textContent = `Took ${elapsed}s`;
 });
 const playButton = document.getElementById("play-button")!;
 playButton.addEventListener("click", (event) => {
 	updateStepSize();
-	if (playButton.textContent == "Play") {
+	if (!world.ticking) {
 		world.ticking = true;
 		playButton.textContent = "Stop";
 	} else {

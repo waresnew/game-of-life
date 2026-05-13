@@ -51,9 +51,16 @@
 		}
 		#stats {
 			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+		#stats-display,
+		#stats-world {
+			display: flex;
 			gap: 2rem;
 			justify-content: center;
 		}
+		#debug-content,
 		#debug {
 			display: flex;
 			gap: 0.5rem;
@@ -74,18 +81,25 @@
 	<body>
 		<div id="container">
 			<div id="debug">
-				<span id="debug-rendered"></span>
-				<span id="debug-cache_hitrate"></span>
-				<span id="debug-memory"></span>
+				<button id="toggle-debug">Show debug info</button>
+				<div id="debug-content">
+					<span id="debug-rendered"></span>
+					<span id="debug-cache_hitrate"></span>
+					<span id="debug-memory"></span>
+				</div>
 			</div>
 			<div id="display">
 				<div id="stats">
-					<span id="stats-generation"></span>
-					<span id="stats-alive"></span>
-					<span id="stats-tps"></span>
-					<span id="stats-cursor"></span>
-					<span id="stats-zoom"></span>
-					<button id="toggle-debug">Debug info</button>
+					<div id="stats-world">
+						<span id="stats-generation"></span>
+						<span id="stats-gens_per_s"></span>
+						<span id="stats-alive"></span>
+					</div>
+					<div id="stats-display">
+						<span id="stats-fps"></span>
+						<span id="stats-cursor"></span>
+						<span id="stats-zoom"></span>
+					</div>
 				</div>
 				<canvas height="500" width="500" id="grid">Game of Life grid</canvas>
 			</div>
