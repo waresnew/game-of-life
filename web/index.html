@@ -75,6 +75,10 @@
 			display: flex;
 			gap: 0.5rem;
 		}
+		#stepsize {
+			display: flex;
+			gap: 0.5rem;
+		}
 		</style>
 	</head>
 	<body>
@@ -103,8 +107,11 @@
 				<canvas height="500" width="500" id="grid">Game of Life grid</canvas>
 			</div>
 			<div id="controls">
-				<label for="stepsize">Step size</label>
-				<input type="number" id="stepsize" pattern="[0-9]*" value="1">
+				<div id="stepsize">
+					<button id="stepsize-less">-</button>
+					<span id="stepsize-display"></span>
+					<button id="stepsize-more">+</button>
+				</div>
 				<div id="once">
 					<button id="once-button">Run once</button>
 					<span id="once-runtime"></span>

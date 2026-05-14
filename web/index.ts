@@ -54,6 +54,8 @@ function updateStats() {
 		`Wasm memory: ${Math.round(wasm.memory.buffer.byteLength / 1e6)} MB`;
 	document.getElementById("stats-generation")!.textContent =
 		`Generation: ${world.generation}`;
+	document.getElementById("stepsize-display")!.textContent =
+		`Step size: 2^${world.stepExp}`;
 }
 const debugButton = document.getElementById("toggle-debug")!;
 debugButton.addEventListener("click", (event) => {
@@ -243,24 +245,13 @@ function next_step() {
 	}
 	world.generation += BigInt(1 << world.stepExp);
 }
-function updateStepSize() {
-	const input = document.getElementById("stepsize") as HTMLInputElement;
-	try {
-		const x = parseInt(input.value);
-		if (x < 1n) {
-			alert("Step size must be positive");
-			return;
-		} else if (x > 63) {
-			alert("Step size must be smaller than 2^63");
-		}
-		world.stepExp = x;
-	} catch (e) {
-		alert("Step size must be an integer");
-	}
-}
-//TODO: updatestepsize after each update to the textbox, don't alert every time tho (report another way)
+document.getElementById("stepsize-less")!.addEventListener("click", (event) => {
+	world.stepExp = Math.max(0, world.stepExp - 1);
+});
+document.getElementById("stepsize-more")!.addEventListener("click", (event) => {
+	world.stepExp = Math.min(63, world.stepExp + 1);
+});
 document.getElementById("once-button")!.addEventListener("click", (event) => {
-	updateStepSize();
 	world.ticking = false;
 	playButton.textContent = "Play";
 	const start = performance.now();
@@ -270,7 +261,6 @@ document.getElementById("once-button")!.addEventListener("click", (event) => {
 });
 const playButton = document.getElementById("play-button")!;
 playButton.addEventListener("click", (event) => {
-	updateStepSize();
 	if (!world.ticking) {
 		world.ticking = true;
 		playButton.textContent = "Stop";
