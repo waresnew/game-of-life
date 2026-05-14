@@ -5,7 +5,6 @@ use ahash::AHashMap;
 use wasm_bindgen::prelude::*;
 
 mod hashlife;
-mod lru_cache;
 mod quadtree;
 
 #[wasm_bindgen]
@@ -127,21 +126,6 @@ impl Solver {
 #[wasm_bindgen(start, private)]
 pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
-}
-//NOTE: unused
-pub fn decompose_bits(n: u64) -> Vec<u32> {
-    let mut ans = Vec::new();
-    let mut remaining = n.count_ones();
-    for k in 0..64 {
-        if (n >> k) & 1 == 1 {
-            ans.push(k);
-            remaining -= 1;
-            if remaining == 0 {
-                break;
-            }
-        }
-    }
-    ans
 }
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, Default)]
