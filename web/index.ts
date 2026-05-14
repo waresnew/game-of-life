@@ -258,7 +258,7 @@ document.getElementById("stepsize-less")!.addEventListener("click", (event) => {
 	world.dirty = true;
 });
 document.getElementById("stepsize-more")!.addEventListener("click", (event) => {
-	world.stepExp = Math.min(63, world.stepExp + 1);
+	world.stepExp = Math.min(49, world.stepExp + 1); //(MAX_HEIGHT+1)-2=49
 	world.dirty = true;
 });
 document.getElementById("once-button")!.addEventListener("click", (event) => {
