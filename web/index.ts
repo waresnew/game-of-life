@@ -243,7 +243,7 @@ function next_step() {
 	for (const coord of res) {
 		world.alive.add([coord.x, coord.y].join(" "));
 	}
-	world.generation += BigInt(1 << world.stepExp);
+	world.generation += 2n ** BigInt(world.stepExp);
 }
 document.getElementById("stepsize-less")!.addEventListener("click", (event) => {
 	world.stepExp = Math.max(0, world.stepExp - 1);
