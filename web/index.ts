@@ -247,9 +247,11 @@ function next_step() {
 }
 document.getElementById("stepsize-less")!.addEventListener("click", (event) => {
 	world.stepExp = Math.max(0, world.stepExp - 1);
+	world.dirty = true;
 });
 document.getElementById("stepsize-more")!.addEventListener("click", (event) => {
 	world.stepExp = Math.min(63, world.stepExp + 1);
+	world.dirty = true;
 });
 document.getElementById("once-button")!.addEventListener("click", (event) => {
 	world.ticking = false;
