@@ -78,7 +78,7 @@ impl Solver {
         self.perf_stats.cache_misses = 0;
         let mut cur = self
             .quadtree
-            .expect("call load_alive() at least once before solve()");
+            .expect("call init() at least once before solve()");
         cur = next_step(Quadtree::add_border(cur, &mut self.dict), self);
         let new_alive = (&self.dict[&cur])
             .to_alive(&self.dict, &mut AHashMap::new())

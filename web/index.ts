@@ -29,13 +29,15 @@ class World {
 	dragSession: Set<string> = new Set();
 	stepExp = 0;
 	generation = 0n;
-	dirty = false;
+	dirty = true;
 }
 
 const world = new World();
 const solver = new Solver();
 const canvas = document.getElementById("grid") as HTMLCanvasElement;
 let worldCursor: Point = [-1, -1];
+resizeCanvas();
+requestAnimationFrame(repaint);
 function updateStats() {
 	document.getElementById("stats-zoom")!.textContent =
 		`Zoom: ${world.zoom.toPrecision(3)}`;
@@ -57,6 +59,12 @@ function updateStats() {
 	document.getElementById("stepsize-display")!.textContent =
 		`Step size: 2^${world.stepExp}`;
 }
+function resizeCanvas() {
+	const rect = canvas.getBoundingClientRect();
+	canvas.width = rect.width;
+	canvas.height = rect.height;
+}
+window.addEventListener("resize", (event) => resizeCanvas());
 const debugButton = document.getElementById("toggle-debug")!;
 debugButton.addEventListener("click", (event) => {
 	const debug = document.getElementById("debug-content")!;
@@ -145,7 +153,6 @@ function repaint(time: DOMHighResTimeStamp) {
 	);
 	requestAnimationFrame(repaint);
 }
-requestAnimationFrame(repaint);
 function inverseTransform(p: Point): Point {
 	return [
 		(p[0] + world.centre[0] - canvas.width / 2) / world.zoom,
@@ -153,6 +160,7 @@ function inverseTransform(p: Point): Point {
 	];
 }
 canvas.addEventListener("wheel", (event) => {
+	event.preventDefault();
 	//TODO: pinch support (mobile)
 
 	const mouseDelta = -event.deltaY * 0.001;
