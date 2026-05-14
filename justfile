@@ -9,3 +9,6 @@ profile:
 
 bin:
     RUST_BACKTRACE=1 cargo run --release
+    
+build:
+    bun build --compile --target=browser --minify ./web/index.html --outdir=dist
