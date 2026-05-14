@@ -2,7 +2,7 @@ use ahash::AHashMap;
 
 use crate::quadtree::Quadtree;
 
-impl<'a> Quadtree {
+impl Quadtree {
     pub fn add_border(t_hash: u64, dict: &mut AHashMap<u64, Quadtree>) -> u64 {
         let &Quadtree {
             tl,

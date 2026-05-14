@@ -128,7 +128,7 @@ pub fn next_step(cur_hash: u64, ctx: &mut Solver) -> u64 {
     }
     ctx.dict[&cur_hash].ans.unwrap()
 }
-fn solve_4x4<'a>(cur_hash: u64, ctx: &'a mut Solver) -> u64 {
+fn solve_4x4(cur_hash: u64, ctx: &mut Solver) -> u64 {
     fn apply_gol(
         i: usize,
         j: usize,
