@@ -14,7 +14,12 @@ Note: To simplify rendering on the JavaScript side, the grid is constrained by (
 
 ## Building
 
-The demo website is fully client-side and can be visited here: **TODO**
+The demo website is fully client-side and can be visited here: https://waresnew.github.io/game-of-life/
 
-You can build it locally by running `just`
+You can build it locally by running `just build` and opening `./dist/index.html` in a web browser.
+
+### Dependencies 
+- [just](https://github.com/casey/just)
+- [wasm-pack](https://github.com/wasm-bindgen/wasm-pack)
+- [bun](https://github.com/oven-sh/bun)
 
