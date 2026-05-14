@@ -2,7 +2,7 @@ use game_of_life::{Point, Solver};
 
 fn main() {
     let mut solver = Solver::default();
-    let mut alive: Vec<Point> = vec![
+    let alive: Vec<Point> = vec![
         (-2, 1),
         (-2, -1),
         (-3, -1),
@@ -14,9 +14,10 @@ fn main() {
     .into_iter()
     .map(|x| Point::from_tuple(x))
     .collect();
-    solver.load_alive(&mut alive);
+    solver.init(alive, 12);
+    let mut ans = vec![];
     for i in 0..100 {
-        alive = solver.solve(4000);
+        ans = solver.solve();
     } //633 alive
-    dbg!(alive.len(), solver.perf_stats);
+    dbg!(ans.len(), solver.perf_stats);
 }

@@ -58,7 +58,6 @@
 		#stats-world {
 			display: flex;
 			gap: 2rem;
-			justify-content: center;
 		}
 		#debug-content,
 		#debug {
@@ -82,7 +81,7 @@
 		<div id="container">
 			<div id="debug">
 				<button id="toggle-debug">Show debug info</button>
-				<div id="debug-content">
+				<div id="debug-content" style="visibility: hidden;">
 					<span id="debug-rendered"></span>
 					<span id="debug-cache_hitrate"></span>
 					<span id="debug-memory"></span>

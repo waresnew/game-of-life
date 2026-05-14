@@ -27,7 +27,7 @@ class World {
 	prevFpsTime = 0;
 	fps = 0;
 	dragSession: Set<string> = new Set();
-	stepSize = 1n;
+	stepExp = 0;
 	generation = 0n;
 	dirty = false;
 }
@@ -233,27 +233,27 @@ function next_step() {
 			const [x, y] = s.split(" ") as [string, string];
 			return new RustPoint(BigInt(parseInt(x)), BigInt(parseInt(y)));
 		});
-		solver.reset(formatted);
+		solver.init(formatted, world.stepExp);
 	}
 
-	const res = solver.solve(BigInt(world.stepSize));
+	const res = solver.solve();
 	world.alive.clear();
 	for (const coord of res) {
 		world.alive.add([coord.x, coord.y].join(" "));
 	}
-	world.generation += BigInt(world.stepSize);
+	world.generation += BigInt(1 << world.stepExp);
 }
 function updateStepSize() {
 	const input = document.getElementById("stepsize") as HTMLInputElement;
 	try {
-		const x = BigInt(input.value);
+		const x = parseInt(input.value);
 		if (x < 1n) {
 			alert("Step size must be positive");
 			return;
-		} else if (x > 18_446_744_073_709_551_615n) {
-			alert("Step size must be smaller than 2^64-1");
+		} else if (x > 63) {
+			alert("Step size must be smaller than 2^63");
 		}
-		world.stepSize = x;
+		world.stepExp = x;
 	} catch (e) {
 		alert("Step size must be an integer");
 	}

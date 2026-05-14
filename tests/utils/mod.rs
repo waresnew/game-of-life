@@ -6,12 +6,12 @@ pub fn convert_coords(input: Vec<(i64, i64)>) -> Vec<Point> {
 
 #[macro_export]
 macro_rules! test_solve {
-    ($input:expr, $n:expr, $output:expr) => {
+    ($input:expr, $k:expr, $output:expr) => {
         let mut output = crate::utils::convert_coords($output);
-        let mut alive = crate::utils::convert_coords($input);
+        let alive = crate::utils::convert_coords($input);
         let mut solver = game_of_life::Solver::default();
-        solver.load_alive(&mut alive);
-        let mut res = solver.solve($n);
+        solver.init(alive, $k);
+        let mut res = solver.solve();
         res.sort();
         output.sort();
         assert_eq!(res, output);

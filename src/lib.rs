@@ -1,19 +1,12 @@
 use std::fmt;
 
-use crate::{
-    hashlife::next_step,
-    quadtree::Quadtree,
-    utils::{PerfStats, decompose_bits},
-};
+use crate::{hashlife::next_step, quadtree::Quadtree};
 use ahash::AHashMap;
 use wasm_bindgen::prelude::*;
 
-#[cfg(target_arch = "wasm32")]
-use crate::utils::web::*;
-
 mod hashlife;
+mod lru_cache;
 mod quadtree;
-mod utils;
 
 #[wasm_bindgen]
 #[derive(Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
@@ -39,41 +32,28 @@ impl Point {
         Point::new(x, y)
     }
 }
-fn calc_start_pos(alive: &Vec<Point>) -> Point {
-    if alive.is_empty() {
-        return Point::new(0, 0);
-    }
-    let mut min_x = i64::MAX;
-    let mut min_y = i64::MAX;
-    for &Point { x, y } in alive {
-        min_x = min_x.min(x);
-        min_y = min_y.min(y);
-    }
-    Point::new(min_x, min_y)
-}
+
 const MAX_HEIGHT: u32 = 50;
 const MIN_POINT: Point = Point {
     x: -1_000_000_000_000_000,
     y: -1_000_000_000_000_000,
 };
 #[wasm_bindgen]
-#[derive(Default)]
 pub struct Solver {
     pub perf_stats: PerfStats,
     dict: AHashMap<u64, Quadtree>,
-    next_step_dp: AHashMap<u64, Quadtree>,
-    quadtree: Option<Quadtree>,
+    quadtree: Option<u64>,
+    step_exp: u32,
 }
 
-impl Solver {
-    pub fn load_alive(&mut self, alive: &mut Vec<Point>) {
-        self.quadtree = Some(Quadtree::from_alive(
-            alive,
-            MIN_POINT,
-            MAX_HEIGHT,
-            &mut self.dict,
-            &mut AHashMap::new(),
-        ));
+impl Default for Solver {
+    fn default() -> Self {
+        Self {
+            perf_stats: Default::default(),
+            dict: Default::default(),
+            step_exp: 0,
+            quadtree: Default::default(),
+        }
     }
 }
 #[wasm_bindgen]
@@ -82,39 +62,90 @@ impl Solver {
     pub fn new() -> Self {
         Self::default()
     }
-    pub fn reset(&mut self, mut alive: Vec<Point>) {
+    pub fn init(&mut self, mut alive: Vec<Point>, step_exp: u32) {
         self.perf_stats = PerfStats::default();
         self.dict = AHashMap::new();
-        self.next_step_dp = AHashMap::new();
-        self.load_alive(&mut alive);
+        self.quadtree = Some(Quadtree::from_alive(
+            &mut alive,
+            MIN_POINT,
+            MAX_HEIGHT,
+            &mut self.dict,
+            &mut AHashMap::new(),
+        ));
+        self.step_exp = step_exp;
     }
-    pub fn solve(&mut self, n: u64) -> Vec<Point> {
+    pub fn solve(&mut self) -> Vec<Point> {
         self.perf_stats.cache_hits = 0;
         self.perf_stats.cache_misses = 0;
         let mut cur = self
             .quadtree
             .expect("call load_alive() at least once before solve()");
-        let bits = decompose_bits(n);
-        for k in bits {
-            cur = next_step(
-                Quadtree::add_border(cur, &mut self.dict),
-                k,
-                &mut self.dict,
-                &mut self.next_step_dp,
-                &mut self.perf_stats,
-            );
-        }
-        let new_alive = cur
+        cur = next_step(Quadtree::add_border(cur, &mut self.dict), self);
+        let new_alive = (&self.dict[&cur])
             .to_alive(&self.dict, &mut AHashMap::new())
             .into_iter()
             .map(|Point { x, y }| Point::new(x + MIN_POINT.x, y + MIN_POINT.y))
             .collect();
         self.quadtree = Some(cur);
+        self.gc_dict();
         new_alive
+    }
+    fn gc_dict(&mut self) {
+        fn mark_gc(cur: u64, dict: &mut AHashMap<u64, Quadtree>) {
+            let &Quadtree {
+                tl,
+                tr,
+                bl,
+                br,
+                height,
+                ans,
+                ..
+            } = &dict[&cur];
+            if height == 0 {
+                return;
+            }
+            for maybe_next in [Some(tl), Some(tr), Some(bl), Some(br), ans] {
+                let Some(next) = maybe_next else {
+                    continue;
+                };
+                let tree = dict.get_mut(&next).unwrap();
+                if !tree.keep {
+                    tree.keep = true;
+                    mark_gc(next, dict);
+                }
+            }
+        }
+        self.dict.get_mut(&self.quadtree.unwrap()).unwrap().keep = true;
+        mark_gc(self.quadtree.unwrap(), &mut self.dict);
+        self.dict.retain(|_, v| v.keep);
+        for (_, v) in &mut self.dict {
+            v.keep = false;
+        }
     }
 }
 
 #[wasm_bindgen(start, private)]
 pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
+}
+//NOTE: unused
+pub fn decompose_bits(n: u64) -> Vec<u32> {
+    let mut ans = Vec::new();
+    let mut remaining = n.count_ones();
+    for k in 0..64 {
+        if (n >> k) & 1 == 1 {
+            ans.push(k);
+            remaining -= 1;
+            if remaining == 0 {
+                break;
+            }
+        }
+    }
+    ans
+}
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct PerfStats {
+    pub cache_hits: u64,
+    pub cache_misses: u64,
 }

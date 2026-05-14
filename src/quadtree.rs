@@ -7,7 +7,7 @@ use crate::Point;
 mod convert;
 mod manip;
 
-#[derive(Default, Copy, Clone, Debug)]
+#[derive(Default, Debug)]
 pub struct Quadtree {
     pub tl: u64,
     pub tr: u64,
@@ -15,6 +15,8 @@ pub struct Quadtree {
     pub br: u64,
     pub height: u32,
     pub hash: u64,
+    pub ans: Option<u64>,
+    pub keep: bool,
     _private: (),
 }
 impl PartialEq for Quadtree {
@@ -23,11 +25,7 @@ impl PartialEq for Quadtree {
     }
 }
 impl Eq for Quadtree {}
-impl Hash for Quadtree {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.hash.hash(state);
-    }
-}
+
 impl Quadtree {
     pub fn join(
         tl: u64,
@@ -36,18 +34,23 @@ impl Quadtree {
         br: u64,
         height: u32,
         dict: &mut AHashMap<u64, Quadtree>,
-    ) -> Self {
-        let ret = Self {
-            tl,
-            tr,
-            bl,
-            br,
-            height,
-            hash: Self::calc_hash(tl, tr, bl, br),
-            _private: (),
-        };
-        dict.insert(ret.hash, ret);
-        ret
+    ) -> u64 {
+        let hash = Self::calc_hash(tl, tr, bl, br);
+        if !dict.contains_key(&hash) {
+            let ans = Self {
+                tl,
+                tr,
+                bl,
+                br,
+                height,
+                hash,
+                ans: None,
+                keep: false,
+                _private: (),
+            };
+            dict.insert(ans.hash, ans);
+        }
+        hash
     }
     fn calc_hash(tl: u64, tr: u64, bl: u64, br: u64) -> u64 {
         let mut hasher = AHasher::default();
@@ -57,7 +60,7 @@ impl Quadtree {
         br.hash(&mut hasher);
         hasher.finish()
     }
-    pub fn zeros(height: u32, dict: &mut AHashMap<u64, Quadtree>) -> Self {
+    pub fn zeros(height: u32, dict: &mut AHashMap<u64, Quadtree>) -> u64 {
         let ret = Self::from_alive(
             &mut Vec::new(),
             Point::new(0, 0),
@@ -67,10 +70,10 @@ impl Quadtree {
         );
         ret
     }
-    pub fn alive_cell(dict: &mut AHashMap<u64, Quadtree>) -> Self {
+    pub fn alive_cell(dict: &mut AHashMap<u64, Quadtree>) -> u64 {
         Self::join(1, 1, 1, 1, 0, dict)
     }
-    pub fn dead_cell(dict: &mut AHashMap<u64, Quadtree>) -> Self {
+    pub fn dead_cell(dict: &mut AHashMap<u64, Quadtree>) -> u64 {
         Self::join(0, 0, 0, 0, 0, dict)
     }
 }

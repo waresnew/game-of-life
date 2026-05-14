@@ -10,8 +10,8 @@ impl Quadtree {
         start_pos: Point,
         height: u32,
         dict: &mut AHashMap<u64, Quadtree>,
-        dp: &mut AHashMap<u64, Quadtree>,
-    ) -> Quadtree {
+        dp: &mut AHashMap<u64, u64>,
+    ) -> u64 {
         if height == 0 {
             assert!(alive.len() <= 1, "alive len: {}", alive.len());
             if alive.len() == 1 {
@@ -73,10 +73,7 @@ impl Quadtree {
                 dict,
                 dp,
             );
-            dp.insert(
-                key,
-                Self::join(tl.hash, tr.hash, bl.hash, br.hash, height, dict),
-            );
+            dp.insert(key, Self::join(tl, tr, bl, br, height, dict));
         }
         dp[&key]
     }
@@ -91,7 +88,7 @@ impl Quadtree {
             .collect::<Vec<String>>()
             .join("\n")
     }
-    fn to_array(self, dict: &AHashMap<u64, Quadtree>) -> Vec<Vec<u8>> {
+    fn to_array(&self, dict: &AHashMap<u64, Quadtree>) -> Vec<Vec<u8>> {
         if self.height == 0 {
             return vec![vec![self.tl as u8]];
         }
@@ -107,7 +104,7 @@ impl Quadtree {
         top.chain(bottom).collect()
     }
     pub fn to_alive(
-        self,
+        &self,
         dict: &AHashMap<u64, Quadtree>,
         dp: &mut AHashMap<u64, Vec<Point>>,
     ) -> Vec<Point> {
