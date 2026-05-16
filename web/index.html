@@ -37,6 +37,7 @@
 			aspect-ratio: 1 / 1;
 			min-width: 200px;
 			width: 100%;
+			touch-action: none;
 		}
 		#controls {
 			display: flex;
@@ -86,6 +87,9 @@
 			line-height: 1;
 			white-space: nowrap;
 		}
+		button {
+			touch-action: none;
+		}
 		.runtime {
 			text-wrap: nowrap;
 		}
@@ -93,11 +97,22 @@
 			display: flex;
 			justify-content: space-between;
 			width: 100%;
+			gap: 2rem;
 		}
 		html,
 		body {
 			width: 100%;
 			height: 100%;
+		}
+		@media (pointer: fine) {
+			#instructions-touch {
+				display: none;
+			}
+		}
+		@media (pointer: coarse) {
+			#instructions-mouse {
+				display: none;
+			}
 		}
 		</style>
 	</head>
@@ -125,7 +140,12 @@
 				</div>
 				<canvas id="grid">Game of Life grid</canvas>
 				<div id="footer">
-					<span>Left click to draw, right click to pan, scroll to zoom.</span>
+					<span id="instructions-mouse"
+						>Left click to draw, right click to pan, scroll to zoom.</span
+					>
+					<span id="instructions-touch"
+						>Drag with one finger to draw, two fingers to pan, pinch to zoom.</span
+					>
 					<a href="https://github.com/waresnew/game-of-life" target="_blank"
 						>Source</a
 					>
