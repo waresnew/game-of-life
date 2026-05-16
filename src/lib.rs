@@ -38,6 +38,7 @@ const MIN_POINT: Point = Point {
     y: -1_000_000_000_000_000,
 };
 #[wasm_bindgen]
+#[derive(Default)]
 pub struct Solver {
     pub perf_stats: PerfStats,
     dict: AHashMap<u64, Quadtree>,
@@ -45,16 +46,6 @@ pub struct Solver {
     step_exp: u32,
 }
 
-impl Default for Solver {
-    fn default() -> Self {
-        Self {
-            perf_stats: Default::default(),
-            dict: Default::default(),
-            step_exp: 0,
-            quadtree: Default::default(),
-        }
-    }
-}
 #[wasm_bindgen]
 impl Solver {
     #[wasm_bindgen(constructor)]
@@ -80,7 +71,7 @@ impl Solver {
             .quadtree
             .expect("call init() at least once before solve()");
         cur = next_step(Quadtree::add_border(cur, &mut self.dict), self);
-        let new_alive = (&self.dict[&cur])
+        let new_alive = self.dict[&cur]
             .to_alive(&self.dict, &mut AHashMap::new())
             .into_iter()
             .map(|Point { x, y }| Point::new(x + MIN_POINT.x, y + MIN_POINT.y))

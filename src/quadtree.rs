@@ -61,14 +61,13 @@ impl Quadtree {
         hasher.finish()
     }
     pub fn zeros(height: u32, dict: &mut AHashMap<u64, Quadtree>) -> u64 {
-        let ret = Self::from_alive(
+        Self::from_alive(
             &mut Vec::new(),
             Point::new(0, 0),
             height,
             dict,
             &mut AHashMap::new(),
-        );
-        ret
+        )
     }
     pub fn alive_cell(dict: &mut AHashMap<u64, Quadtree>) -> u64 {
         Self::join(1, 1, 1, 1, 0, dict)

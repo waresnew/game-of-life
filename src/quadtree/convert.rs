@@ -77,7 +77,7 @@ impl Quadtree {
         }
         dp[&key]
     }
-    pub fn to_string(self, dict: &AHashMap<u64, Quadtree>) -> String {
+    pub fn to_string(&self, dict: &AHashMap<u64, Quadtree>) -> String {
         let grid = self.to_array(dict);
         grid.iter()
             .map(|row| {

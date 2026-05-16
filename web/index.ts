@@ -3,6 +3,9 @@ import init, {
 	Point as RustPoint,
 	Solver,
 } from "../pkg/game_of_life.js";
+
+// @ts-expect-error
+// the generated js doesn't use a relative path for wasm so bun ignores it
 import wasmUrl from "../pkg/game_of_life_bg.wasm";
 
 const wasm = await init(wasmUrl);

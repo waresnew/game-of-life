@@ -12,7 +12,7 @@ fn main() {
         (3, -1),
     ]
     .into_iter()
-    .map(|x| Point::from_tuple(x))
+    .map(Point::from_tuple)
     .collect();
     solver.init(alive, 12);
     let mut ans = vec![];
