@@ -7,6 +7,9 @@ profile:
     wasm-pack build --dev --target web
     NO_COLOR=1 bun ./web/index.html
 
+bench:
+    cargo bench
+
 bin:
     RUST_BACKTRACE=1 cargo run --release
     

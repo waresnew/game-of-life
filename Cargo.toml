@@ -12,6 +12,14 @@ getrandom = { version = "0.3", features = ["wasm_js"] }
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.121"
 
+[dev-dependencies]
+criterion = "0.8.2"
+rand = "0.10.2"
+
+[[bench]]
+name = "hashlife_benchmark"
+harness = false
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
