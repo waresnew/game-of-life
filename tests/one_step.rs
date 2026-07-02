@@ -1,3 +1,5 @@
+use game_of_life::{Point, Solver};
+
 mod utils;
 #[test]
 fn one_step_cross() {
@@ -32,4 +34,23 @@ fn one_step_glider() {
 #[test]
 fn one_step_two() {
     test_solve!(vec![(0, 0), (1, 0)], 0, vec![]);
+}
+#[test]
+fn one_step_acorn() {
+    let alive: Vec<Point> = vec![
+        (-2, 1),
+        (-2, -1),
+        (-3, -1),
+        (0, 0),
+        (1, -1),
+        (2, -1),
+        (3, -1),
+    ]
+    .into_iter()
+    .map(Point::from_tuple)
+    .collect();
+    let mut solver = Solver::new(alive, 16);
+    let mut ans = vec![];
+    ans = solver.solve();
+    assert_eq!(ans.len(), 633);
 }
