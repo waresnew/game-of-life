@@ -4,7 +4,7 @@ use ahash::{AHashMap, AHasher};
 
 use crate::{
     Point,
-    quadtree::{QuadtreeKey, QuadtreePool},
+    quadtree::{Quadtree, QuadtreeKey, QuadtreePool},
 };
 
 impl QuadtreePool {
@@ -84,7 +84,7 @@ impl QuadtreePool {
             .join("\n")
     }
     fn to_array(&self, id: usize) -> Vec<Vec<u8>> {
-        let root = &self[id];
+        let root = self[id].as_subtree();
         if root.height == 0 {
             return vec![vec![root.tl as u8]];
         }
@@ -100,38 +100,35 @@ impl QuadtreePool {
         top.chain(bottom).collect()
     }
     pub fn to_alive(&self, id: usize, dp: &mut AHashMap<QuadtreeKey, Vec<Point>>) -> Vec<Point> {
-        let root = &self[id];
-        if root.height == 0 {
-            assert!(
-                root.tl == root.tr
-                    && root.tr == root.bl
-                    && root.bl == root.br
-                    && (root.tl == 1 || root.tl == 0)
-            );
-            if root.tl == 1 {
-                return vec![Point::new(0, 0)];
-            } else {
-                return vec![];
+        match &self[id] {
+            Quadtree::Subtree(root) => {
+                if !dp.contains_key(&root.get_key()) {
+                    let mid = 1 << (root.height - 1);
+                    let tl_ans = self
+                        .to_alive(root.tl, dp)
+                        .into_iter()
+                        .map(|Point { x, y }| Point::new(x, y + mid));
+                    let tr_ans = self
+                        .to_alive(root.tr, dp)
+                        .into_iter()
+                        .map(|Point { x, y }| Point::new(x + mid, y + mid));
+                    let bl_ans = self.to_alive(root.bl, dp);
+                    let br_ans = self
+                        .to_alive(root.br, dp)
+                        .into_iter()
+                        .map(|Point { x, y }| Point::new(x + mid, y));
+                    let ans = tl_ans.chain(tr_ans).chain(bl_ans).chain(br_ans).collect();
+                    dp.insert(root.get_key(), ans);
+                }
+                dp[&root.get_key()].clone()
+            }
+            &Quadtree::Cell(alive) => {
+                if alive {
+                    vec![Point::new(0, 0)]
+                } else {
+                    vec![]
+                }
             }
         }
-        if !dp.contains_key(&root.get_key()) {
-            let mid = 1 << (root.height - 1);
-            let tl_ans = self
-                .to_alive(root.tl, dp)
-                .into_iter()
-                .map(|Point { x, y }| Point::new(x, y + mid));
-            let tr_ans = self
-                .to_alive(root.tr, dp)
-                .into_iter()
-                .map(|Point { x, y }| Point::new(x + mid, y + mid));
-            let bl_ans = self.to_alive(root.bl, dp);
-            let br_ans = self
-                .to_alive(root.br, dp)
-                .into_iter()
-                .map(|Point { x, y }| Point::new(x + mid, y));
-            let ans = tl_ans.chain(tr_ans).chain(bl_ans).chain(br_ans).collect();
-            dp.insert(root.get_key(), ans);
-        }
-        dp[&root.get_key()].clone()
     }
 }

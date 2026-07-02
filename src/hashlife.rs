@@ -1,10 +1,10 @@
 use crate::{
     Solver,
-    quadtree::{Quadtree, QuadtreePool},
+    quadtree::{QuadtreePool, Subtree},
 };
 
 pub fn next_step(cur_id: usize, ctx: &mut Solver) -> usize {
-    let Quadtree {
+    let &Subtree {
         tl,
         tr,
         bl,
@@ -12,7 +12,7 @@ pub fn next_step(cur_id: usize, ctx: &mut Solver) -> usize {
         height: cur_height,
         ans: cur_ans,
         ..
-    } = ctx.pool[cur_id];
+    } = ctx.pool[cur_id].as_subtree();
     if cur_ans.is_none() {
         ctx.perf_stats.cache_misses += 1;
         if cur_height == 2 {
@@ -20,34 +20,34 @@ pub fn next_step(cur_id: usize, ctx: &mut Solver) -> usize {
             ctx.pool.set_ans(cur_id, ans);
             return ans;
         }
-        let Quadtree {
+        let &Subtree {
             tl: tl_tl,
             tr: tl_tr,
             bl: tl_bl,
             br: tl_br,
             ..
-        } = ctx.pool[tl];
-        let Quadtree {
+        } = ctx.pool[tl].as_subtree();
+        let &Subtree {
             tl: tr_tl,
             tr: tr_tr,
             bl: tr_bl,
             br: tr_br,
             ..
-        } = ctx.pool[tr];
-        let Quadtree {
+        } = ctx.pool[tr].as_subtree();
+        let &Subtree {
             tl: bl_tl,
             tr: bl_tr,
             bl: bl_bl,
             br: bl_br,
             ..
-        } = ctx.pool[bl];
-        let Quadtree {
+        } = ctx.pool[bl].as_subtree();
+        let &Subtree {
             tl: br_tl,
             tr: br_tr,
             bl: br_bl,
             br: br_br,
             ..
-        } = ctx.pool[br];
+        } = ctx.pool[br].as_subtree();
         let next_tl = next_step(tl, ctx);
         let next_tm = next_step(
             ctx.pool.join(tl_tr, tr_tl, tl_br, tr_bl, cur_height - 1),
@@ -105,7 +105,7 @@ pub fn next_step(cur_id: usize, ctx: &mut Solver) -> usize {
     } else {
         ctx.perf_stats.cache_hits += 1;
     }
-    ctx.pool[cur_id].ans.unwrap()
+    ctx.pool[cur_id].as_subtree().ans.unwrap()
 }
 fn solve_4x4(cur_id: usize, ctx: &mut Solver) -> usize {
     fn apply_gol(i: usize, j: usize, grid: &[[usize; 4]; 4], pool: &mut QuadtreePool) -> usize {
@@ -134,11 +134,11 @@ fn solve_4x4(cur_id: usize, ctx: &mut Solver) -> usize {
             dead
         }
     }
-    let cur = &ctx.pool[cur_id];
-    let tl = &ctx.pool[cur.tl];
-    let tr = &ctx.pool[cur.tr];
-    let bl = &ctx.pool[cur.bl];
-    let br = &ctx.pool[cur.br];
+    let cur = ctx.pool[cur_id].as_subtree();
+    let tl = ctx.pool[cur.tl].as_subtree();
+    let tr = ctx.pool[cur.tr].as_subtree();
+    let bl = ctx.pool[cur.bl].as_subtree();
+    let br = ctx.pool[cur.br].as_subtree();
     let grid: [[usize; 4]; 4] = [
         [tl.tl, tl.tr, tr.tl, tr.tr],
         [tl.bl, tl.br, tr.bl, tr.br],
