@@ -51,6 +51,6 @@ fn one_step_acorn() {
     .collect();
     let mut solver = Solver::new(alive, 16);
     let mut ans = vec![];
-    ans = solver.solve();
+    ans = solver.next_step();
     assert_eq!(ans.len(), 633);
 }

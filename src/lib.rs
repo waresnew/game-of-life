@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{hashlife::next_step, quadtree::QuadtreePool};
+use crate::{hashlife::evolve, quadtree::QuadtreePool};
 use ahash::AHashMap;
 use wasm_bindgen::prelude::*;
 
@@ -58,10 +58,10 @@ impl Solver {
             step_exp,
         }
     }
-    pub fn solve(&mut self) -> Vec<Point> {
+    pub fn next_step(&mut self) -> Vec<Point> {
         self.perf_stats.cache_hits = 0;
         self.perf_stats.cache_misses = 0;
-        self.quadtree = next_step(self.pool.add_border(self.quadtree), self);
+        self.quadtree = evolve(self.pool.add_border(self.quadtree), self);
         let new_alive = self
             .pool
             .to_alive(self.quadtree, &mut AHashMap::new())

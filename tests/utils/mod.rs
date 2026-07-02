@@ -10,7 +10,7 @@ macro_rules! test_solve {
         let mut output = $crate::utils::convert_coords($output);
         let alive = $crate::utils::convert_coords($input);
         let mut solver = game_of_life::Solver::new(alive, $k);
-        let mut res = solver.solve();
+        let mut res = solver.next_step();
         res.sort();
         output.sort();
         assert_eq!(res, output);

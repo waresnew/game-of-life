@@ -16,7 +16,7 @@ fn main() {
     let mut solver = Solver::new(alive, 12);
     let mut ans = vec![];
     for i in 0..100 {
-        ans = solver.solve();
+        ans = solver.next_step();
     } //633 alive
     dbg!(ans.len(), solver.perf_stats);
 }

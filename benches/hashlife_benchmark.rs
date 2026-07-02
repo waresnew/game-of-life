@@ -18,7 +18,7 @@ fn random_rect(c: &mut Criterion) {
     c.bench_function("random 64x64", |b| {
         b.iter(|| {
             let mut solver = Solver::new(input.clone(), 12);
-            solver.solve();
+            solver.next_step();
         })
     });
 }

@@ -3,7 +3,7 @@ use crate::{
     quadtree::{QuadtreePool, Subtree},
 };
 
-pub fn next_step(cur_id: usize, ctx: &mut Solver) -> usize {
+pub fn evolve(cur_id: usize, ctx: &mut Solver) -> usize {
     let &Subtree {
         tl,
         tr,
@@ -48,30 +48,30 @@ pub fn next_step(cur_id: usize, ctx: &mut Solver) -> usize {
             br: br_br,
             ..
         } = ctx.pool[br].as_subtree();
-        let next_tl = next_step(tl, ctx);
-        let next_tm = next_step(
+        let next_tl = evolve(tl, ctx);
+        let next_tm = evolve(
             ctx.pool.join(tl_tr, tr_tl, tl_br, tr_bl, cur_height - 1),
             ctx,
         );
-        let next_tr = next_step(tr, ctx);
-        let next_ml = next_step(
+        let next_tr = evolve(tr, ctx);
+        let next_ml = evolve(
             ctx.pool.join(tl_bl, tl_br, bl_tl, bl_tr, cur_height - 1),
             ctx,
         );
-        let next_mm = next_step(
+        let next_mm = evolve(
             ctx.pool.join(tl_br, tr_bl, bl_tr, br_tl, cur_height - 1),
             ctx,
         );
-        let next_mr = next_step(
+        let next_mr = evolve(
             ctx.pool.join(tr_bl, tr_br, br_tl, br_tr, cur_height - 1),
             ctx,
         );
-        let next_bl = next_step(bl, ctx);
-        let next_bm = next_step(
+        let next_bl = evolve(bl, ctx);
+        let next_bm = evolve(
             ctx.pool.join(bl_tr, br_tl, bl_br, br_bl, cur_height - 1),
             ctx,
         );
-        let next_br = next_step(br, ctx);
+        let next_br = evolve(br, ctx);
 
         let intermediate_tl = ctx
             .pool
@@ -94,10 +94,10 @@ pub fn next_step(cur_id: usize, ctx: &mut Solver) -> usize {
             ctx.pool
                 .join(new_tl, new_tr, new_bl, new_br, cur_height - 1)
         } else {
-            let new_tl = next_step(intermediate_tl, ctx);
-            let new_tr = next_step(intermediate_tr, ctx);
-            let new_bl = next_step(intermediate_bl, ctx);
-            let new_br = next_step(intermediate_br, ctx);
+            let new_tl = evolve(intermediate_tl, ctx);
+            let new_tr = evolve(intermediate_tr, ctx);
+            let new_bl = evolve(intermediate_bl, ctx);
+            let new_br = evolve(intermediate_br, ctx);
             ctx.pool
                 .join(new_tl, new_tr, new_bl, new_br, cur_height - 1)
         };
