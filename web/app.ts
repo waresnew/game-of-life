@@ -34,7 +34,7 @@ class World {
 }
 
 export const world = new World();
-const solver = new Solver();
+let solver: Solver | null = null;
 export const canvas = document.getElementById("grid") as HTMLCanvasElement;
 resizeCanvas();
 requestAnimationFrame(repaint);
@@ -48,10 +48,15 @@ function updateStats() {
 	document.getElementById("stats-fps")!.textContent = `FPS: ${world.fps}`;
 	document.getElementById("stats-alive")!.textContent =
 		`Alive: ${world.alive.size}`;
-	const totalCache =
-		solver.perf_stats.cache_hits + solver.perf_stats.cache_misses;
-	document.getElementById("debug-cache_hitrate")!.textContent =
-		`Cache hit rate: ${totalCache > 0 ? (solver.perf_stats.cache_hits * 100n) / totalCache : "0"}%`;
+	if (solver) {
+		const totalCache =
+			solver.perf_stats.cache_hits + solver.perf_stats.cache_misses;
+		document.getElementById("debug-cache_hitrate")!.textContent =
+			`Cache hit rate: ${totalCache > 0 ? (solver.perf_stats.cache_hits * 100n) / totalCache : "0"}%`;
+	} else {
+		document.getElementById("debug-cache_hitrate")!.textContent =
+			"Cache hit rate: 0%";
+	}
 	document.getElementById("debug-memory")!.textContent =
 		`Wasm memory: ${Math.round(wasm.memory.buffer.byteLength / 1e6)} MB`;
 	document.getElementById("stats-generation")!.textContent =
@@ -150,13 +155,13 @@ export function inverseTransform(p: Point): Point {
 	];
 }
 export function next_step() {
-	if (world.dirty) {
+	if (solver == null || world.dirty) {
 		world.dirty = false;
 		const formatted = Array.from(world.alive).map((s) => {
 			const [x, y] = s.split(" ") as [string, string];
 			return new RustPoint(BigInt(parseInt(x)), BigInt(parseInt(y)));
 		});
-		solver.init(formatted, world.stepExp);
+		solver = new Solver(formatted, world.stepExp);
 	}
 
 	const res = solver.solve();

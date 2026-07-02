@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{hashlife::next_step, quadtree::Quadtree};
+use crate::{hashlife::next_step, quadtree::QuadtreePool};
 use ahash::AHashMap;
 use wasm_bindgen::prelude::*;
 
@@ -38,79 +38,38 @@ const MIN_POINT: Point = Point {
     y: -1_000_000_000_000_000,
 };
 #[wasm_bindgen]
-#[derive(Default)]
 pub struct Solver {
     pub perf_stats: PerfStats,
-    dict: AHashMap<u64, Quadtree>,
-    quadtree: Option<u64>,
+    pool: QuadtreePool,
+    quadtree: usize,
     step_exp: u32,
 }
 
 #[wasm_bindgen]
 impl Solver {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
-        Self::default()
-    }
-    pub fn init(&mut self, mut alive: Vec<Point>, step_exp: u32) {
-        self.perf_stats = PerfStats::default();
-        self.dict = AHashMap::new();
-        self.quadtree = Some(Quadtree::from_alive(
-            &mut alive,
-            MIN_POINT,
-            MAX_HEIGHT,
-            &mut self.dict,
-            &mut AHashMap::new(),
-        ));
-        self.step_exp = step_exp;
+    pub fn new(mut alive: Vec<Point>, step_exp: u32) -> Self {
+        let mut pool = QuadtreePool::new();
+        let quadtree = pool.load_alives(&mut alive, MIN_POINT, MAX_HEIGHT, &mut AHashMap::new());
+        Self {
+            perf_stats: PerfStats::default(),
+            pool,
+            quadtree,
+            step_exp,
+        }
     }
     pub fn solve(&mut self) -> Vec<Point> {
         self.perf_stats.cache_hits = 0;
         self.perf_stats.cache_misses = 0;
-        let mut cur = self
-            .quadtree
-            .expect("call init() at least once before solve()");
-        cur = next_step(Quadtree::add_border(cur, &mut self.dict), self);
-        let new_alive = self.dict[&cur]
-            .to_alive(&self.dict, &mut AHashMap::new())
+        self.quadtree = next_step(self.pool.add_border(self.quadtree), self);
+        let new_alive = self
+            .pool
+            .to_alive(self.quadtree, &mut AHashMap::new())
             .into_iter()
             .map(|Point { x, y }| Point::new(x + MIN_POINT.x, y + MIN_POINT.y))
             .collect();
-        self.quadtree = Some(cur);
-        self.gc_dict();
+        (self.pool, self.quadtree) = self.pool.gc_pool(self.quadtree);
         new_alive
-    }
-    fn gc_dict(&mut self) {
-        fn mark_gc(cur: u64, dict: &mut AHashMap<u64, Quadtree>) {
-            let &Quadtree {
-                tl,
-                tr,
-                bl,
-                br,
-                height,
-                ans,
-                ..
-            } = &dict[&cur];
-            if height == 0 {
-                return;
-            }
-            for maybe_next in [Some(tl), Some(tr), Some(bl), Some(br), ans] {
-                let Some(next) = maybe_next else {
-                    continue;
-                };
-                let tree = dict.get_mut(&next).unwrap();
-                if !tree.keep {
-                    tree.keep = true;
-                    mark_gc(next, dict);
-                }
-            }
-        }
-        self.dict.get_mut(&self.quadtree.unwrap()).unwrap().keep = true;
-        mark_gc(self.quadtree.unwrap(), &mut self.dict);
-        self.dict.retain(|_, v| v.keep);
-        for (_, v) in &mut self.dict {
-            v.keep = false;
-        }
     }
 }
 

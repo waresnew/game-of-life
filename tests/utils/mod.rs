@@ -9,8 +9,7 @@ macro_rules! test_solve {
     ($input:expr, $k:expr, $output:expr) => {
         let mut output = $crate::utils::convert_coords($output);
         let alive = $crate::utils::convert_coords($input);
-        let mut solver = game_of_life::Solver::default();
-        solver.init(alive, $k);
+        let mut solver = game_of_life::Solver::new(alive, $k);
         let mut res = solver.solve();
         res.sort();
         output.sort();

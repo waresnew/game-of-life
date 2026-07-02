@@ -2,22 +2,25 @@ use std::hash::{Hash, Hasher};
 
 use ahash::{AHashMap, AHasher};
 
-use crate::{Point, quadtree::Quadtree};
+use crate::{
+    Point,
+    quadtree::{QuadtreeKey, QuadtreePool},
+};
 
-impl Quadtree {
-    pub fn from_alive(
+impl QuadtreePool {
+    pub fn load_alives(
+        &mut self,
         alive: &mut Vec<Point>,
         start_pos: Point,
         height: u32,
-        dict: &mut AHashMap<u64, Quadtree>,
-        dp: &mut AHashMap<u64, u64>,
-    ) -> u64 {
+        dp: &mut AHashMap<u64, usize>,
+    ) -> usize {
         if height == 0 {
             assert!(alive.len() <= 1, "alive len: {}", alive.len());
             if alive.len() == 1 {
-                return Self::alive_cell(dict);
+                return self.alive_cell();
             } else {
-                return Self::dead_cell(dict);
+                return self.dead_cell();
             }
         }
         /// will mutate the arg to avoid a clone
@@ -51,34 +54,26 @@ impl Quadtree {
                     unreachable!("cell not placed in quadrant");
                 }
             }
-            let tl = Self::from_alive(
+            let tl = self.load_alives(
                 &mut tl_alive,
                 Point::new(start_pos.x, mid_y),
                 height - 1,
-                dict,
                 dp,
             );
-            let tr = Self::from_alive(
-                &mut tr_alive,
-                Point::new(mid_x, mid_y),
-                height - 1,
-                dict,
-                dp,
-            );
-            let bl = Self::from_alive(&mut bl_alive, start_pos, height - 1, dict, dp);
-            let br = Self::from_alive(
+            let tr = self.load_alives(&mut tr_alive, Point::new(mid_x, mid_y), height - 1, dp);
+            let bl = self.load_alives(&mut bl_alive, start_pos, height - 1, dp);
+            let br = self.load_alives(
                 &mut br_alive,
                 Point::new(mid_x, start_pos.y),
                 height - 1,
-                dict,
                 dp,
             );
-            dp.insert(key, Self::join(tl, tr, bl, br, height, dict));
+            dp.insert(key, self.join(tl, tr, bl, br, height));
         }
         dp[&key]
     }
-    pub fn to_string(&self, dict: &AHashMap<u64, Quadtree>) -> String {
-        let grid = self.to_array(dict);
+    pub fn to_string(&self, id: usize) -> String {
+        let grid = self.to_array(id);
         grid.iter()
             .map(|row| {
                 row.iter()
@@ -88,14 +83,15 @@ impl Quadtree {
             .collect::<Vec<String>>()
             .join("\n")
     }
-    fn to_array(&self, dict: &AHashMap<u64, Quadtree>) -> Vec<Vec<u8>> {
-        if self.height == 0 {
-            return vec![vec![self.tl as u8]];
+    fn to_array(&self, id: usize) -> Vec<Vec<u8>> {
+        let root = &self[id];
+        if root.height == 0 {
+            return vec![vec![root.tl as u8]];
         }
-        let tl = dict[&self.tl].to_array(dict);
-        let tr = dict[&self.tr].to_array(dict);
-        let bl = dict[&self.bl].to_array(dict);
-        let br = dict[&self.br].to_array(dict);
+        let tl = self.to_array(root.tl);
+        let tr = self.to_array(root.tr);
+        let bl = self.to_array(root.bl);
+        let br = self.to_array(root.br);
         fn block_concat(left: Vec<Vec<u8>>, right: Vec<Vec<u8>>) -> impl Iterator<Item = Vec<u8>> {
             left.into_iter().zip(right).map(|(x, y)| [x, y].concat())
         }
@@ -103,42 +99,39 @@ impl Quadtree {
         let bottom = block_concat(bl, br);
         top.chain(bottom).collect()
     }
-    pub fn to_alive(
-        &self,
-        dict: &AHashMap<u64, Quadtree>,
-        dp: &mut AHashMap<u64, Vec<Point>>,
-    ) -> Vec<Point> {
-        if self.height == 0 {
+    pub fn to_alive(&self, id: usize, dp: &mut AHashMap<QuadtreeKey, Vec<Point>>) -> Vec<Point> {
+        let root = &self[id];
+        if root.height == 0 {
             assert!(
-                self.tl == self.tr
-                    && self.tr == self.bl
-                    && self.bl == self.br
-                    && (self.tl == 1 || self.tl == 0)
+                root.tl == root.tr
+                    && root.tr == root.bl
+                    && root.bl == root.br
+                    && (root.tl == 1 || root.tl == 0)
             );
-            if self.tl == 1 {
+            if root.tl == 1 {
                 return vec![Point::new(0, 0)];
             } else {
                 return vec![];
             }
         }
-        if !dp.contains_key(&self.hash) {
-            let mid = 1 << (self.height - 1);
-            let tl_ans = dict[&self.tl]
-                .to_alive(dict, dp)
+        if !dp.contains_key(&root.get_key()) {
+            let mid = 1 << (root.height - 1);
+            let tl_ans = self
+                .to_alive(root.tl, dp)
                 .into_iter()
                 .map(|Point { x, y }| Point::new(x, y + mid));
-            let tr_ans = dict[&self.tr]
-                .to_alive(dict, dp)
+            let tr_ans = self
+                .to_alive(root.tr, dp)
                 .into_iter()
                 .map(|Point { x, y }| Point::new(x + mid, y + mid));
-            let bl_ans = dict[&self.bl].to_alive(dict, dp);
-            let br_ans = dict[&self.br]
-                .to_alive(dict, dp)
+            let bl_ans = self.to_alive(root.bl, dp);
+            let br_ans = self
+                .to_alive(root.br, dp)
                 .into_iter()
                 .map(|Point { x, y }| Point::new(x + mid, y));
             let ans = tl_ans.chain(tr_ans).chain(bl_ans).chain(br_ans).collect();
-            dp.insert(self.hash, ans);
+            dp.insert(root.get_key(), ans);
         }
-        dp[&self.hash].clone()
+        dp[&root.get_key()].clone()
     }
 }
