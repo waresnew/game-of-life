@@ -1,7 +1,7 @@
 use std::ops::Index;
 
 use ahash::AHashMap;
-use num_bigint::{BigInt, BigUint};
+use num_bigint::BigUint;
 
 use crate::WorldPoint;
 
@@ -24,6 +24,9 @@ impl QuadtreePool {
         ret.pool.push(Quadtree::Cell(false));
         ret.pool.push(Quadtree::Cell(true));
         ret
+    }
+    pub fn size(&self) -> usize {
+        self.pool.len()
     }
     pub fn insert_if_new(&mut self, t: Quadtree) -> usize {
         let key = t.as_subtree().get_key();

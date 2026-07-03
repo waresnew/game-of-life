@@ -1,11 +1,11 @@
 [default]
 dev:
-    wasm-pack build --release --target web
-    NO_COLOR=1 bun ./web/index.html
+    wasm-pack build --release --target bundler
+    cd web && bunx vite
 
 profile:
-    wasm-pack build --dev --target web
-    NO_COLOR=1 bun ./web/index.html
+    wasm-pack build --dev --target bundler
+    cd web && bunx vite
 
 bench:
     cargo bench
@@ -14,5 +14,5 @@ bin:
     RUST_BACKTRACE=1 cargo run --release
     
 build:
-    wasm-pack build --release --target web
-    bun build --compile --target=browser --minify ./web/index.html --outdir=dist
+    wasm-pack build --release --target bundler
+    cd web && bunx vite build --minify

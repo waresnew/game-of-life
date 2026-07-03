@@ -1,7 +1,6 @@
 use std::fmt;
 
 use crate::{hashlife::evolve, quadtree::QuadtreePool};
-use ahash::AHashMap;
 use num_bigint::BigUint;
 use wasm_bindgen::prelude::*;
 
@@ -127,6 +126,7 @@ impl Solver {
         self.quadtree = evolve(self.pool.add_border(self.quadtree), self);
         (self.pool, self.quadtree) = self.pool.gc_pool(self.quadtree);
         self.perf_stats.alives = self.pool[self.quadtree].as_subtree().count.to_str_radix(10);
+        self.perf_stats.pool_size = self.pool.size();
     }
 }
 
@@ -138,6 +138,7 @@ pub fn init_panic_hook() {
 #[derive(Clone, Debug)]
 pub struct PerfStats {
     pub alives: String,
+    pub pool_size: usize,
     pub cache_hits: u64,
     pub cache_misses: u64,
 }
@@ -145,8 +146,9 @@ impl Default for PerfStats {
     fn default() -> Self {
         Self {
             alives: String::from("0"),
-            cache_hits: Default::default(),
-            cache_misses: Default::default(),
+            pool_size: 0,
+            cache_hits: 0,
+            cache_misses: 0,
         }
     }
 }

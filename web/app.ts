@@ -1,15 +1,10 @@
-import init, {
+import {
 	type PerfStats,
 	Renderer,
 	WorldPoint as RustPoint,
 	WorldPoint,
 } from "../pkg/game_of_life.js";
 
-// @ts-expect-error
-// the generated js doesn't use a relative path for wasm so bun ignores it
-import wasmUrl from "../pkg/game_of_life_bg.wasm";
-
-const wasm = await init(wasmUrl);
 export type Point = [number, number];
 
 export const CELL_SIZE = 50;
@@ -56,8 +51,8 @@ function updateStats() {
 		document.getElementById("debug-cache_hitrate")!.textContent =
 			"Cache hit rate: 0%";
 	}
-	document.getElementById("debug-memory")!.textContent =
-		`Wasm memory: ${Math.round(wasm.memory.buffer.byteLength / 1e6)} MB`;
+	document.getElementById("debug-pool_size")!.textContent =
+		`Pool size: ${renderer.perf_stats.pool_size}`;
 	document.getElementById("stats-generation")!.textContent =
 		`Generation: ${world.generation}`;
 	document.getElementById("stepsize-display")!.textContent =

@@ -123,7 +123,7 @@
 				<div id="debug-content" style="visibility: hidden;">
 					<span id="debug-rendered"></span>
 					<span id="debug-cache_hitrate"></span>
-					<span id="debug-memory"></span>
+					<span id="debug-pool_size"></span>
 				</div>
 			</div>
 			<div id="display">
@@ -169,9 +169,8 @@
 					<label for="pattern-presets">Patterns:</label>
 					<select name="pattern-presets" id="pattern-dropdown">
 						<option selected value="blank">Blank</option>
-						<option value="glider.rle">glider.rle</option>
-						<option value="from-file">From file...</option>
 					</select>
+					<input type="file" id="pattern-from-file" accept=".rle">
 				</div>
 			</div>
 		</div>

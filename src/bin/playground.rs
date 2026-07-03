@@ -1,4 +1,4 @@
-use game_of_life::{Renderer, Solver, WorldPoint};
+use game_of_life::{Renderer, WorldPoint};
 
 fn main() {
     let alive: Vec<WorldPoint> = vec![

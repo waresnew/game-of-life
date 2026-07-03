@@ -1,6 +1,12 @@
 import { WorldPoint } from "../pkg/game_of_life";
 import { CELL_SIZE, canvas, next_step, renderer, world } from "./app";
 
+const patterns: Record<string, string> = import.meta.glob("./patterns/*.rle", {
+	query: "?raw",
+	import: "default",
+	eager: true,
+});
+
 document.getElementById("stepsize-less")!.addEventListener("click", (event) => {
 	world.stepExp = Math.max(0, world.stepExp - 1);
 	renderer.change_step_exp(world.stepExp);
@@ -38,14 +44,22 @@ debugButton.addEventListener("click", (event) => {
 		debugButton.textContent = "Show debug info";
 	}
 });
-const patternPresets = document.getElementById("pattern-dropdown")!;
+const patternPresets = document.getElementById(
+	"pattern-dropdown",
+) as HTMLSelectElement;
+for (const key of Object.keys(patterns)) {
+	const filename = key.slice(key.lastIndexOf("/") + 1);
+	patternPresets.add(new Option(filename, key));
+}
 patternPresets.addEventListener("change", async (event) => {
 	const option = (event.target as HTMLSelectElement).value;
-	if (option == "from-file") {
-		//TODO:
-	} else {
-		applyRlePattern(gliderText);
-	}
+	applyRlePattern(patterns[option]!);
+});
+const patternFilePicker = document.getElementById("pattern-from-file")!;
+patternFilePicker.addEventListener("change", async (event) => {
+	const file = (event.target as HTMLInputElement).files![0];
+	if (!file) return;
+	applyRlePattern(await file.text());
 });
 
 //spec: https://conwaylife.com/wiki/Run_Length_Encoded
@@ -64,8 +78,11 @@ function applyRlePattern(pattern: string) {
 	let y = Math.floor(height / 2);
 	world.centre = [0, 0];
 	world.zoom = Math.min(
-		canvas.width / (width * CELL_SIZE),
-		canvas.height / (height * CELL_SIZE),
+		1,
+		Math.min(
+			canvas.width / (width * CELL_SIZE),
+			canvas.height / (height * CELL_SIZE),
+		),
 	);
 	const lines = content.join("").split("$");
 	for (const line of lines) {
