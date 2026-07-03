@@ -1,12 +1,12 @@
-import { next_step, world } from "./app";
+import { next_step, renderer, world } from "./app";
 
 document.getElementById("stepsize-less")!.addEventListener("click", (event) => {
 	world.stepExp = Math.max(0, world.stepExp - 1);
-	world.dirty = true;
+	renderer.change_step_exp(world.stepExp);
 });
 document.getElementById("stepsize-more")!.addEventListener("click", (event) => {
 	world.stepExp = Math.min(49, world.stepExp + 1); //(MAX_HEIGHT+1)-2=49
-	world.dirty = true;
+	renderer.change_step_exp(world.stepExp);
 });
 document.getElementById("once-button")!.addEventListener("click", (event) => {
 	world.ticking = false;

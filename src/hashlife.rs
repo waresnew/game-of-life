@@ -1,6 +1,6 @@
 use crate::{
     Solver,
-    quadtree::{QuadtreePool, Subtree},
+    quadtree::{ALIVE_CELL_ID, DEAD_CELL_ID, QuadtreePool, Subtree},
 };
 
 pub fn evolve(cur_id: usize, ctx: &mut Solver) -> usize {
@@ -109,29 +109,27 @@ pub fn evolve(cur_id: usize, ctx: &mut Solver) -> usize {
 }
 fn solve_4x4(cur_id: usize, ctx: &mut Solver) -> usize {
     fn apply_gol(i: usize, j: usize, grid: &[[usize; 4]; 4], pool: &mut QuadtreePool) -> usize {
-        let alive = pool.alive_cell();
-        let dead = pool.dead_cell();
         let mut alive_neighbours = 0;
         for di in -1..=1 {
             for dj in -1..=1 {
                 if di == 0 && dj == 0 {
                     continue;
                 }
-                if grid[(i as isize + di) as usize][(j as isize + dj) as usize] == alive {
+                if grid[(i as isize + di) as usize][(j as isize + dj) as usize] == ALIVE_CELL_ID {
                     alive_neighbours += 1;
                 }
             }
         }
-        if grid[i][j] == alive {
+        if grid[i][j] == ALIVE_CELL_ID {
             if !(2..=3).contains(&alive_neighbours) {
-                dead
+                DEAD_CELL_ID
             } else {
-                alive
+                ALIVE_CELL_ID
             }
         } else if alive_neighbours == 3 {
-            alive
+            ALIVE_CELL_ID
         } else {
-            dead
+            DEAD_CELL_ID
         }
     }
     let cur = ctx.pool[cur_id].as_subtree();

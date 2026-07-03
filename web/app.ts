@@ -1,7 +1,8 @@
 import init, {
 	type PerfStats,
-	Point as RustPoint,
-	Solver,
+	Renderer,
+	WorldPoint as RustPoint,
+	WorldPoint,
 } from "../pkg/game_of_life.js";
 
 // @ts-expect-error
@@ -20,7 +21,6 @@ if (WORLD_BORDER * CELL_SIZE > Number.MAX_SAFE_INTEGER) {
 
 class World {
 	centre: Point = [0, 0];
-	alive: Set<string> = new Set();
 	renderedCnt = 0;
 	zoom = 1;
 	ticking = false;
@@ -29,12 +29,11 @@ class World {
 	fps = 0;
 	stepExp = 0;
 	generation = 0n;
-	dirty = true;
 	worldCursor: Point = [-1, -1];
 }
 
 export const world = new World();
-let solver: Solver | null = null;
+export const renderer = new Renderer(world.stepExp, CELL_SIZE);
 export const canvas = document.getElementById("grid") as HTMLCanvasElement;
 resizeCanvas();
 requestAnimationFrame(repaint);
@@ -47,12 +46,12 @@ function updateStats() {
 		`Rendered: ${world.renderedCnt}`;
 	document.getElementById("stats-fps")!.textContent = `FPS: ${world.fps}`;
 	document.getElementById("stats-alive")!.textContent =
-		`Alive: ${world.alive.size}`;
-	if (solver) {
+		`Alive: ${renderer.perf_stats.alives}`;
+	if (renderer) {
 		const totalCache =
-			solver.perf_stats.cache_hits + solver.perf_stats.cache_misses;
+			renderer.perf_stats.cache_hits + renderer.perf_stats.cache_misses;
 		document.getElementById("debug-cache_hitrate")!.textContent =
-			`Cache hit rate: ${totalCache > 0 ? (solver.perf_stats.cache_hits * 100n) / totalCache : "0"}%`;
+			`Cache hit rate: ${totalCache > 0 ? (renderer.perf_stats.cache_hits * 100n) / totalCache : "0"}%`;
 	} else {
 		document.getElementById("debug-cache_hitrate")!.textContent =
 			"Cache hit rate: 0%";
@@ -85,7 +84,6 @@ function repaint(time: DOMHighResTimeStamp) {
 		document.getElementById("play-runtime")!.textContent = `Took ${elapsed}s`;
 	}
 
-	updateStats();
 	const ctx = canvas.getContext("2d")!;
 	ctx.resetTransform();
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -109,18 +107,18 @@ function repaint(time: DOMHighResTimeStamp) {
 	const br = inverseTransform([canvas.width, canvas.height]).map((x) =>
 		Math.floor(x / CELL_SIZE),
 	) as Point;
-	let renderedCnt = 0;
-	for (const s of world.alive) {
-		const [x, y] = s.split(" ").map((x) => parseInt(x)) as Point;
-		const tl_inside = tl[0] <= x && x <= tr[0] && bl[1] <= y && y <= tl[1];
-		const br_inside =
-			tl[0] <= x + 1 && x + 1 <= tr[0] && bl[1] <= y - 1 && y - 1 <= tl[1];
-		if (tl_inside || br_inside) {
-			ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-			++renderedCnt;
-		}
+	const alives = renderer.render(
+		world.zoom,
+		new WorldPoint(BigInt(bl[0]), BigInt(bl[1])),
+		new WorldPoint(BigInt(tr[0]), BigInt(tr[1])),
+	);
+	world.renderedCnt = alives.length;
+	updateStats();
+	for (const point of alives) {
+		const x = Number(point.x);
+		const y = Number(point.y);
+		ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 	}
-	world.renderedCnt = renderedCnt;
 	if (CELL_SIZE * world.zoom >= 1) {
 		for (let i = tl[0]; i <= tr[0]; ++i) {
 			ctx.beginPath();
@@ -155,19 +153,6 @@ export function inverseTransform(p: Point): Point {
 	];
 }
 export function next_step() {
-	if (solver == null || world.dirty) {
-		world.dirty = false;
-		const formatted = Array.from(world.alive).map((s) => {
-			const [x, y] = s.split(" ") as [string, string];
-			return new RustPoint(BigInt(parseInt(x)), BigInt(parseInt(y)));
-		});
-		solver = new Solver(formatted, world.stepExp);
-	}
-
-	const res = solver.solve();
-	world.alive.clear();
-	for (const coord of res) {
-		world.alive.add([coord.x, coord.y].join(" "));
-	}
+	renderer.next_step();
 	world.generation += 2n ** BigInt(world.stepExp);
 }

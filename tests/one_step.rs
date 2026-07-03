@@ -1,4 +1,4 @@
-use game_of_life::{Point, Solver};
+use game_of_life::{Renderer, WorldPoint};
 
 mod utils;
 #[test]
@@ -15,12 +15,13 @@ fn one_step_cross() {
             (1, -1),
             (1, 0),
             (1, 1)
-        ]
+        ],
+        (-20, -20)
     );
 }
 #[test]
 fn one_step_empty() {
-    test_solve!(vec![], 0, vec![]);
+    test_solve!(vec![], 0, vec![], (-20, -20));
 }
 
 #[test]
@@ -28,16 +29,17 @@ fn one_step_glider() {
     test_solve!(
         vec![(-1, -1), (0, -1), (0, 1), (1, 0), (1, -1)],
         0,
-        vec![(-1, 0), (0, -2), (0, -1), (1, -1), (1, 0)]
+        vec![(-1, 0), (0, -2), (0, -1), (1, -1), (1, 0)],
+        (-20, -20)
     );
 }
 #[test]
 fn one_step_two() {
-    test_solve!(vec![(0, 0), (1, 0)], 0, vec![]);
+    test_solve!(vec![(0, 0), (1, 0)], 0, vec![], (-20, -20));
 }
 #[test]
 fn one_step_acorn() {
-    let alive: Vec<Point> = vec![
+    let alive: Vec<WorldPoint> = vec![
         (-2, 1),
         (-2, -1),
         (-3, -1),
@@ -47,10 +49,12 @@ fn one_step_acorn() {
         (3, -1),
     ]
     .into_iter()
-    .map(Point::from_tuple)
+    .map(WorldPoint::from_tuple)
     .collect();
-    let mut solver = Solver::new(alive, 16);
-    let mut ans = vec![];
-    ans = solver.next_step();
-    assert_eq!(ans.len(), 633);
+    let mut renderer = Renderer::new(13, 50);
+    for x in alive {
+        renderer.toggle_cell(x);
+    }
+    renderer.next_step();
+    assert_eq!(renderer.perf_stats().alives, "633");
 }

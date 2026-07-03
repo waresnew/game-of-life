@@ -1,12 +1,15 @@
 use std::ops::Index;
 
 use ahash::AHashMap;
+use num_bigint::{BigInt, BigUint};
 
-use crate::Point;
+use crate::WorldPoint;
 
 mod convert;
 
 type QuadtreeKey = (usize, usize, usize, usize);
+pub const DEAD_CELL_ID: usize = 0;
+pub const ALIVE_CELL_ID: usize = 1;
 #[derive(Debug)]
 pub struct QuadtreePool {
     dict: AHashMap<QuadtreeKey, usize>,
@@ -33,19 +36,34 @@ impl QuadtreePool {
     pub fn set_ans(&mut self, id: usize, ans: usize) {
         self.pool[id].as_subtree_mut().ans = Some(ans);
     }
-    pub fn alive_cell(&mut self) -> usize {
-        1
-    }
-    pub fn dead_cell(&mut self) -> usize {
-        0
+    pub fn reset_ans(&mut self) {
+        for t in &mut self.pool {
+            if let Quadtree::Subtree(subtree) = t {
+                subtree.ans = None;
+            }
+        }
     }
     pub fn join(&mut self, tl: usize, tr: usize, bl: usize, br: usize, height: u32) -> usize {
+        let count = [tl, tr, bl, br]
+            .iter()
+            .map(|&id| match &self.pool[id] {
+                Quadtree::Subtree(subtree) => &subtree.count,
+                &Quadtree::Cell(alive) => {
+                    if alive {
+                        &BigUint::ONE
+                    } else {
+                        &BigUint::ZERO
+                    }
+                }
+            })
+            .sum();
         self.insert_if_new(Quadtree::Subtree(Subtree {
             tl,
             tr,
             bl,
             br,
             height,
+            count,
             ans: None,
             _private: (),
         }))
@@ -54,10 +72,68 @@ impl QuadtreePool {
     pub fn zeros(&mut self, height: u32) -> usize {
         self.load_alives(
             &mut Vec::new(),
-            Point::new(0, 0),
+            WorldPoint::new(0, 0),
             height,
             &mut AHashMap::new(),
         )
+    }
+    fn point_in_box(point: WorldPoint, (bounds1, bounds2): (WorldPoint, WorldPoint)) -> bool {
+        let (min_x, max_x) = (bounds1.x.min(bounds2.x), bounds1.x.max(bounds2.x));
+        let (min_y, max_y) = (bounds1.y.min(bounds2.y), bounds1.y.max(bounds2.y));
+        !(point.x > max_x || point.x < min_x || point.y > max_y || point.y < min_y)
+    }
+    #[must_use]
+    pub fn toggle_cell_and_return_root(
+        &mut self,
+        point: WorldPoint,
+        root: usize,
+        min: WorldPoint,
+    ) -> usize {
+        match self.pool[root] {
+            Quadtree::Subtree(Subtree {
+                tl,
+                tr,
+                bl,
+                br,
+                height,
+                ..
+            }) => {
+                if !Self::point_in_box(
+                    point,
+                    (
+                        min,
+                        WorldPoint::new(min.x + (1_i64 << height), min.y + (1_i64 << height)),
+                    ),
+                ) {
+                    return root;
+                }
+                let mid = 1_i64 << (height - 1);
+                let tl = self.toggle_cell_and_return_root(
+                    point,
+                    tl,
+                    WorldPoint::new(min.x, min.y + mid),
+                );
+                let tr = self.toggle_cell_and_return_root(
+                    point,
+                    tr,
+                    WorldPoint::new(min.x + mid, min.y + mid),
+                );
+                let bl = self.toggle_cell_and_return_root(point, bl, min);
+                let br = self.toggle_cell_and_return_root(
+                    point,
+                    br,
+                    WorldPoint::new(min.x + mid, min.y),
+                );
+                self.join(tl, tr, bl, br, height)
+            }
+            Quadtree::Cell(alive) => {
+                if min == point {
+                    if alive { DEAD_CELL_ID } else { ALIVE_CELL_ID }
+                } else {
+                    root
+                }
+            }
+        }
     }
     pub fn add_border(&mut self, t: usize) -> usize {
         let &Subtree {
@@ -127,9 +203,9 @@ impl QuadtreePool {
                 }
                 Quadtree::Cell(alive) => {
                     if alive {
-                        new_pool.alive_cell()
+                        ALIVE_CELL_ID
                     } else {
-                        new_pool.dead_cell()
+                        DEAD_CELL_ID
                     }
                 }
             }
@@ -161,6 +237,7 @@ pub struct Subtree {
     pub bl: usize,
     pub br: usize,
     pub height: u32,
+    pub count: BigUint,
     pub ans: Option<usize>,
     _private: (),
 }

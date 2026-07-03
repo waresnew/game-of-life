@@ -2,6 +2,7 @@ use std::fmt;
 
 use crate::{hashlife::evolve, quadtree::QuadtreePool};
 use ahash::AHashMap;
+use num_bigint::BigUint;
 use wasm_bindgen::prelude::*;
 
 mod hashlife;
@@ -9,35 +10,96 @@ mod quadtree;
 
 #[wasm_bindgen]
 #[derive(Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
-pub struct Point {
+pub struct WorldPoint {
     pub x: i64,
     pub y: i64,
 }
-impl fmt::Debug for Point {
+impl fmt::Debug for WorldPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
     }
 }
 
 #[wasm_bindgen]
-impl Point {
+impl WorldPoint {
     #[wasm_bindgen(constructor)]
     pub fn new(x: i64, y: i64) -> Self {
         Self { x, y }
     }
 }
-impl Point {
+impl WorldPoint {
     pub fn from_tuple((x, y): (i64, i64)) -> Self {
-        Point::new(x, y)
+        WorldPoint::new(x, y)
+    }
+    pub fn negate(self) -> Self {
+        Self {
+            x: -self.x,
+            y: -self.y,
+        }
     }
 }
 
 const MAX_HEIGHT: u32 = 50;
-const MIN_POINT: Point = Point {
+pub const MIN_POINT: WorldPoint = WorldPoint {
     x: -1_000_000_000_000_000,
     y: -1_000_000_000_000_000,
 };
 #[wasm_bindgen]
+pub struct Renderer {
+    solver: Solver,
+    pub base_cell_size: u32,
+}
+impl Renderer {
+    pub fn set_alives(&mut self, alives: BigUint) {
+        self.solver.perf_stats.alives = alives.to_str_radix(10);
+    }
+}
+#[wasm_bindgen]
+impl Renderer {
+    #[wasm_bindgen(getter=perf_stats)]
+    pub fn get_perf_stats_copy(&self) -> PerfStats {
+        self.solver.perf_stats.clone()
+    }
+    #[wasm_bindgen(constructor)]
+    pub fn new(step_exp: u32, base_cell_size: u32) -> Self {
+        Self {
+            solver: Solver::new(step_exp),
+            base_cell_size,
+        }
+    }
+    pub fn next_step(&mut self) {
+        self.solver.next_step();
+    }
+    pub fn render(
+        &self,
+        zoom: f64,
+        bound_min: WorldPoint,
+        bound_max: WorldPoint,
+    ) -> Vec<WorldPoint> {
+        self.solver.pool.to_alive(
+            self.solver.quadtree,
+            (bound_min, bound_max),
+            self.base_cell_size,
+            zoom,
+            MIN_POINT,
+        )
+    }
+    pub fn toggle_cell(&mut self, point: WorldPoint) {
+        self.solver.quadtree =
+            self.solver
+                .pool
+                .toggle_cell_and_return_root(point, self.solver.quadtree, MIN_POINT);
+        let alives = self.solver.pool[self.solver.quadtree]
+            .as_subtree()
+            .count
+            .clone();
+        self.set_alives(alives);
+    }
+    pub fn change_step_exp(&mut self, step_exp: u32) {
+        self.solver.step_exp = step_exp;
+        self.solver.pool.reset_ans();
+    }
+}
 pub struct Solver {
     pub perf_stats: PerfStats,
     pool: QuadtreePool,
@@ -45,12 +107,10 @@ pub struct Solver {
     step_exp: u32,
 }
 
-#[wasm_bindgen]
 impl Solver {
-    #[wasm_bindgen(constructor)]
-    pub fn new(mut alive: Vec<Point>, step_exp: u32) -> Self {
+    pub fn new(step_exp: u32) -> Self {
         let mut pool = QuadtreePool::new();
-        let quadtree = pool.load_alives(&mut alive, MIN_POINT, MAX_HEIGHT, &mut AHashMap::new());
+        let quadtree = pool.zeros(MAX_HEIGHT);
         Self {
             perf_stats: PerfStats::default(),
             pool,
@@ -58,18 +118,12 @@ impl Solver {
             step_exp,
         }
     }
-    pub fn next_step(&mut self) -> Vec<Point> {
+    pub fn next_step(&mut self) {
         self.perf_stats.cache_hits = 0;
         self.perf_stats.cache_misses = 0;
         self.quadtree = evolve(self.pool.add_border(self.quadtree), self);
-        let new_alive = self
-            .pool
-            .to_alive(self.quadtree, &mut AHashMap::new())
-            .into_iter()
-            .map(|Point { x, y }| Point::new(x + MIN_POINT.x, y + MIN_POINT.y))
-            .collect();
         (self.pool, self.quadtree) = self.pool.gc_pool(self.quadtree);
-        new_alive
+        self.perf_stats.alives = self.pool[self.quadtree].as_subtree().count.to_str_radix(10);
     }
 }
 
@@ -77,9 +131,19 @@ impl Solver {
 pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug, Default)]
+#[wasm_bindgen(getter_with_clone)]
+#[derive(Clone, Debug)]
 pub struct PerfStats {
+    pub alives: String,
     pub cache_hits: u64,
     pub cache_misses: u64,
+}
+impl Default for PerfStats {
+    fn default() -> Self {
+        Self {
+            alives: String::from("0"),
+            cache_hits: Default::default(),
+            cache_misses: Default::default(),
+        }
+    }
 }

@@ -1,14 +1,16 @@
+import { WorldPoint } from "../pkg/game_of_life";
 import {
 	CELL_SIZE,
 	canvas,
 	inverseTransform,
 	type Point,
+	renderer,
 	WORLD_BORDER,
 	world,
 } from "./app";
 
 const currentPointers: Map<number, Point> = new Map();
-const drawSession: Set<string> = new Set();
+const drawSession: Set<string> = new Set(); // js quirk
 let prevPanX = -1;
 let prevPanY = -1;
 const pointerInCanvas = false;
@@ -141,7 +143,6 @@ function zoom(zoomFactor: number) {
 	world.zoom = newZoom;
 }
 function doDraw() {
-	world.dirty = true;
 	const cell: Point = [
 		Math.floor(world.worldCursor[0] / CELL_SIZE),
 		Math.floor(world.worldCursor[1] / CELL_SIZE),
@@ -163,9 +164,5 @@ function doDraw() {
 		return;
 	}
 	drawSession.add(strCell);
-	if (world.alive.has(strCell)) {
-		world.alive.delete(strCell);
-	} else {
-		world.alive.add(strCell);
-	}
+	renderer.toggle_cell(new WorldPoint(BigInt(cell[0]), BigInt(cell[1])));
 }

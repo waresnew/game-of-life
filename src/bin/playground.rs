@@ -1,7 +1,7 @@
-use game_of_life::{Point, Solver};
+use game_of_life::{Renderer, Solver, WorldPoint};
 
 fn main() {
-    let alive: Vec<Point> = vec![
+    let alive: Vec<WorldPoint> = vec![
         (-2, 1),
         (-2, -1),
         (-3, -1),
@@ -11,12 +11,16 @@ fn main() {
         (3, -1),
     ]
     .into_iter()
-    .map(Point::from_tuple)
+    .map(WorldPoint::from_tuple)
     .collect();
-    let mut solver = Solver::new(alive, 12);
+    let mut renderer = Renderer::new(12, 50);
+    for x in alive {
+        renderer.toggle_cell(x);
+    }
     let mut ans = vec![];
     for i in 0..100 {
-        ans = solver.next_step();
+        renderer.next_step();
+        ans = renderer.render(1.0, WorldPoint::new(-200, -200), WorldPoint::new(200, 200));
     } //633 alive
-    dbg!(ans.len(), solver.perf_stats);
+    dbg!(ans.len(), renderer.perf_stats());
 }
