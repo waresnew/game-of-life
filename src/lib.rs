@@ -99,6 +99,9 @@ impl Renderer {
         self.solver.step_exp = step_exp;
         self.solver.pool.reset_ans();
     }
+    pub fn clear_grid(&mut self) {
+        self.solver = Solver::new(self.solver.step_exp);
+    }
 }
 pub struct Solver {
     pub perf_stats: PerfStats,

@@ -22,5 +22,5 @@ fn main() {
         renderer.next_step();
         ans = renderer.render(1.0, WorldPoint::new(-200, -200), WorldPoint::new(200, 200));
     } //633 alive
-    dbg!(ans.len(), renderer.perf_stats());
+    dbg!(ans.len(), renderer.get_perf_stats_copy());
 }

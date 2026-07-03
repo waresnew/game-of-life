@@ -56,5 +56,5 @@ fn one_step_acorn() {
         renderer.toggle_cell(x);
     }
     renderer.next_step();
-    assert_eq!(renderer.perf_stats().alives, "633");
+    assert_eq!(renderer.get_perf_stats_copy().alives, "633");
 }
