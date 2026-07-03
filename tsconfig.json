@@ -5,6 +5,8 @@
     "rootDir": "web",
     "outDir": "dist",
 
+    "moduleResolution": "bundler",
+
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "esnext",
