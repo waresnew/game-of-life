@@ -33,17 +33,6 @@ playButton.addEventListener("click", (event) => {
 		playButton.textContent = "Play";
 	}
 });
-const debugButton = document.getElementById("toggle-debug")!;
-debugButton.addEventListener("click", (event) => {
-	const debug = document.getElementById("debug-content")!;
-	if (debug.style.visibility == "hidden") {
-		debugButton.textContent = "Hide debug info";
-		debug.style.visibility = "visible";
-	} else {
-		debug.style.visibility = "hidden";
-		debugButton.textContent = "Show debug info";
-	}
-});
 const patternPresets = document.getElementById(
 	"pattern-dropdown",
 ) as HTMLSelectElement;
@@ -65,6 +54,8 @@ patternFilePicker.addEventListener("change", async (event) => {
 //spec: https://conwaylife.com/wiki/Run_Length_Encoded
 function applyRlePattern(pattern: string) {
 	world.generation = 0n;
+	world.ticking = false;
+	playButton.textContent = "Play";
 	renderer.clear_grid();
 	const content = pattern
 		.trim()
