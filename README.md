@@ -12,13 +12,11 @@ To support very sparse patterns, the world is stored in a quadtree with a hash t
 
 Note: To simplify rendering on the JavaScript side, the grid is constrained by (-1e14, -1e14) and (1e14, 1e14). Any cells that exit that region will die.
 
-Pattern presets were taken from [LifeWiki](https://conwaylife.com/patterns/).
-
 ## Building
 
 The demo website is fully client-side and can be visited here: https://waresnew.github.io/game-of-life/
 
-Several preset patterns are provided in the [.rle](https://conwaylife.com/wiki/Run_Length_Encoded) format. You can upload your own via file.
+Several preset patterns are provided in the .rle format from [LifeWiki](https://conwaylife.com/patterns/). You can upload your own files.
 
 You can build it locally by running `just build` and opening `./dist/index.html` in a web browser.
 
