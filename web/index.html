@@ -26,34 +26,35 @@
 		}
 		html,
 		body {
-			width: 100%;
-			height: 100%;
 			margin: 0;
 		}
 		body:not(.ready) {
 			visibility: hidden;
 		}
+		:root {
+			--page-padding: 1rem;
+		}
 		</style>
 	</head>
 	<body>
-		<div
-			class="flex gap-8 justify-center-safe items-center-safe box-border p-4 h-full w-full"
-		>
-			<div class="flex flex-col gap-2 items-center-safe flex-1 h-full w-full">
-				<div class="flex flex-col gap-2">
+		<div class="flex gap-4 items-center-safe flex-wrap p-(--page-padding)">
+			<div
+				class="flex flex-col gap-2 flex-1 h-[calc(100vh-2*var(--page-padding))] w-full min-w-100"
+			>
+				<div class="flex flex-col gap-2 w-full flex-none">
 					<div class="flex gap-8" id="stats-world">
-						<span id="stats-generation"></span>
-						<span id="stats-alive"></span>
+						<span class="min-w-0 flex-1 truncate" id="stats-generation"></span>
+						<span class="min-w-0 flex-1 truncate" id="stats-alive"></span>
 					</div>
 					<div class="flex gap-8" id="stats-display">
-						<span id="stats-fps"></span>
-						<span id="stats-cursor"></span>
-						<span id="stats-zoom"></span>
+						<span class="min-w-0 flex-1 truncate" id="stats-fps"></span>
+						<span class="min-w-0 flex-1 truncate" id="stats-cursor"></span>
+						<span class="min-w-0 flex-1 truncate" id="stats-zoom"></span>
 					</div>
 				</div>
 				<canvas
 					id="grid"
-					class="border border-black [image-rendering:pixelated] min-w-50 h-full w-full touch-none"
+					class="border border-black [image-rendering:pixelated] h-full w-full touch-none"
 					>Game of Life grid</canvas
 				>
 				<div class="flex justify-between w-full gap-8" id="footer">
@@ -68,7 +69,7 @@
 					>
 				</div>
 			</div>
-			<div class="flex flex-col gap-4 items-start">
+			<div class="flex flex-col gap-4 w-60 flex-none">
 				<div class="flex gap-2 flex-col" id="patterns">
 					<label for="pattern-presets">Patterns:</label>
 					<select name="pattern-presets" id="pattern-dropdown">
@@ -85,18 +86,18 @@
 					</div>
 					<div class="flex gap-2" id="once">
 						<button id="once-button">Run once</button>
-						<span class="text-nowrap" id="once-runtime"></span>
+						<span class="min-w-0 flex-1 truncate" id="once-runtime"></span>
 					</div>
 					<div class="flex gap-2" id="play">
 						<button id="play-button">Play</button>
-						<span class="text-nowrap" id="play-runtime"></span>
+						<span class="min-w-0 flex-1 truncate" id="play-runtime"></span>
 					</div>
 				</div>
 				<div class="h-px w-full bg-zinc-300"></div>
 				<div class="flex flex-col gap-1">
-					<span id="debug-rendered"></span>
-					<span id="debug-cache_hitrate"></span>
-					<span id="debug-pool_size"></span>
+					<span class="min-w-0 flex-1 truncate" id="debug-rendered"></span>
+					<span class="min-w-0 flex-1 truncate" id="debug-cache_hitrate"></span>
+					<span class="min-w-0 flex-1 truncate" id="debug-pool_size"></span>
 				</div>
 			</div>
 		</div>
