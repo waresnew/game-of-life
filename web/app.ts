@@ -30,7 +30,6 @@ class World {
 export const world = new World();
 export const renderer = new Renderer(world.stepExp, CELL_SIZE);
 export const canvas = document.getElementById("grid") as HTMLCanvasElement;
-resizeCanvas();
 requestAnimationFrame(repaint);
 function updateStats() {
 	document.getElementById("stats-zoom")!.textContent =
@@ -63,7 +62,8 @@ function resizeCanvas() {
 	canvas.width = rect.width;
 	canvas.height = rect.height;
 }
-window.addEventListener("resize", (event) => resizeCanvas());
+const canvasResizeObserver = new ResizeObserver(resizeCanvas);
+canvasResizeObserver.observe(canvas);
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 function repaint(time: DOMHighResTimeStamp) {
 	++world.frameCounter;
