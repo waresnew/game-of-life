@@ -26,6 +26,9 @@ jobs:
     - uses: taiki-e/install-action@v2
       with:
         tool: just,wasm-pack
+    - name: Install web deps
+      working-directory: web
+      run: bun ci
     - name: Build
       run: |
         just build
