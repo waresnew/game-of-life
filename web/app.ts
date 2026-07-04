@@ -139,6 +139,7 @@ function repaint(time: DOMHighResTimeStamp) {
 		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
 		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
 	);
+	document.body.classList.add("ready"); //fouc from empty spans
 	requestAnimationFrame(repaint);
 }
 export function inverseTransform(p: Point): Point {
