@@ -173,6 +173,7 @@ impl QuadtreePool {
             height - 1,
         )
     }
+    #[must_use]
     pub fn gc_pool(&mut self, root: usize) -> (Self, usize) {
         fn copy_to_new_pool(
             cur: usize,
