@@ -1,7 +1,7 @@
 use std::{collections::HashSet, hint::black_box};
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use game_of_life::{Renderer, WorldPoint};
+use game_of_life::renderer::{Renderer, WorldPoint};
 use rand::{distr::Uniform, prelude::*};
 
 fn random_rect(c: &mut Criterion) {
@@ -22,7 +22,7 @@ fn random_rect(c: &mut Criterion) {
     c.bench_function("random 64x64 next_step", |b| {
         b.iter(|| {
             renderer.next_step();
-            renderer.change_step_exp(black_box(12)); //reset ans
+            renderer.set_step_exp(black_box(12)); //reset ans
         })
     });
 }

@@ -1,7 +1,7 @@
-use std::{collections::HashSet, hint::black_box};
+use std::collections::HashSet;
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use game_of_life::{Renderer, WorldPoint};
+use game_of_life::renderer::{Renderer, WorldPoint};
 use rand::{distr::Uniform, prelude::*};
 
 fn random_rect(c: &mut Criterion) {
@@ -19,15 +19,7 @@ fn random_rect(c: &mut Criterion) {
     for x in input.clone() {
         renderer.toggle_cell(x);
     }
-    c.bench_function("random 64x64 render", |b| {
-        b.iter(|| {
-            renderer.render(
-                black_box(1.0),
-                black_box(WorldPoint::new(-32, 32)),
-                black_box(WorldPoint::new(-32, 32)),
-            )
-        })
-    });
+    c.bench_function("random 64x64 render", |b| b.iter(|| renderer.render_all()));
 }
 
 criterion_group!(benches, random_rect);

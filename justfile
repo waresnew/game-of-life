@@ -7,9 +7,6 @@ profile:
     wasm-pack build --dev --target bundler
     cd web && bunx vite
 
-bench:
-    cargo bench
-
 bin:
     RUST_BACKTRACE=1 cargo run --release
     

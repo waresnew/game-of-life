@@ -9,11 +9,11 @@ const patterns: Record<string, string> = import.meta.glob("./patterns/*.rle", {
 
 document.getElementById("stepsize-less")!.addEventListener("click", (event) => {
 	world.stepExp = Math.max(0, world.stepExp - 1);
-	renderer.change_step_exp(world.stepExp);
+	renderer.set_step_exp(world.stepExp);
 });
 document.getElementById("stepsize-more")!.addEventListener("click", (event) => {
 	world.stepExp = Math.min(49, world.stepExp + 1); //(MAX_HEIGHT+1)-2=49
-	renderer.change_step_exp(world.stepExp);
+	renderer.set_step_exp(world.stepExp);
 });
 document.getElementById("once-button")!.addEventListener("click", (event) => {
 	world.ticking = false;

@@ -1,4 +1,4 @@
-use game_of_life::{Renderer, WorldPoint};
+use game_of_life::renderer::{Renderer, WorldPoint};
 
 fn main() {
     let alive: Vec<WorldPoint> = vec![
@@ -18,9 +18,9 @@ fn main() {
         renderer.toggle_cell(x);
     }
     let mut ans = vec![];
-    for i in 0..100 {
+    for _ in 0..100 {
         renderer.next_step();
-        ans = renderer.render(1.0, WorldPoint::new(-200, -200), WorldPoint::new(200, 200));
+        ans = renderer.render_all();
     } //633 alive
-    dbg!(ans.len(), renderer.get_perf_stats_copy());
+    dbg!(ans.len(), renderer.perf_stats());
 }
