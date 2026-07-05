@@ -50,8 +50,8 @@ function updateStats() {
 		document.getElementById("debug-cache_hitrate")!.textContent =
 			"Cache hit rate: 0%";
 	}
-	document.getElementById("debug-pool_size")!.textContent =
-		`Pool size: ${renderer.perf_stats.pool_size}`;
+	document.getElementById("debug-pool_mem")!.textContent =
+		`Pool memory: ${renderer.perf_stats.pool_mem} MB`;
 	document.getElementById("stats-generation")!.textContent =
 		`Generation: ${world.generation}`;
 	document.getElementById("stepsize-display")!.textContent =

@@ -14,11 +14,15 @@ macro_rules! test_solve {
             renderer.toggle_cell(x);
         }
         renderer.next_step();
-        let mut res = renderer.render(
-            1.0,
-            game_of_life::WorldPoint::from_tuple($min_point),
-            game_of_life::WorldPoint::negate(game_of_life::WorldPoint::from_tuple($min_point)),
-        );
+        let mut res: Vec<game_of_life::WorldPoint> = renderer
+            .render(
+                1.0,
+                game_of_life::WorldPoint::from_tuple($min_point),
+                game_of_life::WorldPoint::negate(game_of_life::WorldPoint::from_tuple($min_point)),
+            )
+            .into_iter()
+            .map(|x| x.min)
+            .collect();
         res.sort();
         output.sort();
         assert_eq!(res, output);

@@ -59,11 +59,6 @@ pub struct Renderer {
     solver: Solver,
     pub base_cell_size: u32,
 }
-impl Renderer {
-    pub fn set_alives(&mut self, alives: BigUint) {
-        self.solver.perf_stats.alives = alives.to_str_radix(10);
-    }
-}
 #[wasm_bindgen]
 impl Renderer {
     #[wasm_bindgen(getter=perf_stats)]
@@ -99,15 +94,11 @@ impl Renderer {
             self.solver
                 .pool
                 .toggle_cell_and_return_root(point, self.solver.quadtree, MIN_POINT);
-        let alives = self.solver.pool[self.solver.quadtree]
-            .as_subtree()
-            .count
-            .clone();
-        self.set_alives(alives);
+        self.solver.update_stats();
     }
     pub fn change_step_exp(&mut self, step_exp: u32) {
         self.solver.step_exp = step_exp;
-        self.solver.pool.reset_ans();
+        self.solver.pool.clear_ans();
     }
     pub fn clear_grid(&mut self) {
         self.solver = Solver::new(self.solver.step_exp);
@@ -131,13 +122,19 @@ impl Solver {
             step_exp,
         }
     }
+    pub fn update_stats(&mut self) {
+        self.perf_stats.alives = self.pool[self.quadtree].as_subtree().count.to_str_radix(10);
+        self.perf_stats.pool_mem = self.pool.estimate_pool_mem();
+    }
     pub fn next_step(&mut self) {
         self.perf_stats.cache_hits = 0;
         self.perf_stats.cache_misses = 0;
         self.quadtree = evolve(self.pool.add_border(self.quadtree), self);
-        (self.pool, self.quadtree) = self.pool.gc_pool(self.quadtree);
-        self.perf_stats.alives = self.pool[self.quadtree].as_subtree().count.to_str_radix(10);
-        self.perf_stats.pool_size = self.pool.size();
+        if let Some((new_pool, new_root)) = self.pool.gc_pool_if_needed(self.quadtree) {
+            self.pool = new_pool;
+            self.quadtree = new_root;
+        }
+        self.update_stats();
     }
 }
 
@@ -149,7 +146,7 @@ pub fn init_panic_hook() {
 #[derive(Clone, Debug)]
 pub struct PerfStats {
     pub alives: String,
-    pub pool_size: usize,
+    pub pool_mem: usize,
     pub cache_hits: u64,
     pub cache_misses: u64,
 }
@@ -157,7 +154,7 @@ impl Default for PerfStats {
     fn default() -> Self {
         Self {
             alives: String::from("0"),
-            pool_size: 0,
+            pool_mem: 0,
             cache_hits: 0,
             cache_misses: 0,
         }
