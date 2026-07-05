@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, hint::black_box};
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use game_of_life::{Renderer, WorldPoint};
@@ -15,13 +15,14 @@ fn random_rect(c: &mut Criterion) {
         alive.insert((x, y));
     }
     let input: Vec<WorldPoint> = alive.into_iter().map(WorldPoint::from_tuple).collect();
-    c.bench_function("random 64x64", |b| {
+    let mut renderer = Renderer::new(12, 50);
+    for x in input.clone() {
+        renderer.toggle_cell(x);
+    }
+    c.bench_function("random 64x64 next_step", |b| {
         b.iter(|| {
-            let mut renderer = Renderer::new(12, 50);
-            for x in input.clone() {
-                renderer.toggle_cell(x);
-            }
             renderer.next_step();
+            renderer.change_step_exp(black_box(12)); //reset ans
         })
     });
 }

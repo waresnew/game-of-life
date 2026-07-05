@@ -18,7 +18,11 @@ criterion = "0.8.2"
 rand = "0.10.2"
 
 [[bench]]
-name = "hashlife_benchmark"
+name = "next_step_benchmark"
+harness = false
+
+[[bench]]
+name = "render_benchmark"
 harness = false
 
 [lib]
