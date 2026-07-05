@@ -18,6 +18,17 @@ impl fmt::Debug for WorldPoint {
         write!(f, "({}, {})", self.x, self.y)
     }
 }
+#[wasm_bindgen]
+#[derive(Debug, Clone, Copy)]
+pub struct RendererOutput {
+    pub min: WorldPoint,
+    pub size_exp: u32,
+}
+impl RendererOutput {
+    pub fn unit_cell(min: WorldPoint) -> Self {
+        Self { min, size_exp: 0 }
+    }
+}
 
 #[wasm_bindgen]
 impl WorldPoint {
@@ -74,8 +85,8 @@ impl Renderer {
         zoom: f64,
         bound_min: WorldPoint,
         bound_max: WorldPoint,
-    ) -> Vec<WorldPoint> {
-        self.solver.pool.to_alive(
+    ) -> Vec<RendererOutput> {
+        self.solver.pool.to_visible_alives(
             self.solver.quadtree,
             (bound_min, bound_max),
             self.base_cell_size,

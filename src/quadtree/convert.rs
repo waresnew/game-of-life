@@ -4,7 +4,7 @@ use ahash::{AHashMap, AHasher};
 use num_bigint::BigUint;
 
 use crate::{
-    WorldPoint,
+    RendererOutput, WorldPoint,
     quadtree::{ALIVE_CELL_ID, DEAD_CELL_ID, Quadtree, QuadtreePool},
 };
 
@@ -104,14 +104,14 @@ impl QuadtreePool {
             &Quadtree::Cell(alive) => vec![vec![if alive { 1 } else { 0 }]],
         }
     }
-    pub fn to_alive(
+    pub fn to_visible_alives(
         &self,
         id: usize,
         bounds: (WorldPoint, WorldPoint),
         base_cell_size: u32,
         zoom: f64,
         min: WorldPoint,
-    ) -> Vec<WorldPoint> {
+    ) -> Vec<RendererOutput> {
         match &self[id] {
             Quadtree::Subtree(root) => {
                 if Self::boxes_disjoint(
@@ -128,14 +128,17 @@ impl QuadtreePool {
                 }
                 if (1_i64 << root.height) as f64 * base_cell_size as f64 * zoom <= 1.0 {
                     if root.count > BigUint::ZERO {
-                        return vec![min];
+                        return vec![RendererOutput {
+                            min,
+                            size_exp: root.height,
+                        }];
                     } else {
                         return vec![];
                     }
                 }
                 let mid = 1_i64 << (root.height - 1);
                 let tl_ans = self
-                    .to_alive(
+                    .to_visible_alives(
                         root.tl,
                         bounds,
                         base_cell_size,
@@ -144,7 +147,7 @@ impl QuadtreePool {
                     )
                     .into_iter();
                 let tr_ans = self
-                    .to_alive(
+                    .to_visible_alives(
                         root.tr,
                         bounds,
                         base_cell_size,
@@ -152,9 +155,9 @@ impl QuadtreePool {
                         WorldPoint::new(min.x + mid, min.y + mid),
                     )
                     .into_iter();
-                let bl_ans = self.to_alive(root.bl, bounds, base_cell_size, zoom, min);
+                let bl_ans = self.to_visible_alives(root.bl, bounds, base_cell_size, zoom, min);
                 let br_ans = self
-                    .to_alive(
+                    .to_visible_alives(
                         root.br,
                         bounds,
                         base_cell_size,
@@ -166,7 +169,7 @@ impl QuadtreePool {
             }
             &Quadtree::Cell(alive) => {
                 if alive {
-                    vec![min]
+                    vec![RendererOutput::unit_cell(min)]
                 } else {
                     vec![]
                 }

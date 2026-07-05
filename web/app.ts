@@ -110,9 +110,14 @@ function repaint(time: DOMHighResTimeStamp) {
 	world.renderedCnt = alives.length;
 	updateStats();
 	for (const point of alives) {
-		const x = Number(point.x);
-		const y = Number(point.y);
-		ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+		const x = Number(point.min.x);
+		const y = Number(point.min.y);
+		ctx.fillRect(
+			x * CELL_SIZE,
+			y * CELL_SIZE,
+			CELL_SIZE * (1 << point.size_exp),
+			CELL_SIZE * (1 << point.size_exp),
+		);
 	}
 	if (CELL_SIZE * world.zoom >= 1) {
 		for (let i = tl[0]; i <= tr[0]; ++i) {
