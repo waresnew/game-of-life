@@ -87,19 +87,19 @@ function repaint(time: DOMHighResTimeStamp) {
 		0,
 		0,
 		-world.zoom,
-		-world.centre[0] + canvas.width / 2,
-		-world.centre[1] + canvas.height / 2,
+		canvas.width / 2,
+		canvas.height / 2,
 	);
-	const tl = inverseTransform([0, 0]).map((x) =>
+	const tl = screenToWorld([0, 0]).map((x) =>
 		Math.floor(x / CELL_SIZE),
 	) as Point;
-	const tr = inverseTransform([canvas.width, 0]).map((x) =>
+	const tr = screenToWorld([canvas.width, 0]).map((x) =>
 		Math.floor(x / CELL_SIZE),
 	) as Point;
-	const bl = inverseTransform([0, canvas.height]).map((x) =>
+	const bl = screenToWorld([0, canvas.height]).map((x) =>
 		Math.floor(x / CELL_SIZE),
 	) as Point;
-	const br = inverseTransform([canvas.width, canvas.height]).map((x) =>
+	const br = screenToWorld([canvas.width, canvas.height]).map((x) =>
 		Math.floor(x / CELL_SIZE),
 	) as Point;
 	const alives = renderer.render(
@@ -110,11 +110,12 @@ function repaint(time: DOMHighResTimeStamp) {
 	world.renderedCnt = alives.length;
 	updateStats();
 	for (const point of alives) {
-		const x = Number(point.min.x);
-		const y = Number(point.min.y);
+		const x = Number(point.min.x) * CELL_SIZE;
+		const y = Number(point.min.y) * CELL_SIZE;
+		const [translatedX, translatedY] = translateToScreen([x, y]);
 		ctx.fillRect(
-			x * CELL_SIZE,
-			y * CELL_SIZE,
+			translatedX,
+			translatedY,
 			CELL_SIZE * (1 << point.size_exp),
 			CELL_SIZE * (1 << point.size_exp),
 		);
@@ -123,31 +124,46 @@ function repaint(time: DOMHighResTimeStamp) {
 		for (let i = tl[0]; i <= tr[0]; ++i) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#f0f0f0";
-			ctx.moveTo(i * CELL_SIZE, (tl[1] + 1) * CELL_SIZE);
-			ctx.lineTo(i * CELL_SIZE, (bl[1] - 1) * CELL_SIZE);
+			const start = translateToScreen([i * CELL_SIZE, (tl[1] + 1) * CELL_SIZE]);
+			const end = translateToScreen([i * CELL_SIZE, (bl[1] - 1) * CELL_SIZE]);
+			ctx.moveTo(...start);
+			ctx.lineTo(...end);
 			ctx.stroke();
 			ctx.closePath();
 		}
 		for (let j = bl[1]; j <= tl[1]; ++j) {
 			ctx.beginPath();
 			ctx.strokeStyle = "#f0f0f0";
-			ctx.moveTo((tl[0] - 1) * CELL_SIZE, j * CELL_SIZE);
-			ctx.lineTo((tr[0] + 1) * CELL_SIZE, j * CELL_SIZE);
+			const start = translateToScreen([(tl[0] - 1) * CELL_SIZE, j * CELL_SIZE]);
+			const end = translateToScreen([(tr[0] + 1) * CELL_SIZE, j * CELL_SIZE]);
+			ctx.moveTo(...start);
+			ctx.lineTo(...end);
 			ctx.stroke();
 			ctx.closePath();
 		}
 	}
 	ctx.strokeStyle = "#000000";
+	const border = translateToScreen([
+		-WORLD_BORDER * CELL_SIZE,
+		-WORLD_BORDER * CELL_SIZE,
+	]);
 	ctx.strokeRect(
-		-WORLD_BORDER * CELL_SIZE,
-		-WORLD_BORDER * CELL_SIZE,
+		border[0],
+		border[1],
 		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
 		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
 	);
 	document.body.classList.add("ready"); //fouc from empty spans
 	requestAnimationFrame(repaint);
 }
-export function inverseTransform(p: Point): Point {
+/** do this outside of canvas to avoid float imprecision */
+function translateToScreen(p: Point): Point {
+	return [
+		p[0] - world.centre[0] / world.zoom,
+		p[1] - world.centre[1] / -world.zoom,
+	];
+}
+export function screenToWorld(p: Point): Point {
 	return [
 		(p[0] + world.centre[0] - canvas.width / 2) / world.zoom,
 		(p[1] + world.centre[1] - canvas.height / 2) / -world.zoom,

@@ -2,9 +2,9 @@ import { WorldPoint } from "../pkg/game_of_life";
 import {
 	CELL_SIZE,
 	canvas,
-	inverseTransform,
 	type Point,
 	renderer,
+	screenToWorld,
 	WORLD_BORDER,
 	world,
 } from "./app";
@@ -94,7 +94,7 @@ function updateCursors(event: PointerEvent) {
 		currentPointers.delete(event.pointerId);
 		return;
 	}
-	world.worldCursor = inverseTransform([mouseX, mouseY]);
+	world.worldCursor = screenToWorld([mouseX, mouseY]);
 	if (event.pointerType != "mouse") {
 		currentPointers.set(event.pointerId, [event.clientX, event.clientY]);
 	}
