@@ -1,12 +1,9 @@
 use crate::{
-    quadtree::{Quadtree, Subtree},
-    renderer::WorldPoint,
-    solver::{
-        Solver,
-        quadtree_pool::{ALIVE_CELL_ID, DEAD_CELL_ID},
-    },
+    quadtree_pool::{ALIVE_CELL_ID, DEAD_CELL_ID, Quadtree, Subtree},
+    renderer::{Renderer, WorldPoint},
 };
-impl Solver {
+
+impl Renderer {
     fn point_in_box(point: WorldPoint, (bounds1, bounds2): (WorldPoint, WorldPoint)) -> bool {
         let (min_x, max_x) = (bounds1.x.min(bounds2.x), bounds1.x.max(bounds2.x));
         let (min_y, max_y) = (bounds1.y.min(bounds2.y), bounds1.y.max(bounds2.y));
@@ -19,7 +16,7 @@ impl Solver {
         root: usize,
         min: WorldPoint,
     ) -> usize {
-        match self.pool[root] {
+        match self.solver.pool[root] {
             Quadtree::Subtree(Subtree {
                 tl,
                 tr,
@@ -54,7 +51,7 @@ impl Solver {
                     br,
                     WorldPoint::new(min.x + mid, min.y),
                 );
-                self.pool.join(tl, tr, bl, br, height)
+                self.solver.pool.join(tl, tr, bl, br, height)
             }
             Quadtree::Cell(alive) => {
                 if min == point {

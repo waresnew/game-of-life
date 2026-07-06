@@ -1,13 +1,10 @@
 use crate::{
-    quadtree::Subtree,
-    solver::{
-        Solver,
-        quadtree_pool::{ALIVE_CELL_ID, DEAD_CELL_ID},
-    },
+    quadtree_pool::{ALIVE_CELL_ID, DEAD_CELL_ID, Subtree},
+    solver::Solver,
 };
 
 impl Solver {
-    pub(super) fn evolve(cur_id: usize, ctx: &mut Solver) -> usize {
+    pub fn evolve(cur_id: usize, ctx: &mut Solver) -> usize {
         let &Subtree {
             tl,
             tr,

@@ -1,14 +1,12 @@
 use wasm_bindgen::prelude::*;
 
-use crate::{quadtree::Quadtree, solver::quadtree_pool::QuadtreePool};
+use crate::quadtree_pool::QuadtreePool;
 
-mod controls;
 mod hashlife;
-mod quadtree_pool;
 const MAX_HEIGHT: u32 = 50;
 pub struct Solver {
     pub perf_stats: PerfStats,
-    pool: QuadtreePool,
+    pub pool: QuadtreePool,
     pub root: usize,
     step_exp: u32,
 }
@@ -22,9 +20,6 @@ impl Solver {
             root,
             step_exp,
         }
-    }
-    pub fn query_pool(&self, id: usize) -> &Quadtree {
-        &self.pool[id]
     }
     pub fn update_stats(&mut self) {
         self.perf_stats.alives = self.pool[self.root].as_subtree().count.to_str_radix(10);

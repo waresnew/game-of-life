@@ -1,19 +1,9 @@
 use num_bigint::BigUint;
 
-use crate::{
-    quadtree::{Quadtree, Subtree},
-    solver::quadtree_pool::{DEAD_CELL_ID, QuadtreePool},
-};
+use crate::quadtree_pool::{DEAD_CELL_ID, Quadtree, QuadtreePool, Subtree};
 
 impl QuadtreePool {
-    pub(in crate::solver) fn join(
-        &mut self,
-        tl: usize,
-        tr: usize,
-        bl: usize,
-        br: usize,
-        height: u32,
-    ) -> usize {
+    pub fn join(&mut self, tl: usize, tr: usize, bl: usize, br: usize, height: u32) -> usize {
         let count = [tl, tr, bl, br]
             .iter()
             .map(|&id| match &self.pool[id] {
@@ -38,7 +28,7 @@ impl QuadtreePool {
         }))
     }
 
-    pub(in crate::solver) fn zeros(&mut self, height: u32) -> usize {
+    pub fn zeros(&mut self, height: u32) -> usize {
         if height == 0 {
             DEAD_CELL_ID
         } else {
@@ -46,7 +36,7 @@ impl QuadtreePool {
             self.join(child, child, child, child, height)
         }
     }
-    pub(in crate::solver) fn add_border(&mut self, t: usize) -> usize {
+    pub fn add_border(&mut self, t: usize) -> usize {
         let &Subtree {
             tl,
             tr,
@@ -63,7 +53,7 @@ impl QuadtreePool {
         let br = self.join(br, zero, zero, zero, height);
         self.join(tl, tr, bl, br, height + 1)
     }
-    pub(in crate::solver) fn get_centre(&mut self, t: usize) -> usize {
+    pub fn get_centre(&mut self, t: usize) -> usize {
         let &Subtree {
             tl,
             tr,

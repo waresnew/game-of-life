@@ -2,10 +2,11 @@ use std::ops::Index;
 
 use ahash::AHashMap;
 
-use crate::quadtree::{Quadtree, Subtree};
-
 mod convert;
 mod manip;
+pub mod quadtree;
+
+pub use crate::quadtree_pool::quadtree::*;
 
 type QuadtreeKey = (usize, usize, usize, usize);
 
@@ -19,7 +20,7 @@ pub struct QuadtreePool {
 }
 
 impl QuadtreePool {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         let mut ret = Self {
             dict: AHashMap::new(),
             pool: Vec::new(),
@@ -29,7 +30,7 @@ impl QuadtreePool {
         ret
     }
 
-    pub(super) fn insert_if_new(&mut self, t: Quadtree) -> usize {
+    pub fn insert_if_new(&mut self, t: Quadtree) -> usize {
         let subtree = t.as_subtree();
         let key = (subtree.tl, subtree.tr, subtree.bl, subtree.br);
         if !self.dict.contains_key(&key) {
@@ -38,10 +39,10 @@ impl QuadtreePool {
         }
         self.dict[&key]
     }
-    pub(super) fn set_ans(&mut self, id: usize, ans: usize) {
+    pub fn set_ans(&mut self, id: usize, ans: usize) {
         self.pool[id].as_subtree_mut().ans = Some(ans);
     }
-    pub(super) fn clear_ans(&mut self) {
+    pub fn clear_ans(&mut self) {
         for t in &mut self.pool {
             if let Quadtree::Subtree(subtree) = t {
                 subtree.ans = None;
@@ -49,12 +50,12 @@ impl QuadtreePool {
         }
     }
     /// MB
-    pub(super) fn estimate_pool_mem(&self) -> usize {
+    pub fn estimate_pool_mem(&self) -> usize {
         //exclude Vec overhead
         size_of::<Quadtree>() * self.pool.len() / 1_000_000
     }
     #[must_use]
-    pub(super) fn gc_pool_if_needed(&mut self, root: usize) -> Option<(Self, usize)> {
+    pub fn gc_pool_if_needed(&mut self, root: usize) -> Option<(Self, usize)> {
         const GC_THRESHOLD_MB: usize = 512;
         if self.estimate_pool_mem() > GC_THRESHOLD_MB {
             Some(self.gc_pool(root))

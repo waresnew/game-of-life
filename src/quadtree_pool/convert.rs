@@ -1,15 +1,11 @@
 use std::hash::{Hash, Hasher};
 
-use crate::{
-    quadtree::Quadtree,
-    solver::{
-        QuadtreePool,
-        quadtree_pool::{ALIVE_CELL_ID, DEAD_CELL_ID},
-    },
-};
 use ahash::{AHashMap, AHasher};
 
-use crate::renderer::WorldPoint;
+use crate::{
+    quadtree_pool::{ALIVE_CELL_ID, DEAD_CELL_ID, Quadtree, QuadtreePool},
+    renderer::WorldPoint,
+};
 
 #[allow(dead_code)]
 impl QuadtreePool {
