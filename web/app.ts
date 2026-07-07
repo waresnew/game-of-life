@@ -2,7 +2,6 @@ import {
 	type PerfStats,
 	Renderer,
 	WorldPoint as RustPoint,
-	WorldPoint,
 } from "../pkg/game_of_life.js";
 
 export type Point = [number, number];
@@ -104,8 +103,8 @@ function repaint(time: DOMHighResTimeStamp) {
 	) as Point;
 	const alives = renderer.render(
 		world.zoom,
-		new WorldPoint(BigInt(bl[0]), BigInt(bl[1])),
-		new WorldPoint(BigInt(tr[0]), BigInt(tr[1])),
+		new RustPoint(BigInt(bl[0]), BigInt(bl[1])),
+		new RustPoint(BigInt(tr[0]), BigInt(tr[1])),
 	);
 	world.renderedCnt = alives.length;
 	updateStats();
