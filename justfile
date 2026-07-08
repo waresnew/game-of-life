@@ -7,8 +7,8 @@ profile:
     wasm-pack build --dev --target bundler
     cd web && bunx vite
 
-bin:
-    RUST_BACKTRACE=1 cargo run --release
+bin example:
+    RUST_BACKTRACE=1 cargo run --release --example {{example}}
     
 build:
     wasm-pack build --release --target bundler

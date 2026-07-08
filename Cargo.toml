@@ -4,7 +4,6 @@ description = "Hashlife implementation"
 repository = "https://github.com/waresnew/game-of-life"
 version = "0.1.0"
 edition = "2024"
-default-run = "playground"
 
 [dependencies]
 ahash = "0.8.12"
