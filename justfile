@@ -13,3 +13,9 @@ bin:
 build:
     wasm-pack build --release --target bundler
     cd web && bunx vite build --minify
+
+bench-web:
+    wasm-pack build --release --target bundler
+    cd web && \
+    bunx vitest bench --run
+
