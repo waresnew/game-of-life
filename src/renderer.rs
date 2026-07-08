@@ -50,13 +50,16 @@ impl Renderer {
         bound_min: WorldPoint,
         bound_max: WorldPoint,
     ) -> Vec<RendererOutput> {
+        let mut ans = Vec::new();
         self.to_visible_alives(
             self.solver.root,
             (bound_min, bound_max),
             self.base_cell_size,
             zoom,
             MIN_POINT,
-        )
+            &mut ans,
+        );
+        ans
     }
     pub fn toggle_cell(&mut self, point: WorldPoint) {
         self.solver.root = self.toggle_cell_and_return_root(point, self.solver.root, MIN_POINT);

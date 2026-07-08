@@ -13,7 +13,8 @@ impl Renderer {
         base_cell_size: u32,
         zoom: f64,
         min: WorldPoint,
-    ) -> Vec<RendererOutput> {
+        ans: &mut Vec<RendererOutput>,
+    ) {
         match &self.solver.pool[id] {
             Quadtree::Subtree(root) => {
                 if Self::boxes_disjoint(
@@ -26,57 +27,50 @@ impl Renderer {
                         ),
                     ),
                 ) {
-                    return vec![];
+                    return;
                 }
                 if root.count == BigUint::ZERO {
-                    return vec![];
+                    return;
                 }
                 if (1_i64 << root.height) as f64 * base_cell_size as f64 * zoom <= 1.0 {
                     if root.count > BigUint::ZERO {
-                        return vec![RendererOutput {
+                        ans.push(RendererOutput {
                             min,
                             size_exp: root.height,
-                        }];
-                    } else {
-                        return vec![];
+                        });
                     }
+                    return;
                 }
                 let mid = 1_i64 << (root.height - 1);
-                let tl_ans = self
-                    .to_visible_alives(
-                        root.tl,
-                        bounds,
-                        base_cell_size,
-                        zoom,
-                        WorldPoint::new(min.x, min.y + mid),
-                    )
-                    .into_iter();
-                let tr_ans = self
-                    .to_visible_alives(
-                        root.tr,
-                        bounds,
-                        base_cell_size,
-                        zoom,
-                        WorldPoint::new(min.x + mid, min.y + mid),
-                    )
-                    .into_iter();
-                let bl_ans = self.to_visible_alives(root.bl, bounds, base_cell_size, zoom, min);
-                let br_ans = self
-                    .to_visible_alives(
-                        root.br,
-                        bounds,
-                        base_cell_size,
-                        zoom,
-                        WorldPoint::new(min.x + mid, min.y),
-                    )
-                    .into_iter();
-                tl_ans.chain(tr_ans).chain(bl_ans).chain(br_ans).collect()
+                self.to_visible_alives(
+                    root.tl,
+                    bounds,
+                    base_cell_size,
+                    zoom,
+                    WorldPoint::new(min.x, min.y + mid),
+                    ans,
+                );
+                self.to_visible_alives(
+                    root.tr,
+                    bounds,
+                    base_cell_size,
+                    zoom,
+                    WorldPoint::new(min.x + mid, min.y + mid),
+                    ans,
+                );
+                self.to_visible_alives(root.bl, bounds, base_cell_size, zoom, min, ans);
+                self.to_visible_alives(
+                    root.br,
+                    bounds,
+                    base_cell_size,
+                    zoom,
+                    WorldPoint::new(min.x + mid, min.y),
+                    ans,
+                );
             }
             &Quadtree::Cell(alive) => {
                 if alive {
-                    vec![RendererOutput::unit_cell(min)]
-                } else {
-                    vec![]
+                    ans.push(RendererOutput::unit_cell(min));
                 }
             }
         }
