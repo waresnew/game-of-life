@@ -17,5 +17,5 @@ build:
 bench-web:
     wasm-pack build --release --target bundler
     cd web && \
-    bunx vitest bench --run
+    bunx vitest bench --run --config=vitest.browser.config.ts
 
