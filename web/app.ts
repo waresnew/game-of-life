@@ -106,39 +106,36 @@ function repaint(time: DOMHighResTimeStamp) {
 	);
 	world.renderedCnt = alives.length;
 	updateStats();
+	ctx.beginPath();
 	for (let i = 0; i < alives.length; i += 3) {
 		const x = Number(alives[i]) * CELL_SIZE,
 			y = Number(alives[i + 1]) * CELL_SIZE,
 			size_exp = Number(alives[i + 2]);
 		const [translatedX, translatedY] = translateToScreen([x, y]);
-		ctx.fillRect(
+		ctx.rect(
 			translatedX,
 			translatedY,
 			CELL_SIZE * (1 << size_exp),
 			CELL_SIZE * (1 << size_exp),
 		);
 	}
+	ctx.fill();
 	if (CELL_SIZE * world.zoom >= 1) {
+		ctx.beginPath();
+		ctx.strokeStyle = "#f0f0f0";
 		for (let i = tl[0]; i <= tr[0]; ++i) {
-			ctx.beginPath();
-			ctx.strokeStyle = "#f0f0f0";
 			const start = translateToScreen([i * CELL_SIZE, (tl[1] + 1) * CELL_SIZE]);
 			const end = translateToScreen([i * CELL_SIZE, (bl[1] - 1) * CELL_SIZE]);
 			ctx.moveTo(...start);
 			ctx.lineTo(...end);
-			ctx.stroke();
-			ctx.closePath();
 		}
 		for (let j = bl[1]; j <= tl[1]; ++j) {
-			ctx.beginPath();
-			ctx.strokeStyle = "#f0f0f0";
 			const start = translateToScreen([(tl[0] - 1) * CELL_SIZE, j * CELL_SIZE]);
 			const end = translateToScreen([(tr[0] + 1) * CELL_SIZE, j * CELL_SIZE]);
 			ctx.moveTo(...start);
 			ctx.lineTo(...end);
-			ctx.stroke();
-			ctx.closePath();
 		}
+		ctx.stroke();
 	}
 	ctx.strokeStyle = "#000000";
 	const border = translateToScreen([
