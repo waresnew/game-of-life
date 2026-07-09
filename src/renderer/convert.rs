@@ -2,7 +2,7 @@ use num_bigint::BigUint;
 
 use crate::{
     quadtree_pool::Quadtree,
-    renderer::{Renderer, RendererOutput, WorldPoint},
+    renderer::{Renderer, WorldPoint},
 };
 
 impl Renderer {
@@ -13,7 +13,7 @@ impl Renderer {
         base_cell_size: u32,
         zoom: f64,
         min: WorldPoint,
-        ans: &mut Vec<RendererOutput>,
+        ans: &mut Vec<i64>,
     ) {
         match &self.solver.pool[id] {
             Quadtree::Subtree(root) => {
@@ -34,10 +34,7 @@ impl Renderer {
                 }
                 if (1_i64 << root.height) as f64 * base_cell_size as f64 * zoom <= 1.0 {
                     if root.count > BigUint::ZERO {
-                        ans.push(RendererOutput {
-                            min,
-                            size_exp: root.height,
-                        });
+                        ans.extend([min.x, min.y, root.height as i64]);
                     }
                     return;
                 }
@@ -70,7 +67,7 @@ impl Renderer {
             }
             &Quadtree::Cell(alive) => {
                 if alive {
-                    ans.push(RendererOutput::unit_cell(min));
+                    ans.extend([min.x, min.y, 0]);
                 }
             }
         }

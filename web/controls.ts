@@ -1,4 +1,3 @@
-import { WorldPoint } from "../pkg/game_of_life";
 import {
 	CELL_SIZE,
 	canvas,
@@ -164,5 +163,5 @@ function doDraw() {
 		return;
 	}
 	drawSession.add(strCell);
-	renderer.toggle_cell(new WorldPoint(BigInt(cell[0]), BigInt(cell[1])));
+	renderer.toggle_cell(BigInt(cell[0]), BigInt(cell[1]));
 }

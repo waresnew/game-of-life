@@ -14,8 +14,8 @@ fn main() {
     .map(WorldPoint::from_tuple)
     .collect();
     let mut renderer = Renderer::new(12, 50);
-    for x in alive {
-        renderer.toggle_cell(x);
+    for p in alive {
+        renderer.toggle_cell(p.x, p.y);
     }
     let mut ans = vec![];
     for _ in 0..100 {

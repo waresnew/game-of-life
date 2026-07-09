@@ -1,4 +1,3 @@
-import { WorldPoint } from "../pkg/game_of_life";
 import { CELL_SIZE, canvas, next_step, renderer, world } from "./app";
 
 const patterns: Record<string, string> = import.meta.glob("./patterns/*.rle", {
@@ -86,7 +85,7 @@ function applyRlePattern(pattern: string) {
 				const cnt = cnt_str ? parseInt(cnt_str) : 1;
 				if (c != "b") {
 					for (let _ = 0; _ < cnt; _++) {
-						renderer.toggle_cell(new WorldPoint(BigInt(x), BigInt(y)));
+						renderer.toggle_cell(BigInt(x), BigInt(y));
 						x += 1;
 					}
 				} else {

@@ -1,8 +1,4 @@
-import {
-	type PerfStats,
-	Renderer,
-	WorldPoint as RustPoint,
-} from "../pkg/game_of_life.js";
+import { type PerfStats, Renderer } from "../pkg/game_of_life.js";
 
 export type Point = [number, number];
 
@@ -103,20 +99,23 @@ function repaint(time: DOMHighResTimeStamp) {
 	) as Point;
 	const alives = renderer.render(
 		world.zoom,
-		new RustPoint(BigInt(bl[0]), BigInt(bl[1])),
-		new RustPoint(BigInt(tr[0]), BigInt(tr[1])),
+		BigInt(bl[0]),
+		BigInt(bl[1]),
+		BigInt(tr[0]),
+		BigInt(tr[1]),
 	);
 	world.renderedCnt = alives.length;
 	updateStats();
-	for (const point of alives) {
-		const x = Number(point.min.x) * CELL_SIZE;
-		const y = Number(point.min.y) * CELL_SIZE;
+	for (let i = 0; i < alives.length; i += 3) {
+		const x = Number(alives[i]) * CELL_SIZE,
+			y = Number(alives[i + 1]) * CELL_SIZE,
+			size_exp = Number(alives[i + 2]);
 		const [translatedX, translatedY] = translateToScreen([x, y]);
 		ctx.fillRect(
 			translatedX,
 			translatedY,
-			CELL_SIZE * (1 << point.size_exp),
-			CELL_SIZE * (1 << point.size_exp),
+			CELL_SIZE * (1 << size_exp),
+			CELL_SIZE * (1 << size_exp),
 		);
 	}
 	if (CELL_SIZE * world.zoom >= 1) {

@@ -52,8 +52,8 @@ fn one_step_acorn() {
     .map(WorldPoint::from_tuple)
     .collect();
     let mut renderer = Renderer::new(13, 50);
-    for x in alive {
-        renderer.toggle_cell(x);
+    for p in alive {
+        renderer.toggle_cell(p.x, p.y);
     }
     renderer.next_step();
     assert_eq!(renderer.perf_stats().alives, "633");

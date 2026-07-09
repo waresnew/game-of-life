@@ -8,11 +8,11 @@ fn main() {
         }
     }
     let mut renderer = Renderer::new(12, 50);
-    for x in input.clone() {
-        renderer.toggle_cell(x);
+    for p in input.clone() {
+        renderer.toggle_cell(p.x, p.y);
     }
 
-    for i in 0..1000 {
+    for _i in 0..1000 {
         renderer.render_all();
     }
 }

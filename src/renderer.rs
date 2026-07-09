@@ -15,17 +15,6 @@ pub struct Renderer {
     pub base_cell_size: u32,
 }
 #[wasm_bindgen]
-#[derive(Debug, Clone, Copy)]
-pub struct RendererOutput {
-    pub min: WorldPoint,
-    pub size_exp: u32,
-}
-impl RendererOutput {
-    pub fn unit_cell(min: WorldPoint) -> Self {
-        Self { min, size_exp: 0 }
-    }
-}
-#[wasm_bindgen]
 impl Renderer {
     #[wasm_bindgen(getter)]
     pub fn perf_stats(&self) -> PerfStats {
@@ -47,13 +36,18 @@ impl Renderer {
     pub fn render(
         &self,
         zoom: f64,
-        bound_min: WorldPoint,
-        bound_max: WorldPoint,
-    ) -> Vec<RendererOutput> {
+        bound_min_x: i64,
+        bound_min_y: i64,
+        bound_max_x: i64,
+        bound_max_y: i64,
+    ) -> Vec<i64> {
         let mut ans = Vec::new();
         self.to_visible_alives(
             self.solver.root,
-            (bound_min, bound_max),
+            (
+                WorldPoint::new(bound_min_x, bound_min_y),
+                WorldPoint::new(bound_max_x, bound_max_y),
+            ),
             self.base_cell_size,
             zoom,
             MIN_POINT,
@@ -61,8 +55,9 @@ impl Renderer {
         );
         ans
     }
-    pub fn toggle_cell(&mut self, point: WorldPoint) {
-        self.solver.root = self.toggle_cell_and_return_root(point, self.solver.root, MIN_POINT);
+    pub fn toggle_cell(&mut self, x: i64, y: i64) {
+        self.solver.root =
+            self.toggle_cell_and_return_root(WorldPoint::new(x, y), self.solver.root, MIN_POINT);
         self.solver.update_stats();
     }
     pub fn clear_grid(&mut self) {
@@ -70,12 +65,20 @@ impl Renderer {
     }
 }
 impl Renderer {
-    /// tests/benches only
-    pub fn render_all(&self) -> Vec<RendererOutput> {
-        self.render(1.0, MIN_POINT, WorldPoint::negate(MIN_POINT))
+    /// tests/benches only, ignores size_exp
+    pub fn render_all(&self) -> Vec<WorldPoint> {
+        let max_point = WorldPoint::negate(MIN_POINT);
+        self.render(1.0, MIN_POINT.x, MIN_POINT.y, max_point.x, max_point.y)
+            .chunks_exact(3)
+            .map(|chunk| {
+                let &[x, y, _size_exp] = chunk else {
+                    unreachable!();
+                };
+                WorldPoint::new(x, y)
+            })
+            .collect()
     }
 }
-#[wasm_bindgen]
 #[derive(Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
 pub struct WorldPoint {
     pub x: i64,
@@ -87,9 +90,7 @@ impl fmt::Debug for WorldPoint {
     }
 }
 
-#[wasm_bindgen]
 impl WorldPoint {
-    #[wasm_bindgen(constructor)]
     pub fn new(x: i64, y: i64) -> Self {
         Self { x, y }
     }

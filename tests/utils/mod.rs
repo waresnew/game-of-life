@@ -11,11 +11,11 @@ macro_rules! test_solve {
         let mut output = $crate::utils::convert_coords($output);
         let alive = $crate::utils::convert_coords($input);
         let mut renderer = Renderer::new($k, 50);
-        for x in alive {
-            renderer.toggle_cell(x);
+        for p in alive {
+            renderer.toggle_cell(p.x, p.y);
         }
         renderer.next_step();
-        let mut res: Vec<WorldPoint> = renderer.render_all().into_iter().map(|x| x.min).collect();
+        let mut res: Vec<WorldPoint> = renderer.render_all();
         res.sort();
         output.sort();
         assert_eq!(res, output);
