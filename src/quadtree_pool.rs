@@ -17,37 +17,38 @@ pub const ALIVE_CELL_ID: usize = 1;
 pub struct QuadtreePool {
     dict: AHashMap<QuadtreeKey, usize>,
     pool: Vec<Quadtree>,
+    ans: Vec<Option<usize>>,
 }
 
 impl QuadtreePool {
     pub fn new() -> Self {
-        let mut ret = Self {
+        Self {
             dict: AHashMap::new(),
-            pool: Vec::new(),
-        };
-        ret.pool.push(Quadtree::Cell(false));
-        ret.pool.push(Quadtree::Cell(true));
-        ret
+            pool: vec![Quadtree::Cell(false), Quadtree::Cell(true)],
+            ans: vec![None, None],
+        }
     }
 
-    pub fn insert_if_new(&mut self, t: Quadtree) -> usize {
+    fn insert_if_new(&mut self, t: Quadtree) -> usize {
         let subtree = t.as_subtree();
         let key = (subtree.tl, subtree.tr, subtree.bl, subtree.br);
         if !self.dict.contains_key(&key) {
             self.pool.push(t);
+            self.ans.push(None);
             self.dict.insert(key, self.pool.len() - 1);
         }
         self.dict[&key]
     }
-    pub fn set_ans(&mut self, id: usize, ans: usize) {
-        self.pool[id].as_subtree_mut().ans = Some(ans);
-    }
     pub fn clear_ans(&mut self) {
-        for t in &mut self.pool {
-            if let Quadtree::Subtree(subtree) = t {
-                subtree.ans = None;
-            }
+        for x in &mut self.ans {
+            *x = None;
         }
+    }
+    pub fn get_ans(&self, id: usize) -> Option<usize> {
+        self.ans[id]
+    }
+    pub fn set_ans(&mut self, id: usize, val: usize) {
+        self.ans[id] = Some(val);
     }
     /// MB
     pub fn estimate_pool_mem(&self) -> usize {
@@ -78,7 +79,6 @@ impl QuadtreePool {
                     bl,
                     br,
                     height,
-                    ans,
                     ..
                 }) => {
                     if !dp.contains_key(&cur) {
@@ -87,9 +87,9 @@ impl QuadtreePool {
                         let new_bl = copy_to_new_pool(bl, pool, new_pool, dp);
                         let new_br = copy_to_new_pool(br, pool, new_pool, dp);
                         let new = new_pool.join(new_tl, new_tr, new_bl, new_br, height);
-                        if let Some(ans) = ans {
+                        if let Some(ans) = pool.ans[cur] {
                             let new_ans = copy_to_new_pool(ans, pool, new_pool, dp);
-                            new_pool.set_ans(new, new_ans);
+                            new_pool.ans[new] = Some(new_ans);
                         }
                         dp.insert(cur, new);
                     }

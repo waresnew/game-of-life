@@ -24,7 +24,6 @@ impl QuadtreePool {
             br,
             height,
             count,
-            ans: None,
         }))
     }
 

@@ -28,7 +28,8 @@ impl Solver {
     pub fn next_step(&mut self) {
         self.perf_stats.cache_hits = 0;
         self.perf_stats.cache_misses = 0;
-        self.root = Self::evolve(self.pool.add_border(self.root), self);
+        let input = self.pool.add_border(self.root);
+        self.root = self.evolve(input);
         if let Some((new_pool, new_root)) = self.pool.gc_pool_if_needed(self.root) {
             self.pool = new_pool;
             self.root = new_root;

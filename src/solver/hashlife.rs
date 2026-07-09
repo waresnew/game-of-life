@@ -4,21 +4,21 @@ use crate::{
 };
 
 impl Solver {
-    pub fn evolve(cur_id: usize, ctx: &mut Solver) -> usize {
+    pub fn evolve(&mut self, cur_id: usize) -> usize {
         let &Subtree {
             tl,
             tr,
             bl,
             br,
             height: cur_height,
-            ans: cur_ans,
             ..
-        } = ctx.pool[cur_id].as_subtree();
+        } = self.pool[cur_id].as_subtree();
+        let cur_ans = self.pool.get_ans(cur_id);
         if cur_ans.is_none() {
-            ctx.perf_stats.cache_misses += 1;
+            self.perf_stats.cache_misses += 1;
             if cur_height == 2 {
-                let ans = Self::solve_4x4(cur_id, ctx);
-                ctx.pool.set_ans(cur_id, ans);
+                let ans = self.solve_4x4(cur_id);
+                self.pool.set_ans(cur_id, ans);
                 return ans;
             }
             let &Subtree {
@@ -27,88 +27,78 @@ impl Solver {
                 bl: tl_bl,
                 br: tl_br,
                 ..
-            } = ctx.pool[tl].as_subtree();
+            } = self.pool[tl].as_subtree();
             let &Subtree {
                 tl: tr_tl,
                 tr: _tr_tr,
                 bl: tr_bl,
                 br: tr_br,
                 ..
-            } = ctx.pool[tr].as_subtree();
+            } = self.pool[tr].as_subtree();
             let &Subtree {
                 tl: bl_tl,
                 tr: bl_tr,
                 bl: _bl_bl,
                 br: bl_br,
                 ..
-            } = ctx.pool[bl].as_subtree();
+            } = self.pool[bl].as_subtree();
             let &Subtree {
                 tl: br_tl,
                 tr: br_tr,
                 bl: br_bl,
                 br: _br_br,
                 ..
-            } = ctx.pool[br].as_subtree();
-            let next_tl = Self::evolve(tl, ctx);
-            let next_tm = Self::evolve(
-                ctx.pool.join(tl_tr, tr_tl, tl_br, tr_bl, cur_height - 1),
-                ctx,
-            );
-            let next_tr = Self::evolve(tr, ctx);
-            let next_ml = Self::evolve(
-                ctx.pool.join(tl_bl, tl_br, bl_tl, bl_tr, cur_height - 1),
-                ctx,
-            );
-            let next_mm = Self::evolve(
-                ctx.pool.join(tl_br, tr_bl, bl_tr, br_tl, cur_height - 1),
-                ctx,
-            );
-            let next_mr = Self::evolve(
-                ctx.pool.join(tr_bl, tr_br, br_tl, br_tr, cur_height - 1),
-                ctx,
-            );
-            let next_bl = Self::evolve(bl, ctx);
-            let next_bm = Self::evolve(
-                ctx.pool.join(bl_tr, br_tl, bl_br, br_bl, cur_height - 1),
-                ctx,
-            );
-            let next_br = Self::evolve(br, ctx);
+            } = self.pool[br].as_subtree();
+            let next_tl = self.evolve(tl);
+            let tm = self.pool.join(tl_tr, tr_tl, tl_br, tr_bl, cur_height - 1);
+            let next_tm = self.evolve(tm);
+            let next_tr = self.evolve(tr);
+            let ml = self.pool.join(tl_bl, tl_br, bl_tl, bl_tr, cur_height - 1);
+            let next_ml = self.evolve(ml);
+            let mm = self.pool.join(tl_br, tr_bl, bl_tr, br_tl, cur_height - 1);
+            let next_mm = self.evolve(mm);
+            let mr = self.pool.join(tr_bl, tr_br, br_tl, br_tr, cur_height - 1);
+            let next_mr = self.evolve(mr);
+            let next_bl = self.evolve(bl);
+            let bm = self.pool.join(bl_tr, br_tl, bl_br, br_bl, cur_height - 1);
+            let next_bm = self.evolve(bm);
+            let next_br = self.evolve(br);
 
-            let intermediate_tl = ctx
-                .pool
-                .join(next_tl, next_tm, next_ml, next_mm, cur_height - 1);
-            let intermediate_tr = ctx
-                .pool
-                .join(next_tm, next_tr, next_mm, next_mr, cur_height - 1);
-            let intermediate_bl = ctx
-                .pool
-                .join(next_ml, next_mm, next_bl, next_bm, cur_height - 1);
-            let intermediate_br = ctx
-                .pool
-                .join(next_mm, next_mr, next_bm, next_br, cur_height - 1);
+            let intermediate_tl =
+                self.pool
+                    .join(next_tl, next_tm, next_ml, next_mm, cur_height - 1);
+            let intermediate_tr =
+                self.pool
+                    .join(next_tm, next_tr, next_mm, next_mr, cur_height - 1);
+            let intermediate_bl =
+                self.pool
+                    .join(next_ml, next_mm, next_bl, next_bm, cur_height - 1);
+            let intermediate_br =
+                self.pool
+                    .join(next_mm, next_mr, next_bm, next_br, cur_height - 1);
 
-            let ans = if cur_height - 2 > ctx.step_exp {
-                let new_tl = ctx.pool.get_centre(intermediate_tl);
-                let new_tr = ctx.pool.get_centre(intermediate_tr);
-                let new_bl = ctx.pool.get_centre(intermediate_bl);
-                let new_br = ctx.pool.get_centre(intermediate_br);
-                ctx.pool
+            let ans = if cur_height - 2 > self.step_exp {
+                let new_tl = self.pool.get_centre(intermediate_tl);
+                let new_tr = self.pool.get_centre(intermediate_tr);
+                let new_bl = self.pool.get_centre(intermediate_bl);
+                let new_br = self.pool.get_centre(intermediate_br);
+                self.pool
                     .join(new_tl, new_tr, new_bl, new_br, cur_height - 1)
             } else {
-                let new_tl = Self::evolve(intermediate_tl, ctx);
-                let new_tr = Self::evolve(intermediate_tr, ctx);
-                let new_bl = Self::evolve(intermediate_bl, ctx);
-                let new_br = Self::evolve(intermediate_br, ctx);
-                ctx.pool
+                let new_tl = self.evolve(intermediate_tl);
+                let new_tr = self.evolve(intermediate_tr);
+                let new_bl = self.evolve(intermediate_bl);
+                let new_br = self.evolve(intermediate_br);
+                self.pool
                     .join(new_tl, new_tr, new_bl, new_br, cur_height - 1)
             };
-            ctx.pool.set_ans(cur_id, ans);
+            self.pool.set_ans(cur_id, ans);
         } else {
-            ctx.perf_stats.cache_hits += 1;
+            self.perf_stats.cache_hits += 1;
         }
-        ctx.pool[cur_id].as_subtree().ans.unwrap()
+        self.pool.get_ans(cur_id).unwrap()
     }
-    fn solve_4x4(cur_id: usize, ctx: &mut Solver) -> usize {
+    fn solve_4x4(&mut self, cur_id: usize) -> usize {
         fn apply_gol(i: usize, j: usize, grid: &[[usize; 4]; 4]) -> usize {
             let mut alive_neighbours = 0;
             for di in -1..=1 {
@@ -134,11 +124,11 @@ impl Solver {
                 DEAD_CELL_ID
             }
         }
-        let cur = ctx.pool[cur_id].as_subtree();
-        let tl = ctx.pool[cur.tl].as_subtree();
-        let tr = ctx.pool[cur.tr].as_subtree();
-        let bl = ctx.pool[cur.bl].as_subtree();
-        let br = ctx.pool[cur.br].as_subtree();
+        let cur = self.pool[cur_id].as_subtree();
+        let tl = self.pool[cur.tl].as_subtree();
+        let tr = self.pool[cur.tr].as_subtree();
+        let bl = self.pool[cur.bl].as_subtree();
+        let br = self.pool[cur.br].as_subtree();
         let grid: [[usize; 4]; 4] = [
             [tl.tl, tl.tr, tr.tl, tr.tr],
             [tl.bl, tl.br, tr.bl, tr.br],
@@ -149,6 +139,6 @@ impl Solver {
         let ans_tr = apply_gol(1, 2, &grid);
         let ans_bl = apply_gol(2, 1, &grid);
         let ans_br = apply_gol(2, 2, &grid);
-        ctx.pool.join(ans_tl, ans_tr, ans_bl, ans_br, 1)
+        self.pool.join(ans_tl, ans_tr, ans_bl, ans_br, 1)
     }
 }

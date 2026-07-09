@@ -14,7 +14,6 @@ pub struct Subtree {
     pub br: usize,
     pub height: u32,
     pub count: BigUint,
-    pub ans: Option<usize>,
 }
 impl Quadtree {
     pub fn as_subtree(&self) -> &Subtree {
