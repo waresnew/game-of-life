@@ -1,4 +1,4 @@
-import { canvas, config, next_step, renderer, world } from "./app";
+import { CELL_SIZE, canvas, config, next_step, renderer, world } from "./app";
 
 const patterns: Record<string, string> = import.meta.glob("./patterns/*.rle", {
 	query: "?raw",
@@ -67,11 +67,15 @@ function applyRlePattern(pattern: string) {
 	let x = Math.floor(-width / 2);
 	let y = Math.floor(height / 2);
 	world.centre = [0, 0];
-	world.zoom = Math.min(
-		1,
-		Math.min(
-			canvas.width / (width * config.CELL_SIZE),
-			canvas.height / (height * config.CELL_SIZE),
+	world.zoomExpFloat = Math.floor(
+		Math.log2(
+			Math.min(
+				1,
+				Math.min(
+					canvas.width / (width * CELL_SIZE),
+					canvas.height / (height * CELL_SIZE),
+				),
+			),
 		),
 	);
 	const lines = content.join("").split("$");

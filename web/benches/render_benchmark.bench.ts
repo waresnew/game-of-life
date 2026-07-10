@@ -18,6 +18,7 @@ for (let i = -GRID_SIZE; i <= GRID_SIZE; i++) {
 const min = BigInt(-1 << 50);
 const max = BigInt(1 << 50);
 const config = get_config();
+const CELL_SIZE = 1 << config.CELL_SIZE_EXP;
 const canvas = document.createElement("canvas");
 canvas.width = 500;
 canvas.height = 500;
@@ -31,14 +32,14 @@ describe("render benchmark", () => {
 			const alives = renderer.render(1, min, min, max, max);
 			ctx.beginPath();
 			for (let i = 0; i < alives.length; i += config.RENDER_OUTPUT_SIZE) {
-				const x = Number(alives[i]) * config.CELL_SIZE,
-					y = Number(alives[i + 1]) * config.CELL_SIZE,
+				const x = Number(alives[i]) * CELL_SIZE,
+					y = Number(alives[i + 1]) * CELL_SIZE,
 					size_exp = Number(alives[i + 2]);
 				ctx.rect(
 					x,
 					y,
-					config.CELL_SIZE * (1 << size_exp),
-					config.CELL_SIZE * (1 << size_exp),
+					CELL_SIZE * (1 << size_exp),
+					CELL_SIZE * (1 << size_exp),
 				);
 			}
 			ctx.fill();

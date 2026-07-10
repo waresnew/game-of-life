@@ -35,7 +35,7 @@ impl Renderer {
     /// only to be used for wasm bc the function signature is unergonomic
     pub fn render(
         &self,
-        zoom: f64,
+        zoom_exp: i32,
         bound_min_x: i64,
         bound_min_y: i64,
         bound_max_x: i64,
@@ -48,7 +48,7 @@ impl Renderer {
                 WorldPoint::new(bound_min_x, bound_min_y),
                 WorldPoint::new(bound_max_x, bound_max_y),
             ),
-            zoom,
+            zoom_exp,
             MIN_POINT,
             &mut ans,
         );
@@ -66,12 +66,17 @@ impl Renderer {
 impl Renderer {
     /// tests/benches only, ignores size_exp
     pub fn render_all(&self) -> Vec<WorldPoint> {
-        self.render_visible(MIN_POINT, WorldPoint::negate(MIN_POINT), 1.0)
+        self.render_visible(MIN_POINT, WorldPoint::negate(MIN_POINT), 0)
     }
     /// tests/benches only
-    pub fn render_visible(&self, min: WorldPoint, max: WorldPoint, zoom: f64) -> Vec<WorldPoint> {
+    pub fn render_visible(
+        &self,
+        min: WorldPoint,
+        max: WorldPoint,
+        zoom_exp: i32,
+    ) -> Vec<WorldPoint> {
         let mut ans = Vec::new();
-        self.to_visible_alives(self.solver.root, (min, max), zoom, MIN_POINT, &mut ans);
+        self.to_visible_alives(self.solver.root, (min, max), zoom_exp, MIN_POINT, &mut ans);
         ans.chunks_exact(RENDER_OUTPUT_SIZE)
             .map(|chunk| {
                 let &[x, y, _size_exp] = chunk else {

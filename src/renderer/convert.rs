@@ -1,7 +1,7 @@
 use num_bigint::BigUint;
 
 use crate::{
-    config::CELL_SIZE,
+    config::CELL_SIZE_EXP,
     quadtree_pool::Quadtree,
     renderer::{Renderer, WorldPoint},
 };
@@ -11,7 +11,7 @@ impl Renderer {
         &self,
         id: usize,
         bounds: (WorldPoint, WorldPoint),
-        zoom: f64,
+        zoom_exp: i32,
         min: WorldPoint,
         ans: &mut Vec<i64>,
     ) {
@@ -29,7 +29,9 @@ impl Renderer {
                 if root.count == BigUint::ZERO {
                     return;
                 }
-                if (1_i64 << root.height) as f64 * CELL_SIZE as f64 * zoom <= 1.0 {
+
+                //2^x mult/div
+                if (root.height as i32) + (CELL_SIZE_EXP as i32) + zoom_exp <= 0 {
                     if root.count > BigUint::ZERO {
                         ans.extend([min.x, min.y, root.height as i64]);
                     }
@@ -39,22 +41,22 @@ impl Renderer {
                 self.to_visible_alives(
                     root.tl,
                     bounds,
-                    zoom,
+                    zoom_exp,
                     WorldPoint::new(min.x, min.y + mid),
                     ans,
                 );
                 self.to_visible_alives(
                     root.tr,
                     bounds,
-                    zoom,
+                    zoom_exp,
                     WorldPoint::new(min.x + mid, min.y + mid),
                     ans,
                 );
-                self.to_visible_alives(root.bl, bounds, zoom, min, ans);
+                self.to_visible_alives(root.bl, bounds, zoom_exp, min, ans);
                 self.to_visible_alives(
                     root.br,
                     bounds,
-                    zoom,
+                    zoom_exp,
                     WorldPoint::new(min.x + mid, min.y),
                     ans,
                 );

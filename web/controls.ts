@@ -1,6 +1,8 @@
 import {
+	CELL_SIZE,
 	canvas,
 	config,
+	getEffectiveZoom,
 	type Point,
 	renderer,
 	screenToWorld,
@@ -33,8 +35,11 @@ canvas.addEventListener("pointercancel", (event) => {
 });
 canvas.addEventListener("wheel", (event) => {
 	event.preventDefault();
-	const mouseDelta = -event.deltaY * 0.001;
-	zoom(Math.exp(mouseDelta));
+	const mouseDelta =
+		event.deltaMode == 0x00
+			? -event.deltaY * 0.004
+			: -Math.sign(event.deltaY) * 0.5;
+	zoom(mouseDelta);
 });
 
 function handleTouchZoom(event: PointerEvent) {
@@ -47,7 +52,7 @@ function handleTouchZoom(event: PointerEvent) {
 		const dy = y1 - y2;
 		const dist = Math.sqrt(dx * dx + dy * dy);
 		if (prevTouchZoomDist != -1) {
-			zoom(Math.exp((dist - prevTouchZoomDist) * 0.002));
+			zoom((dist - prevTouchZoomDist) * 0.002);
 		}
 		prevTouchZoomDist = dist;
 	}
@@ -128,23 +133,24 @@ function endDrawSession(event: PointerEvent) {
 	prevPanX = prevPanY = -1;
 	prevTouchZoomDist = -1;
 }
-function zoom(zoomFactor: number) {
-	let newZoom = world.zoom * zoomFactor;
-	newZoom = Math.min(1, newZoom);
+function zoom(zoomDelta: number) {
+	let newZoomExpFloat = world.zoomExpFloat + zoomDelta;
+	newZoomExpFloat = Math.max(-config.MAX_HEIGHT, Math.min(0, newZoomExpFloat));
+	const newZoom = 2 ** Math.trunc(newZoomExpFloat);
 	world.centre = [
 		newZoom * world.worldCursor[0] -
-			world.zoom * world.worldCursor[0] +
+			getEffectiveZoom() * world.worldCursor[0] +
 			world.centre[0],
 		-newZoom * world.worldCursor[1] +
-			world.zoom * world.worldCursor[1] +
+			getEffectiveZoom() * world.worldCursor[1] +
 			world.centre[1],
 	];
-	world.zoom = newZoom;
+	world.zoomExpFloat = newZoomExpFloat;
 }
 function doDraw() {
 	const cell: Point = [
-		Math.floor(world.worldCursor[0] / config.CELL_SIZE),
-		Math.floor(world.worldCursor[1] / config.CELL_SIZE),
+		Math.floor(world.worldCursor[0] / CELL_SIZE),
+		Math.floor(world.worldCursor[1] / CELL_SIZE),
 	];
 	if (
 		cell[0] > WORLD_BORDER ||

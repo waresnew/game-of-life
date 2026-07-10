@@ -25,12 +25,12 @@ macro_rules! define_config {
     };
 }
 define_config! {
-    MAX_HEIGHT:u32=50,
+    MAX_HEIGHT:u32=47,
     MIN_POINT:WorldPoint=WorldPoint {
 
         x: -1 << (MAX_HEIGHT - 1),
         y: -1 << (MAX_HEIGHT - 1),
     },
-    CELL_SIZE:u32=50,
+    CELL_SIZE_EXP:u32=5,
     RENDER_OUTPUT_SIZE:usize=3,
 }
