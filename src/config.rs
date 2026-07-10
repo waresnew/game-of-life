@@ -1,4 +1,4 @@
-use crate::renderer::WorldPoint;
+use crate::renderer::CellPoint;
 use tsify::Ts;
 use tsify::Tsify;
 
@@ -26,7 +26,7 @@ macro_rules! define_config {
 }
 define_config! {
     MAX_HEIGHT:u32=47,
-    MIN_POINT:WorldPoint=WorldPoint {
+    MIN_POINT:CellPoint=CellPoint {
 
         x: -1 << (MAX_HEIGHT - 1),
         y: -1 << (MAX_HEIGHT - 1),

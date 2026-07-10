@@ -4,7 +4,7 @@ use ahash::{AHashMap, AHasher};
 
 use crate::{
     quadtree_pool::{ALIVE_CELL_ID, DEAD_CELL_ID, Quadtree, QuadtreePool},
-    renderer::WorldPoint,
+    renderer::CellPoint,
 };
 
 #[allow(dead_code)]
@@ -12,8 +12,8 @@ impl QuadtreePool {
     #[deprecated = "use toggle_cell instead"]
     pub fn load_alives(
         &mut self,
-        alive: &mut Vec<WorldPoint>,
-        start_pos: WorldPoint,
+        alive: &mut Vec<CellPoint>,
+        start_pos: CellPoint,
         height: u32,
         dp: &mut AHashMap<u64, usize>,
     ) -> usize {
@@ -26,7 +26,7 @@ impl QuadtreePool {
             }
         }
         /// will mutate the arg to avoid a clone
-        fn calc_key(alive: &mut Vec<WorldPoint>, height: u32) -> u64 {
+        fn calc_key(alive: &mut Vec<CellPoint>, height: u32) -> u64 {
             alive.sort_unstable();
             let mut hasher = AHasher::default();
             for x in alive {
@@ -43,30 +43,30 @@ impl QuadtreePool {
             let mut tr_alive = Vec::new();
             let mut bl_alive = Vec::new();
             let mut br_alive = Vec::new();
-            for &mut WorldPoint { x, y } in alive {
+            for &mut CellPoint { x, y } in alive {
                 if x < mid_x && y >= mid_y {
-                    tl_alive.push(WorldPoint::new(x, y));
+                    tl_alive.push(CellPoint::new(x, y));
                 } else if x >= mid_x && y >= mid_y {
-                    tr_alive.push(WorldPoint::new(x, y));
+                    tr_alive.push(CellPoint::new(x, y));
                 } else if x < mid_x && y < mid_y {
-                    bl_alive.push(WorldPoint::new(x, y));
+                    bl_alive.push(CellPoint::new(x, y));
                 } else if x >= mid_x && y < mid_y {
-                    br_alive.push(WorldPoint::new(x, y));
+                    br_alive.push(CellPoint::new(x, y));
                 } else {
                     unreachable!("cell not placed in quadrant");
                 }
             }
             let tl = self.load_alives(
                 &mut tl_alive,
-                WorldPoint::new(start_pos.x, mid_y),
+                CellPoint::new(start_pos.x, mid_y),
                 height - 1,
                 dp,
             );
-            let tr = self.load_alives(&mut tr_alive, WorldPoint::new(mid_x, mid_y), height - 1, dp);
+            let tr = self.load_alives(&mut tr_alive, CellPoint::new(mid_x, mid_y), height - 1, dp);
             let bl = self.load_alives(&mut bl_alive, start_pos, height - 1, dp);
             let br = self.load_alives(
                 &mut br_alive,
-                WorldPoint::new(mid_x, start_pos.y),
+                CellPoint::new(mid_x, start_pos.y),
                 height - 1,
                 dp,
             );

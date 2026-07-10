@@ -1,7 +1,7 @@
-use game_of_life::renderer::{Renderer, WorldPoint};
+use game_of_life::renderer::{CellPoint, Renderer};
 
 fn main() {
-    let alive: Vec<WorldPoint> = vec![
+    let alive: Vec<CellPoint> = vec![
         (-2, 1),
         (-2, -1),
         (-3, -1),
@@ -11,7 +11,7 @@ fn main() {
         (3, -1),
     ]
     .into_iter()
-    .map(WorldPoint::from_tuple)
+    .map(CellPoint::from_tuple)
     .collect();
     let mut renderer = Renderer::new(12);
     for p in alive {

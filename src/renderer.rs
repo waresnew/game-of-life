@@ -1,6 +1,5 @@
-use std::fmt;
-
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use tsify::{Ts, Tsify};
 use wasm_bindgen::prelude::*;
 
 use crate::{
@@ -9,9 +8,31 @@ use crate::{
 };
 mod controls;
 mod convert;
+pub use controls::CellPoint;
+pub use convert::ScreenPoint;
+#[derive(Tsify, Serialize, Deserialize, Copy, Clone)]
+pub struct ViewportInfo {
+    pub bound_min: CellPoint,
+    pub bound_max: CellPoint,
+    pub zoom_exp: i32,
+    pub canvas_dims: ScreenPoint,
+    pub centre: ScreenPoint,
+}
+impl Default for ViewportInfo {
+    fn default() -> Self {
+        Self {
+            bound_min: CellPoint::new(0, 0),
+            bound_max: CellPoint::new(0, 0),
+            zoom_exp: 0,
+            canvas_dims: ScreenPoint::new(0, 0),
+            centre: ScreenPoint::new(0, 0),
+        }
+    }
+}
 #[wasm_bindgen]
 pub struct Renderer {
     solver: Solver,
+    viewport_info: ViewportInfo,
 }
 #[wasm_bindgen]
 impl Renderer {
@@ -23,6 +44,7 @@ impl Renderer {
     pub fn new(step_exp: u32) -> Self {
         Self {
             solver: Solver::new(step_exp),
+            viewport_info: ViewportInfo::default(),
         }
     }
     pub fn next_step(&mut self) {
@@ -31,32 +53,19 @@ impl Renderer {
     pub fn set_step_exp(&mut self, step_exp: u32) {
         self.solver.set_step_exp(step_exp);
     }
+    pub fn update_viewport(&mut self, viewport_info: Ts<ViewportInfo>) {
+        self.viewport_info = viewport_info.to_rust().unwrap();
+    }
     #[cfg(target_arch = "wasm32")]
     /// only to be used for wasm bc the function signature is unergonomic
-    pub fn render(
-        &self,
-        zoom_exp: i32,
-        bound_min_x: i64,
-        bound_min_y: i64,
-        bound_max_x: i64,
-        bound_max_y: i64,
-    ) -> Vec<i64> {
+    pub fn render(&self) -> Vec<i64> {
         let mut ans = Vec::new();
-        self.to_visible_alives(
-            self.solver.root,
-            (
-                WorldPoint::new(bound_min_x, bound_min_y),
-                WorldPoint::new(bound_max_x, bound_max_y),
-            ),
-            zoom_exp,
-            MIN_POINT,
-            &mut ans,
-        );
+        self.to_visible_alives(self.solver.root, MIN_POINT, &mut ans);
         ans
     }
     pub fn toggle_cell(&mut self, x: i64, y: i64) {
         self.solver.root =
-            self.toggle_cell_and_return_root(WorldPoint::new(x, y), self.solver.root, MIN_POINT);
+            self.toggle_cell_and_return_root(CellPoint::new(x, y), self.solver.root, MIN_POINT);
         self.solver.update_stats();
     }
     pub fn clear_grid(&mut self) {
@@ -65,52 +74,34 @@ impl Renderer {
 }
 impl Renderer {
     /// tests/benches only, ignores size_exp
-    pub fn render_all(&self) -> Vec<WorldPoint> {
-        self.render_visible(MIN_POINT, WorldPoint::negate(MIN_POINT), 0)
+    pub fn render_all(&mut self) -> Vec<CellPoint> {
+        self.update_viewport(
+            ViewportInfo {
+                bound_min: MIN_POINT,
+                bound_max: CellPoint::negate(MIN_POINT),
+                zoom_exp: 0,
+                centre: ScreenPoint::new(0, 0),
+                canvas_dims: ScreenPoint::new(
+                    MIN_POINT.x.unsigned_abs() as usize,
+                    MIN_POINT.y.unsigned_abs() as usize,
+                ),
+            }
+            .into_ts()
+            .unwrap(),
+        );
+        self.render_visible()
     }
     /// tests/benches only
-    pub fn render_visible(
-        &self,
-        min: WorldPoint,
-        max: WorldPoint,
-        zoom_exp: i32,
-    ) -> Vec<WorldPoint> {
+    pub fn render_visible(&self) -> Vec<CellPoint> {
         let mut ans = Vec::new();
-        self.to_visible_alives(self.solver.root, (min, max), zoom_exp, MIN_POINT, &mut ans);
+        self.to_visible_alives(self.solver.root, MIN_POINT, &mut ans);
         ans.chunks_exact(RENDER_OUTPUT_SIZE)
             .map(|chunk| {
                 let &[x, y, _size_exp] = chunk else {
                     unreachable!();
                 };
-                WorldPoint::new(x, y)
+                CellPoint::new(x, y)
             })
             .collect()
-    }
-}
-#[derive(Serialize, Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
-pub struct WorldPoint {
-    pub x: i64,
-    pub y: i64,
-}
-impl fmt::Debug for WorldPoint {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
-    }
-}
-
-impl WorldPoint {
-    pub fn new(x: i64, y: i64) -> Self {
-        Self { x, y }
-    }
-}
-impl WorldPoint {
-    pub fn from_tuple((x, y): (i64, i64)) -> Self {
-        WorldPoint::new(x, y)
-    }
-    pub fn negate(self) -> Self {
-        Self {
-            x: -self.x,
-            y: -self.y,
-        }
     }
 }

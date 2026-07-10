@@ -1,4 +1,10 @@
-import { get_config, type PerfStats, Renderer } from "../pkg/game_of_life.js";
+import {
+	get_config,
+	type PerfStats,
+	Renderer,
+	CellPoint as RustCellPoint,
+	ScreenPoint as RustScreenPoint,
+} from "../pkg/game_of_life.js";
 
 export type Point = [number, number];
 
@@ -111,13 +117,14 @@ function repaint(time: DOMHighResTimeStamp) {
 	const br = screenToWorld([canvas.width, canvas.height]).map((x) =>
 		Math.floor(x / CELL_SIZE),
 	) as Point;
-	const alives = renderer.render(
-		getEffectiveZoomExp(),
-		BigInt(bl[0]),
-		BigInt(bl[1]),
-		BigInt(tr[0]),
-		BigInt(tr[1]),
-	);
+	renderer.update_viewport({
+		bound_min: toRustCellPoint(bl),
+		bound_max: toRustCellPoint(tr),
+		zoom_exp: getEffectiveZoomExp(),
+		centre: toRustScreenPoint(world.centre),
+		canvas_dims: toRustScreenPoint([canvas.width, canvas.height]),
+	});
+	const alives = renderer.render();
 	world.renderedCnt = alives.length / config.RENDER_OUTPUT_SIZE;
 	updateStats();
 	ctx.beginPath();
@@ -177,4 +184,10 @@ function getEffectiveZoomExp() {
 }
 export function getEffectiveZoom() {
 	return 2 ** getEffectiveZoomExp();
+}
+function toRustCellPoint(p: Point) {
+	return new RustCellPoint(BigInt(p[0]), BigInt(p[1]));
+}
+function toRustScreenPoint(p: Point) {
+	return new RustScreenPoint(p[0], p[1]);
 }

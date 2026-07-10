@@ -1,7 +1,7 @@
 use std::{collections::HashSet, hint::black_box};
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use game_of_life::renderer::{Renderer, WorldPoint};
+use game_of_life::renderer::{CellPoint, Renderer};
 use rand::{distr::Uniform, prelude::*};
 
 fn random_rect(c: &mut Criterion) {
@@ -14,7 +14,7 @@ fn random_rect(c: &mut Criterion) {
         let y = rng.sample(distr);
         alive.insert((x, y));
     }
-    let input: Vec<WorldPoint> = alive.into_iter().map(WorldPoint::from_tuple).collect();
+    let input: Vec<CellPoint> = alive.into_iter().map(CellPoint::from_tuple).collect();
     let mut renderer = Renderer::new(12);
     for p in input.clone() {
         renderer.toggle_cell(p.x, p.y);
