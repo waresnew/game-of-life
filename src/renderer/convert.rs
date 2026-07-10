@@ -21,10 +21,7 @@ impl Renderer {
                     bounds,
                     (
                         min,
-                        WorldPoint::new(
-                            min.x + (1_i64 << root.height),
-                            min.y + (1_i64 << root.height),
-                        ),
+                        WorldPoint::new(min.x + (1 << root.height), min.y + (1 << root.height)),
                     ),
                 ) {
                     return;
@@ -38,7 +35,7 @@ impl Renderer {
                     }
                     return;
                 }
-                let mid = 1_i64 << (root.height - 1);
+                let mid = 1 << (root.height - 1);
                 self.to_visible_alives(
                     root.tl,
                     bounds,

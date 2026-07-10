@@ -37,8 +37,8 @@ impl QuadtreePool {
         }
         let key = calc_key(alive, height);
         if !dp.contains_key(&key) {
-            let mid_x = start_pos.x + (1_i64 << (height - 1));
-            let mid_y = start_pos.y + (1_i64 << (height - 1));
+            let mid_x = start_pos.x + (1 << (height - 1));
+            let mid_y = start_pos.y + (1 << (height - 1));
             let mut tl_alive = Vec::new();
             let mut tr_alive = Vec::new();
             let mut bl_alive = Vec::new();

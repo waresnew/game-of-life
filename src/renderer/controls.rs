@@ -29,12 +29,12 @@ impl Renderer {
                     point,
                     (
                         min,
-                        WorldPoint::new(min.x + (1_i64 << height), min.y + (1_i64 << height)),
+                        WorldPoint::new(min.x + (1 << height), min.y + (1 << height)),
                     ),
                 ) {
                     return root;
                 }
-                let mid = 1_i64 << (height - 1);
+                let mid = 1 << (height - 1);
                 let tl = self.toggle_cell_and_return_root(
                     point,
                     tl,
