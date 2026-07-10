@@ -2,12 +2,12 @@ use std::fmt;
 
 use wasm_bindgen::prelude::*;
 
-use crate::solver::{PerfStats, Solver};
+use crate::solver::{MAX_HEIGHT, PerfStats, Solver};
 mod controls;
 mod convert;
 pub const MIN_POINT: WorldPoint = WorldPoint {
-    x: -1_000_000_000_000_000,
-    y: -1_000_000_000_000_000,
+    x: -1 << (MAX_HEIGHT - 1),
+    y: -1 << (MAX_HEIGHT - 1),
 };
 #[wasm_bindgen]
 pub struct Renderer {

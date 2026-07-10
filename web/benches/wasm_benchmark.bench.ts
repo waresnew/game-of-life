@@ -15,8 +15,8 @@ for (let i = -GRID_SIZE; i <= GRID_SIZE; i++) {
 		renderer.toggle_cell(BigInt(i), BigInt(j));
 	}
 }
-const min = -100000000000000n;
-const max = 100000000000000n;
+const min = BigInt(-1 << 50);
+const max = BigInt(1 << 50);
 describe("wasm benchmark", () => {
 	bench(
 		"filled 16x16 render",

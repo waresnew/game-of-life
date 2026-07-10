@@ -4,7 +4,7 @@ dev:
     cd web && bunx vite
 
 profile:
-    wasm-pack build --dev --target bundler
+    wasm-pack build --profiling --target bundler
     cd web && bunx vite
 
 bin example:

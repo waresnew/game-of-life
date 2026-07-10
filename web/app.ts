@@ -3,7 +3,7 @@ import { type PerfStats, Renderer } from "../pkg/game_of_life.js";
 export type Point = [number, number];
 
 export const CELL_SIZE = 50;
-export const WORLD_BORDER = 1e14;
+export const WORLD_BORDER = 1 << 50;
 
 if (WORLD_BORDER * CELL_SIZE > Number.MAX_SAFE_INTEGER) {
 	throw "WORLD_BORDER*CELL_SIZE>max safe int";
@@ -104,7 +104,7 @@ function repaint(time: DOMHighResTimeStamp) {
 		BigInt(tr[0]),
 		BigInt(tr[1]),
 	);
-	world.renderedCnt = alives.length;
+	world.renderedCnt = alives.length / 3;
 	updateStats();
 	ctx.beginPath();
 	for (let i = 0; i < alives.length; i += 3) {
