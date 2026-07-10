@@ -1,9 +1,8 @@
 use wasm_bindgen::prelude::*;
 
-use crate::quadtree_pool::QuadtreePool;
+use crate::{config::MAX_HEIGHT, quadtree_pool::QuadtreePool};
 
 mod hashlife;
-pub const MAX_HEIGHT: u32 = 50;
 pub struct Solver {
     pub perf_stats: PerfStats,
     pub pool: QuadtreePool,

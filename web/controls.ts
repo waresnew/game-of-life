@@ -1,6 +1,6 @@
 import {
-	CELL_SIZE,
 	canvas,
+	config,
 	type Point,
 	renderer,
 	screenToWorld,
@@ -143,8 +143,8 @@ function zoom(zoomFactor: number) {
 }
 function doDraw() {
 	const cell: Point = [
-		Math.floor(world.worldCursor[0] / CELL_SIZE),
-		Math.floor(world.worldCursor[1] / CELL_SIZE),
+		Math.floor(world.worldCursor[0] / config.CELL_SIZE),
+		Math.floor(world.worldCursor[1] / config.CELL_SIZE),
 	];
 	if (
 		cell[0] > WORLD_BORDER ||

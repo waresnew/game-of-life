@@ -10,7 +10,7 @@ macro_rules! test_solve {
         use game_of_life::renderer::{Renderer, WorldPoint};
         let mut output = $crate::utils::convert_coords($output);
         let alive = $crate::utils::convert_coords($input);
-        let mut renderer = Renderer::new($k, 50);
+        let mut renderer = Renderer::new($k);
         for p in alive {
             renderer.toggle_cell(p.x, p.y);
         }

@@ -7,7 +7,7 @@ fn main() {
             input.push(WorldPoint::new(i, j))
         }
     }
-    let mut renderer = Renderer::new(12, 50);
+    let mut renderer = Renderer::new(12);
     for p in input.clone() {
         renderer.toggle_cell(p.x, p.y);
     }

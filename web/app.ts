@@ -1,11 +1,11 @@
-import { type PerfStats, Renderer } from "../pkg/game_of_life.js";
+import { get_config, type PerfStats, Renderer } from "../pkg/game_of_life.js";
 
 export type Point = [number, number];
 
-export const CELL_SIZE = 50;
-export const WORLD_BORDER = 1 << 50;
+export const config = get_config();
+export const WORLD_BORDER = 1 << config.MAX_HEIGHT;
 
-if (WORLD_BORDER * CELL_SIZE > Number.MAX_SAFE_INTEGER) {
+if (WORLD_BORDER * config.CELL_SIZE > Number.MAX_SAFE_INTEGER) {
 	throw "WORLD_BORDER*CELL_SIZE>max safe int";
 }
 
@@ -23,14 +23,14 @@ class World {
 }
 
 export const world = new World();
-export const renderer = new Renderer(world.stepExp, CELL_SIZE);
+export const renderer = new Renderer(world.stepExp);
 export const canvas = document.getElementById("grid") as HTMLCanvasElement;
 requestAnimationFrame(repaint);
 function updateStats() {
 	document.getElementById("stats-zoom")!.textContent =
 		`Zoom: ${world.zoom.toPrecision(3)}`;
 	document.getElementById("stats-cursor")!.textContent =
-		`Cursor: (${Math.floor(world.worldCursor[0] / CELL_SIZE)},${Math.floor(world.worldCursor[1] / CELL_SIZE)})`;
+		`Cursor: (${Math.floor(world.worldCursor[0] / config.CELL_SIZE)},${Math.floor(world.worldCursor[1] / config.CELL_SIZE)})`;
 	document.getElementById("debug-rendered")!.textContent =
 		`Rendered: ${world.renderedCnt}`;
 	document.getElementById("stats-fps")!.textContent = `FPS: ${world.fps}`;
@@ -86,16 +86,16 @@ function repaint(time: DOMHighResTimeStamp) {
 		canvas.height / 2,
 	);
 	const tl = screenToWorld([0, 0]).map((x) =>
-		Math.floor(x / CELL_SIZE),
+		Math.floor(x / config.CELL_SIZE),
 	) as Point;
 	const tr = screenToWorld([canvas.width, 0]).map((x) =>
-		Math.floor(x / CELL_SIZE),
+		Math.floor(x / config.CELL_SIZE),
 	) as Point;
 	const bl = screenToWorld([0, canvas.height]).map((x) =>
-		Math.floor(x / CELL_SIZE),
+		Math.floor(x / config.CELL_SIZE),
 	) as Point;
 	const br = screenToWorld([canvas.width, canvas.height]).map((x) =>
-		Math.floor(x / CELL_SIZE),
+		Math.floor(x / config.CELL_SIZE),
 	) as Point;
 	const alives = renderer.render(
 		world.zoom,
@@ -104,34 +104,49 @@ function repaint(time: DOMHighResTimeStamp) {
 		BigInt(tr[0]),
 		BigInt(tr[1]),
 	);
-	world.renderedCnt = alives.length / 3;
+	let minSizeExp = 1000;
+	world.renderedCnt = alives.length / config.RENDER_OUTPUT_SIZE;
 	updateStats();
 	ctx.beginPath();
-	for (let i = 0; i < alives.length; i += 3) {
-		const x = Number(alives[i]) * CELL_SIZE,
-			y = Number(alives[i + 1]) * CELL_SIZE,
+	for (let i = 0; i < alives.length; i += config.RENDER_OUTPUT_SIZE) {
+		const x = Number(alives[i]) * config.CELL_SIZE,
+			y = Number(alives[i + 1]) * config.CELL_SIZE,
 			size_exp = Number(alives[i + 2]);
 		const [translatedX, translatedY] = translateToScreen([x, y]);
 		ctx.rect(
 			translatedX,
 			translatedY,
-			CELL_SIZE * (1 << size_exp),
-			CELL_SIZE * (1 << size_exp),
+			config.CELL_SIZE * (1 << size_exp),
+			config.CELL_SIZE * (1 << size_exp),
 		);
+		minSizeExp = Math.min(minSizeExp, size_exp);
 	}
+	console.log(minSizeExp);
 	ctx.fill();
-	if (CELL_SIZE * world.zoom >= 1) {
+	if (config.CELL_SIZE * world.zoom >= 1) {
 		ctx.beginPath();
 		ctx.strokeStyle = "#f0f0f0";
 		for (let i = tl[0]; i <= tr[0]; ++i) {
-			const start = translateToScreen([i * CELL_SIZE, (tl[1] + 1) * CELL_SIZE]);
-			const end = translateToScreen([i * CELL_SIZE, (bl[1] - 1) * CELL_SIZE]);
+			const start = translateToScreen([
+				i * config.CELL_SIZE,
+				(tl[1] + 1) * config.CELL_SIZE,
+			]);
+			const end = translateToScreen([
+				i * config.CELL_SIZE,
+				(bl[1] - 1) * config.CELL_SIZE,
+			]);
 			ctx.moveTo(...start);
 			ctx.lineTo(...end);
 		}
 		for (let j = bl[1]; j <= tl[1]; ++j) {
-			const start = translateToScreen([(tl[0] - 1) * CELL_SIZE, j * CELL_SIZE]);
-			const end = translateToScreen([(tr[0] + 1) * CELL_SIZE, j * CELL_SIZE]);
+			const start = translateToScreen([
+				(tl[0] - 1) * config.CELL_SIZE,
+				j * config.CELL_SIZE,
+			]);
+			const end = translateToScreen([
+				(tr[0] + 1) * config.CELL_SIZE,
+				j * config.CELL_SIZE,
+			]);
 			ctx.moveTo(...start);
 			ctx.lineTo(...end);
 		}
@@ -139,14 +154,14 @@ function repaint(time: DOMHighResTimeStamp) {
 	}
 	ctx.strokeStyle = "#000000";
 	const border = translateToScreen([
-		-WORLD_BORDER * CELL_SIZE,
-		-WORLD_BORDER * CELL_SIZE,
+		-WORLD_BORDER * config.CELL_SIZE,
+		-WORLD_BORDER * config.CELL_SIZE,
 	]);
 	ctx.strokeRect(
 		border[0],
 		border[1],
-		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
-		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
+		(WORLD_BORDER * 2 + 1) * config.CELL_SIZE,
+		(WORLD_BORDER * 2 + 1) * config.CELL_SIZE,
 	);
 	document.body.classList.add("ready"); //fouc from empty spans
 	requestAnimationFrame(repaint);

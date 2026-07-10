@@ -51,7 +51,7 @@ fn one_step_acorn() {
     .into_iter()
     .map(WorldPoint::from_tuple)
     .collect();
-    let mut renderer = Renderer::new(13, 50);
+    let mut renderer = Renderer::new(13);
     for p in alive {
         renderer.toggle_cell(p.x, p.y);
     }

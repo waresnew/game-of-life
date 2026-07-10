@@ -15,7 +15,7 @@ fn random_rect(c: &mut Criterion) {
         alive.insert((x, y));
     }
     let input: Vec<WorldPoint> = alive.into_iter().map(WorldPoint::from_tuple).collect();
-    let mut renderer = Renderer::new(12, 50);
+    let mut renderer = Renderer::new(12);
     for p in input.clone() {
         renderer.toggle_cell(p.x, p.y);
     }

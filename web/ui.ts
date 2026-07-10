@@ -1,4 +1,4 @@
-import { CELL_SIZE, canvas, next_step, renderer, world } from "./app";
+import { canvas, config, next_step, renderer, world } from "./app";
 
 const patterns: Record<string, string> = import.meta.glob("./patterns/*.rle", {
 	query: "?raw",
@@ -11,7 +11,7 @@ document.getElementById("stepsize-less")!.addEventListener("click", (event) => {
 	renderer.set_step_exp(world.stepExp);
 });
 document.getElementById("stepsize-more")!.addEventListener("click", (event) => {
-	world.stepExp = Math.min(49, world.stepExp + 1); //(MAX_HEIGHT+1)-2=49
+	world.stepExp = Math.min(config.MAX_HEIGHT + 1 - 2, world.stepExp + 1);
 	renderer.set_step_exp(world.stepExp);
 });
 document.getElementById("once-button")!.addEventListener("click", (event) => {
@@ -70,8 +70,8 @@ function applyRlePattern(pattern: string) {
 	world.zoom = Math.min(
 		1,
 		Math.min(
-			canvas.width / (width * CELL_SIZE),
-			canvas.height / (height * CELL_SIZE),
+			canvas.width / (width * config.CELL_SIZE),
+			canvas.height / (height * config.CELL_SIZE),
 		),
 	);
 	const lines = content.join("").split("$");

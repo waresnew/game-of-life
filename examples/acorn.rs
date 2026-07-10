@@ -13,7 +13,7 @@ fn main() {
     .into_iter()
     .map(WorldPoint::from_tuple)
     .collect();
-    let mut renderer = Renderer::new(12, 50);
+    let mut renderer = Renderer::new(12);
     for p in alive {
         renderer.toggle_cell(p.x, p.y);
     }

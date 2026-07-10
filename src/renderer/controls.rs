@@ -4,13 +4,8 @@ use crate::{
 };
 
 impl Renderer {
-    fn point_in_box(point: WorldPoint, (bounds1, bounds2): (WorldPoint, WorldPoint)) -> bool {
-        let (min_x, max_x) = (bounds1.x.min(bounds2.x), bounds1.x.max(bounds2.x));
-        let (min_y, max_y) = (bounds1.y.min(bounds2.y), bounds1.y.max(bounds2.y));
-        !(point.x > max_x || point.x < min_x || point.y > max_y || point.y < min_y)
-    }
     #[must_use]
-    pub fn toggle_cell_and_return_root(
+    pub(super) fn toggle_cell_and_return_root(
         &mut self,
         point: WorldPoint,
         root: usize,

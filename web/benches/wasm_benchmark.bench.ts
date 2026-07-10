@@ -8,7 +8,7 @@ function getRandomInt(min: number, max: number) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const renderer = new Renderer(0, 50);
+const renderer = new Renderer(0);
 const GRID_SIZE = 8;
 for (let i = -GRID_SIZE; i <= GRID_SIZE; i++) {
 	for (let j = -GRID_SIZE; j <= GRID_SIZE; j++) {
