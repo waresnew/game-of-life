@@ -15,12 +15,13 @@ impl ImageBitmap {
             height,
         }
     }
-    pub fn fill(&mut self, sx: i64, sy: i64, size_exp: u32) {
+    pub fn fill(&mut self, bl: CellPoint, size_exp: u32) {
         let size = 1 << size_exp;
+        let tl = CellPoint::new(bl.x, bl.y - size);
         for dx in 0..size {
             for dy in 0..size {
-                let x = sx + dx;
-                let y = sy + dy;
+                let x = tl.x + dx;
+                let y = tl.y + dy;
                 if y >= self.height as i64 || x >= self.width as i64 || y < 0 || x < 0 {
                     continue;
                 }

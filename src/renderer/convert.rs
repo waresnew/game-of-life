@@ -44,7 +44,7 @@ impl Renderer {
                 let pixels_exp = (pixels_exp_tmp + (root.height as i32)).max(0) as u32;
                 if pixels_exp == 0 {
                     if root.count > BigUint::ZERO {
-                        ans.fill(screen_point.x, screen_point.y, pixels_exp);
+                        ans.fill(screen_point, pixels_exp);
                     }
                     return;
                 }
@@ -57,7 +57,7 @@ impl Renderer {
             &Quadtree::Cell(alive) => {
                 if alive && self.point_in_viewport(min) {
                     let pixels_exp = pixels_exp_tmp.max(0) as u32;
-                    ans.fill(screen_point.x, screen_point.y, pixels_exp);
+                    ans.fill(screen_point, pixels_exp);
                 }
             }
         }
