@@ -32,6 +32,31 @@ playButton.addEventListener("click", (event) => {
 		playButton.textContent = "Play";
 	}
 });
+
+function handleRuleChange() {
+	const inputB = document.getElementById("rule-b-input") as HTMLInputElement;
+	const inputS = document.getElementById("rule-s-input") as HTMLInputElement;
+	if (inputB.checkValidity() && inputS.checkValidity()) {
+		const b = new Uint32Array(inputB.value.split("").map((x) => parseInt(x)));
+		const s = new Uint32Array(inputS.value.split("").map((x) => parseInt(x)));
+		renderer.set_rules(b, s);
+		inputB.classList.add("border-green-400");
+		inputS.classList.add("border-green-400");
+		setTimeout(() => {
+			inputB.classList.remove("border-green-400");
+			inputS.classList.remove("border-green-400");
+		}, 200);
+	}
+}
+
+document
+	.getElementById("rule-b-input")!
+	.addEventListener("change", handleRuleChange);
+
+document
+	.getElementById("rule-s-input")!
+	.addEventListener("change", handleRuleChange);
+
 const patternPresets = document.getElementById(
 	"pattern-dropdown",
 ) as HTMLSelectElement;

@@ -70,6 +70,32 @@
 				</div>
 			</div>
 			<div class="flex flex-col gap-4 w-60 flex-none">
+				<div>
+					<span>Rule:</span>
+					<label for="rule-b">B</label>
+					<input
+						class="max-w-8 invalid:border-red-400"
+						title="Condition for cell to be born (# of alive neighbours)"
+						name="rule-b"
+						id="rule-b-input"
+						maxlength="9"
+						value="3"
+						autocomplete="off"
+						pattern="[0-8]*"
+					>
+					<span>/</span>
+					<label for="rule-s">S</label>
+					<input
+						class="max-w-8 invalid:border-red-400"
+						title="Condition for a cell to survive (# of alive neighbours)"
+						name="rule-s"
+						id="rule-s-input"
+						maxlength="9"
+						value="23"
+						autocomplete="off"
+						pattern="[0-8]*"
+					>
+				</div>
 				<div class="flex gap-2 flex-col" id="patterns">
 					<label for="pattern-presets">Patterns:</label>
 					<select name="pattern-presets" id="pattern-dropdown">
