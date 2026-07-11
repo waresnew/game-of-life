@@ -1,6 +1,6 @@
 import { Bench } from "tinybench";
 import { bench, describe } from "vitest";
-import { get_config, Renderer } from "../../pkg/game_of_life.js";
+import { get_config, Point, Renderer } from "../../pkg/game_of_life.js";
 
 function getRandomInt(min: number, max: number) {
 	min = Math.ceil(min);
@@ -24,24 +24,23 @@ canvas.width = 500;
 canvas.height = 500;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext("2d")!;
+renderer.update_viewport({
+	zoom_out_exp: 0,
+	canvas_dims: new Point(500n, 500n),
+	centre: new Point(0n, 0n),
+});
 describe("render benchmark", () => {
 	bench(
 		"filled 16x16 canvas render",
 		async () => {
 			//assume 1 zoom, camera at (0,0)
-			const alives = renderer.render(1, min, min, max, max);
-			ctx.beginPath();
-			for (let i = 0; i < alives.length; i += config.RENDER_OUTPUT_SIZE) {
-				const x = Number(alives[i]) * CELL_SIZE,
-					y = Number(alives[i + 1]) * CELL_SIZE,
-					size_exp = Number(alives[i + 2]);
-				ctx.rect(
-					x,
-					y,
-					CELL_SIZE * (1 << size_exp),
-					CELL_SIZE * (1 << size_exp),
-				);
-			}
+			const alives = renderer.render();
+			const imageData = new ImageData(
+				new Uint8ClampedArray(renderer.render()),
+				canvas.width,
+				canvas.height,
+			);
+			ctx.putImageData(imageData, 0, 0);
 			ctx.fill();
 		},
 		{ time: 5000 },

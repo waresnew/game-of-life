@@ -1,5 +1,3 @@
-use web_sys::console;
-
 use crate::renderer::Point;
 
 pub struct ImageBitmap {
@@ -8,15 +6,15 @@ pub struct ImageBitmap {
     height: usize,
 }
 const RGBA_LEN: usize = 4;
-const DEAD_COLOUR: RGB = RGB::new(255, 255, 255);
-const ALIVE_COLOUR: RGB = RGB::new(0, 0, 0);
+const DEAD_COLOUR: Rgb = Rgb::new(255, 255, 255);
+const ALIVE_COLOUR: Rgb = Rgb::new(0, 0, 0);
 #[derive(Debug, Clone, Copy)]
-pub struct RGB {
+pub struct Rgb {
     pub r: u8,
     pub g: u8,
     pub b: u8,
 }
-impl RGB {
+impl Rgb {
     pub const fn new(r: u8, g: u8, b: u8) -> Self {
         Self { r, g, b }
     }
@@ -52,7 +50,7 @@ impl ImageBitmap {
             }
         }
     }
-    pub fn fill_pixel(&mut self, p: Point, colour: RGB) {
+    pub fn fill_pixel(&mut self, p: Point, colour: Rgb) {
         if p.x < 0 || p.y < 0 || p.x >= self.width as i64 || p.y >= self.height as i64 {
             return;
         }

@@ -16,7 +16,7 @@ if (WORLD_BORDER * CELL_SIZE > Number.MAX_SAFE_INTEGER) {
 }
 
 class World {
-	centre: Point = [0, 0];
+	#centre: Point = [0, 0];
 	renderedCnt = 0;
 	zoomOutExpFloat = 0;
 	ticking = false;
@@ -26,6 +26,12 @@ class World {
 	stepExp = 0;
 	generation = 0n;
 	worldCursor: Point = [-1, -1];
+	get centre() {
+		return this.#centre;
+	}
+	set centre(p) {
+		this.#centre = [Math.floor(p[0]), Math.floor(p[1])];
+	}
 }
 
 export const world = new World();
@@ -80,7 +86,6 @@ function repaint(time: DOMHighResTimeStamp) {
 
 	const ctx = canvas.getContext("2d")!;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	world.centre = [Math.floor(world.centre[0]), Math.floor(world.centre[1])]; //TODO: enforce better
 	renderer.update_viewport({
 		zoom_out_exp: getEffectiveZoomOutExp(),
 		centre: toRustCellPoint(world.centre),

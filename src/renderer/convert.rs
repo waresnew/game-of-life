@@ -1,5 +1,4 @@
 use num_bigint::BigUint;
-use web_sys::console;
 
 use crate::{
     config::CELL_SIZE_EXP,
@@ -7,7 +6,7 @@ use crate::{
     renderer::{
         Renderer,
         controls::Point,
-        image_bitmap::{ImageBitmap, RGB},
+        image_bitmap::{ImageBitmap, Rgb},
     },
 };
 
@@ -37,7 +36,7 @@ impl Renderer {
         if CELL_SIZE_EXP < GRID_CUTOFF + self.viewport_info.zoom_out_exp {
             return;
         }
-        const GRID_COLOUR: RGB = RGB::new(240, 240, 240);
+        const GRID_COLOUR: Rgb = Rgb::new(240, 240, 240);
         let min = self.screen_to_cell(Point::new(0, self.viewport_info.canvas_dims.y));
         let max = self.screen_to_cell(Point::new(self.viewport_info.canvas_dims.x, 0));
         for x in min.x..=max.x {
