@@ -32,9 +32,8 @@ impl ImageBitmap {
             height,
         }
     }
-    pub fn fill_cell(&mut self, bl: Point, size_exp: u32) {
+    pub fn fill_cell(&mut self, tl: Point, size_exp: u32) {
         let size = 1 << size_exp;
-        let tl = Point::new(bl.x, bl.y - size);
         for dx in 0..size {
             for dy in 0..size {
                 let x = tl.x + dx;

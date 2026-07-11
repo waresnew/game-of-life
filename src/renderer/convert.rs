@@ -30,8 +30,8 @@ impl Renderer {
             + (self.viewport_info.canvas_dims.y / 2);
         Point::new(x, y)
     }
-    pub(super) fn draw_gridlines(&self, ans: &mut ImageBitmap) {
-        const GRID_CUTOFF: u32 = 2;
+    pub(super) fn draw_grid(&self, ans: &mut ImageBitmap) {
+        const GRID_CUTOFF: u32 = CELL_SIZE_EXP - 3;
         //aka CELL_SIZE_EXP-zoom_out_exp<cutoff
         if CELL_SIZE_EXP < GRID_CUTOFF + self.viewport_info.zoom_out_exp {
             return;
@@ -52,19 +52,13 @@ impl Renderer {
             }
         }
     }
-    pub(super) fn render_alives(&self, id: usize, min: Point, ans: &mut ImageBitmap) {
-        let screen_point = self.cell_to_screen(min);
+    pub(super) fn render_visible_alives(&self, id: usize, min: Point, ans: &mut ImageBitmap) {
         //2^x mult/div
         let pixels_exp_tmp = (CELL_SIZE_EXP as i32) - (self.viewport_info.zoom_out_exp as i32);
         match &self.solver.pool[id] {
             Quadtree::Subtree(root) => {
-                if !self.box_intersects_canvas(
-                    screen_point,
-                    self.cell_to_screen(Point::new(
-                        min.x + (1 << root.height) - 1,
-                        min.y + (1 << root.height) - 1,
-                    )),
-                ) {
+                let (screen_min, screen_max) = self.get_screen_bounding_box(min, root.height);
+                if !self.box_intersects_canvas(screen_min, screen_max) {
                     return;
                 }
                 if root.count == BigUint::ZERO {
@@ -74,39 +68,44 @@ impl Renderer {
                 let pixels_exp = (pixels_exp_tmp + (root.height as i32)).max(0) as u32;
                 if pixels_exp == 0 {
                     if root.count > BigUint::ZERO {
-                        ans.fill_cell(screen_point, pixels_exp);
+                        ans.fill_cell(screen_min, pixels_exp);
                     }
                     return;
                 }
                 let mid = 1 << (root.height - 1);
-                self.render_alives(root.tl, Point::new(min.x, min.y + mid), ans);
-                self.render_alives(root.tr, Point::new(min.x + mid, min.y + mid), ans);
-                self.render_alives(root.bl, min, ans);
-                self.render_alives(root.br, Point::new(min.x + mid, min.y), ans);
+                self.render_visible_alives(root.tl, Point::new(min.x, min.y + mid), ans);
+                self.render_visible_alives(root.tr, Point::new(min.x + mid, min.y + mid), ans);
+                self.render_visible_alives(root.bl, min, ans);
+                self.render_visible_alives(root.br, Point::new(min.x + mid, min.y), ans);
             }
             &Quadtree::Cell(alive) => {
-                if alive && self.point_in_canvas(screen_point) {
+                let (screen_min, screen_max) = self.get_screen_bounding_box(min, 0);
+                if alive && self.box_intersects_canvas(screen_min, screen_max) {
                     let pixels_exp = pixels_exp_tmp.max(0) as u32;
-                    ans.fill_cell(screen_point, pixels_exp);
+                    ans.fill_cell(screen_min, pixels_exp);
                 }
             }
         }
     }
 
-    fn box_intersects_canvas(&self, corner1: Point, corner2: Point) -> bool {
-        let min_x = corner1.x.min(corner2.x);
-        let max_x = corner1.x.max(corner2.x);
-        let min_y = corner1.y.min(corner2.y);
-        let max_y = corner1.y.max(corner2.y);
-        !(min_x >= self.viewport_info.canvas_dims.x
-            || min_y >= self.viewport_info.canvas_dims.y
-            || max_x < 0
-            || max_y < 0)
+    fn get_screen_bounding_box(&self, point: Point, size_exp: u32) -> (Point, Point) {
+        let point1 = self.cell_to_screen(point);
+        let point2 = self.cell_to_screen(Point::new(
+            point.x + (1 << size_exp),
+            point.y + (1 << size_exp),
+        ));
+        (
+            Point::new(point1.x.min(point2.x), point1.y.min(point2.y)),
+            Point::new(point1.x.max(point2.x), point1.y.max(point2.y)),
+        )
+    }
+    fn box_intersects_canvas(&self, min: Point, max: Point) -> bool {
+        !(min.x >= self.viewport_info.canvas_dims.x
+            || min.y >= self.viewport_info.canvas_dims.y
+            || max.x < 0
+            || max.y < 0)
     }
 
-    fn point_in_canvas(&self, point: Point) -> bool {
-        self.box_intersects_canvas(point, point)
-    }
     pub(super) fn point_in_box(point: Point, box_min: Point, box_max: Point) -> bool {
         !(point.x > box_max.x || point.x < box_min.x || point.y > box_max.y || point.y < box_min.y)
     }

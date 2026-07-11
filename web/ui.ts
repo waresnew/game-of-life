@@ -61,9 +61,14 @@ function applyRlePattern(pattern: string) {
 		.split("\n")
 		.map((x) => x.trim())
 		.filter((x) => x.length && !x.startsWith("#"));
-	const header = /^x = (\d+), y = (\d+)/.exec(content.shift()!);
+	const header = /^x = (\d+), y = (\d+), rule = [bB]?(\d+)\/[sS]?(\d+)/.exec(
+		content.shift()!,
+	);
 	const width = parseInt(header![1]!);
 	const height = parseInt(header![2]!);
+	const borns = header![3]!.split("").map((x) => parseInt(x));
+	const survives = header![4]!.split("").map((x) => parseInt(x));
+	renderer.set_rules(new Uint32Array(borns), new Uint32Array(survives));
 	let x = Math.floor(-width / 2);
 	let y = Math.floor(height / 2);
 	world.centre = [0, 0];

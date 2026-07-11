@@ -1,6 +1,6 @@
 use crate::{
     quadtree_pool::{ALIVE_CELL_ID, DEAD_CELL_ID, Subtree},
-    solver::Solver,
+    solver::{LifeRule, Solver},
 };
 
 impl Solver {
@@ -99,7 +99,7 @@ impl Solver {
         self.pool.get_ans(cur_id).unwrap()
     }
     fn solve_4x4(&mut self, cur_id: usize) -> usize {
-        fn apply_gol(i: usize, j: usize, grid: &[[usize; 4]; 4]) -> usize {
+        fn apply_gol(i: usize, j: usize, grid: &[[usize; 4]; 4], rules: LifeRule) -> usize {
             let mut alive_neighbours = 0;
             for di in -1..=1 {
                 for dj in -1..=1 {
@@ -113,15 +113,17 @@ impl Solver {
                 }
             }
             if grid[i][j] == ALIVE_CELL_ID {
-                if !(2..=3).contains(&alive_neighbours) {
-                    DEAD_CELL_ID
-                } else {
+                if rules.survives(alive_neighbours) {
                     ALIVE_CELL_ID
+                } else {
+                    DEAD_CELL_ID
                 }
-            } else if alive_neighbours == 3 {
-                ALIVE_CELL_ID
             } else {
-                DEAD_CELL_ID
+                if rules.is_born(alive_neighbours) {
+                    ALIVE_CELL_ID
+                } else {
+                    DEAD_CELL_ID
+                }
             }
         }
         let cur = self.pool[cur_id].as_subtree();
@@ -135,10 +137,10 @@ impl Solver {
             [bl.tl, bl.tr, br.tl, br.tr],
             [bl.bl, bl.br, br.bl, br.br],
         ];
-        let ans_tl = apply_gol(1, 1, &grid);
-        let ans_tr = apply_gol(1, 2, &grid);
-        let ans_bl = apply_gol(2, 1, &grid);
-        let ans_br = apply_gol(2, 2, &grid);
+        let ans_tl = apply_gol(1, 1, &grid, self.rules());
+        let ans_tr = apply_gol(1, 2, &grid, self.rules());
+        let ans_bl = apply_gol(2, 1, &grid, self.rules());
+        let ans_br = apply_gol(2, 2, &grid, self.rules());
         self.pool.join(ans_tl, ans_tr, ans_bl, ans_br, 1)
     }
 }

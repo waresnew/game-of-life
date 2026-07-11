@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     config::MIN_POINT,
-    solver::{PerfStats, Solver},
+    solver::{GOL_RULES, PerfStats, Solver},
 };
 mod controls;
 mod convert;
@@ -40,7 +40,7 @@ impl Renderer {
     #[wasm_bindgen(constructor)]
     pub fn new(step_exp: u32) -> Self {
         Self {
-            solver: Solver::new(step_exp),
+            solver: Solver::new(step_exp, GOL_RULES),
             viewport_info: ViewportInfo::default(),
         }
     }
@@ -55,8 +55,8 @@ impl Renderer {
     }
     pub fn render(&self) -> Vec<u8> {
         let mut ans = ImageBitmap::new(self.viewport_info.canvas_dims);
-        self.render_alives(self.solver.root, MIN_POINT, &mut ans);
-        self.draw_gridlines(&mut ans);
+        self.render_visible_alives(self.solver.root, MIN_POINT, &mut ans);
+        self.draw_grid(&mut ans);
         ans.into_pixels()
     }
     pub fn toggle_cell(&mut self, x: i64, y: i64) {
@@ -65,7 +65,10 @@ impl Renderer {
         self.solver.update_stats();
     }
     pub fn clear_grid(&mut self) {
-        self.solver = Solver::new(self.solver.step_exp());
+        self.solver = Solver::new(self.solver.step_exp(), self.solver.rules());
+    }
+    pub fn set_rules(&mut self, b: Vec<usize>, s: Vec<usize>) {
+        self.solver.set_rules(b, s);
     }
 }
 impl Renderer {
@@ -85,7 +88,7 @@ impl Renderer {
     /// tests/benches only
     pub fn render_visible(&self) -> Vec<u8> {
         let mut ans = ImageBitmap::new(self.viewport_info.canvas_dims);
-        self.render_alives(self.solver.root, MIN_POINT, &mut ans);
+        self.render_visible_alives(self.solver.root, MIN_POINT, &mut ans);
         ans.into_pixels()
     }
 }

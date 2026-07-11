@@ -40,7 +40,7 @@ export const canvas = document.getElementById("grid") as HTMLCanvasElement;
 requestAnimationFrame(repaint);
 function updateStats() {
 	document.getElementById("stats-zoom")!.textContent =
-		`Zoom: 2^${-world.zoomOutExpFloat}`;
+		`Zoom: 2^${-getEffectiveZoomOutExp()}`;
 	document.getElementById("stats-cursor")!.textContent =
 		`Cursor: (${Math.floor(world.worldCursor[0] / CELL_SIZE)},${Math.floor(world.worldCursor[1] / CELL_SIZE)})`;
 	document.getElementById("stats-fps")!.textContent = `FPS: ${world.fps}`;

@@ -3,14 +3,32 @@ use wasm_bindgen::prelude::*;
 use crate::{config::MAX_HEIGHT, quadtree_pool::QuadtreePool};
 
 mod hashlife;
+#[derive(Debug, Clone, Copy)]
+pub struct LifeRule {
+    born: [bool; 9],
+    survive: [bool; 9],
+}
+impl LifeRule {
+    pub fn is_born(&self, num: usize) -> bool {
+        self.born[num]
+    }
+    pub fn survives(&self, num: usize) -> bool {
+        self.survive[num]
+    }
+}
+pub const GOL_RULES: LifeRule = LifeRule {
+    born: [false, false, false, true, false, false, false, false, false],
+    survive: [false, false, true, true, false, false, false, false, false],
+};
 pub struct Solver {
     pub perf_stats: PerfStats,
     pub pool: QuadtreePool,
     pub root: usize,
     step_exp: u32,
+    rules: LifeRule,
 }
 impl Solver {
-    pub fn new(step_exp: u32) -> Self {
+    pub fn new(step_exp: u32, rules: LifeRule) -> Self {
         let mut pool = QuadtreePool::new();
         let root = pool.zeros(MAX_HEIGHT);
         Self {
@@ -18,6 +36,7 @@ impl Solver {
             pool,
             root,
             step_exp,
+            rules,
         }
     }
     pub fn update_stats(&mut self) {
@@ -41,6 +60,21 @@ impl Solver {
     }
     pub fn step_exp(&self) -> u32 {
         self.step_exp
+    }
+
+    pub fn rules(&self) -> LifeRule {
+        self.rules
+    }
+    pub fn set_rules(&mut self, b: Vec<usize>, s: Vec<usize>) {
+        self.rules.born = [false; 9];
+        self.rules.survive = [false; 9];
+        for x in b {
+            self.rules.born[x] = true;
+        }
+        for x in s {
+            self.rules.survive[x] = true;
+        }
+        self.pool.clear_ans();
     }
 }
 #[wasm_bindgen(getter_with_clone)]
