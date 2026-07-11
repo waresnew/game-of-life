@@ -38,8 +38,6 @@ function updateStats() {
 		`Zoom: 2^${-world.zoomOutExpFloat}`;
 	document.getElementById("stats-cursor")!.textContent =
 		`Cursor: (${Math.floor(world.worldCursor[0] / CELL_SIZE)},${Math.floor(world.worldCursor[1] / CELL_SIZE)})`;
-	document.getElementById("debug-rendered")!.textContent =
-		`Rendered: ${world.renderedCnt}`;
 	document.getElementById("stats-fps")!.textContent = `FPS: ${world.fps}`;
 	document.getElementById("stats-alive")!.textContent =
 		`Alive: ${renderer.perf_stats.alives}`;
@@ -117,31 +115,36 @@ function repaint(time: DOMHighResTimeStamp) {
 	const br = screenToWorld([canvas.width, canvas.height]).map((x) =>
 		Math.floor(x / CELL_SIZE),
 	) as Point;
+	world.centre = [Math.floor(world.centre[0]), Math.floor(world.centre[1])];
 	renderer.update_viewport({
 		bound_min: toRustCellPoint(bl),
 		bound_max: toRustCellPoint(tr),
 		zoom_out_exp: getEffectiveZoomOutExp(),
-		centre: toRustScreenPoint(world.centre),
-		canvas_dims: toRustScreenPoint([canvas.width, canvas.height]),
+		centre: toRustCellPoint(world.centre),
+		canvas_dims: toRustCellPoint([canvas.width, canvas.height]),
 	});
-	const alives = renderer.render();
-	world.renderedCnt = alives.length / config.RENDER_OUTPUT_SIZE;
-	updateStats();
-	ctx.beginPath();
-	for (let i = 0; i < alives.length; i += config.RENDER_OUTPUT_SIZE) {
-		const x = Number(alives[i]) * CELL_SIZE,
-			y = Number(alives[i + 1]) * CELL_SIZE,
-			size_exp = Number(alives[i + 2]);
-		const [translatedX, translatedY] = translateToScreen([x, y]);
-		ctx.rect(
-			translatedX,
-			translatedY,
-			CELL_SIZE * (1 << size_exp),
-			CELL_SIZE * (1 << size_exp),
-		);
+	const imageData = ctx.createImageData(canvas.width, canvas.height);
+	const data = renderer.render();
+	for (let i = 0; i < data.length; i++) {
+		const val = data[i] == 1 ? 0 : 255;
+		const rgbaIndex = i * 4;
+		imageData.data[rgbaIndex] = val;
+		imageData.data[rgbaIndex + 1] = val;
+		imageData.data[rgbaIndex + 2] = val;
+		imageData.data[rgbaIndex + 3] = 255;
 	}
-	ctx.fillStyle = "#000000";
-	ctx.fill();
+	ctx.resetTransform();
+	ctx.putImageData(imageData, 0, 0);
+	updateStats();
+	ctx.setTransform(
+		//TODO: repeated
+		getEffectiveZoom(),
+		0,
+		0,
+		-getEffectiveZoom(),
+		canvas.width / 2,
+		canvas.height / 2,
+	);
 	if (config.CELL_SIZE_EXP - getEffectiveZoomOutExp() >= 0) {
 		ctx.beginPath();
 		ctx.strokeStyle = "#f0f0f0";
@@ -165,8 +168,8 @@ function repaint(time: DOMHighResTimeStamp) {
 /** do this outside of canvas to avoid float imprecision */
 function translateToScreen(p: Point): Point {
 	return [
-		p[0] - world.centre[0] / getEffectiveZoom(),
-		p[1] - world.centre[1] / -getEffectiveZoom(),
+		p[0] - Math.floor(world.centre[0]) / getEffectiveZoom(),
+		p[1] - Math.floor(world.centre[1]) / -getEffectiveZoom(),
 	];
 }
 export function screenToWorld(p: Point): Point {

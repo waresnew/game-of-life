@@ -67,10 +67,10 @@ function applyRlePattern(pattern: string) {
 	let x = Math.floor(-width / 2);
 	let y = Math.floor(height / 2);
 	world.centre = [0, 0];
-	world.zoomOutExpFloat = Math.ceil(
-		Math.log2(
-			Math.max(
-				0,
+	world.zoomOutExpFloat = Math.max(
+		0,
+		Math.ceil(
+			Math.log2(
 				Math.max(
 					(width * CELL_SIZE) / canvas.width,
 					(height * CELL_SIZE) / canvas.height,

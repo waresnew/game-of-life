@@ -32,5 +32,4 @@ define_config! {
         y: -1 << (MAX_HEIGHT - 1),
     },
     CELL_SIZE_EXP:u32=5,
-    RENDER_OUTPUT_SIZE:usize=3,
 }

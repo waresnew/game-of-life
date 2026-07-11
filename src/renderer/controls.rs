@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{cell::Cell, fmt};
 
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -28,7 +28,7 @@ impl Renderer {
                 if !Self::point_in_box(
                     point,
                     min,
-                    CellPoint::new(min.x + (1 << height), min.y + (1 << height)),
+                    CellPoint::new(min.x + (1 << height) - 1, min.y + (1 << height) - 1),
                 ) {
                     return root;
                 }

@@ -1,22 +1,25 @@
 use serde::{Deserialize, Serialize};
 use tsify::{Ts, Tsify};
 use wasm_bindgen::prelude::*;
+use web_sys::console;
 
 use crate::{
-    config::{MIN_POINT, RENDER_OUTPUT_SIZE},
+    config::MIN_POINT,
     solver::{PerfStats, Solver},
 };
 mod controls;
 mod convert;
+mod image_bitmap;
 pub use controls::CellPoint;
 pub use convert::ScreenPoint;
+use image_bitmap::*;
 #[derive(Tsify, Serialize, Deserialize, Copy, Clone)]
 pub struct ViewportInfo {
     pub bound_min: CellPoint,
     pub bound_max: CellPoint,
     pub zoom_out_exp: u32,
-    pub canvas_dims: ScreenPoint,
-    pub centre: ScreenPoint,
+    pub canvas_dims: CellPoint, //TODO: misleading name
+    pub centre: CellPoint,
 }
 impl Default for ViewportInfo {
     fn default() -> Self {
@@ -24,8 +27,8 @@ impl Default for ViewportInfo {
             bound_min: CellPoint::new(0, 0),
             bound_max: CellPoint::new(0, 0),
             zoom_out_exp: 0,
-            canvas_dims: ScreenPoint::new(0, 0),
-            centre: ScreenPoint::new(0, 0),
+            canvas_dims: CellPoint::new(0, 0),
+            centre: CellPoint::new(0, 0), //TODO: this should be called WorldPoint
         }
     }
 }
@@ -56,12 +59,10 @@ impl Renderer {
     pub fn update_viewport(&mut self, viewport_info: Ts<ViewportInfo>) {
         self.viewport_info = viewport_info.to_rust().unwrap();
     }
-    #[cfg(target_arch = "wasm32")]
-    /// only to be used for wasm bc the function signature is unergonomic
-    pub fn render(&self) -> Vec<i64> {
-        let mut ans = Vec::new();
+    pub fn render(&self) -> Vec<u8> {
+        let mut ans = ImageBitmap::new(self.viewport_info.canvas_dims);
         self.to_visible_alives(self.solver.root, MIN_POINT, &mut ans);
-        ans
+        ans.into_pixels()
     }
     pub fn toggle_cell(&mut self, x: i64, y: i64) {
         self.solver.root =
@@ -74,17 +75,14 @@ impl Renderer {
 }
 impl Renderer {
     /// tests/benches only, ignores size_exp
-    pub fn render_all(&mut self) -> Vec<CellPoint> {
+    pub fn render_all(&mut self) -> Vec<u8> {
         self.update_viewport(
             ViewportInfo {
                 bound_min: MIN_POINT,
                 bound_max: CellPoint::negate(MIN_POINT),
                 zoom_out_exp: 0,
-                centre: ScreenPoint::new(0, 0),
-                canvas_dims: ScreenPoint::new(
-                    MIN_POINT.x.unsigned_abs() as usize,
-                    MIN_POINT.y.unsigned_abs() as usize,
-                ),
+                centre: CellPoint::new(0, 0),
+                canvas_dims: CellPoint::new(MIN_POINT.x, MIN_POINT.y),
             }
             .into_ts()
             .unwrap(),
@@ -92,16 +90,9 @@ impl Renderer {
         self.render_visible()
     }
     /// tests/benches only
-    pub fn render_visible(&self) -> Vec<CellPoint> {
-        let mut ans = Vec::new();
+    pub fn render_visible(&self) -> Vec<u8> {
+        let mut ans = ImageBitmap::new(self.viewport_info.canvas_dims);
         self.to_visible_alives(self.solver.root, MIN_POINT, &mut ans);
-        ans.chunks_exact(RENDER_OUTPUT_SIZE)
-            .map(|chunk| {
-                let &[x, y, _size_exp] = chunk else {
-                    unreachable!();
-                };
-                CellPoint::new(x, y)
-            })
-            .collect()
+        ans.into_pixels()
     }
 }

@@ -18,5 +18,8 @@
   "type": "module",
   "scripts": {
     "test:browser": "vitest --config=vitest.browser.config.ts"
+  },
+  "dependencies": {
+    "vite-plugin-checker": "^0.14.4"
   }
 }
