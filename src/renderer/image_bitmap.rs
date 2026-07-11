@@ -1,4 +1,4 @@
-use crate::renderer::{CellPoint, ScreenPoint};
+use crate::renderer::Point;
 
 pub struct ImageBitmap {
     pixels: Vec<u8>,
@@ -6,7 +6,7 @@ pub struct ImageBitmap {
     height: usize,
 }
 impl ImageBitmap {
-    pub fn new(canvas_dims: CellPoint) -> Self {
+    pub fn new(canvas_dims: Point) -> Self {
         let width = usize::try_from(canvas_dims.x).unwrap();
         let height = usize::try_from(canvas_dims.y).unwrap();
         Self {
@@ -15,9 +15,9 @@ impl ImageBitmap {
             height,
         }
     }
-    pub fn fill(&mut self, bl: CellPoint, size_exp: u32) {
+    pub fn fill(&mut self, bl: Point, size_exp: u32) {
         let size = 1 << size_exp;
-        let tl = CellPoint::new(bl.x, bl.y - size);
+        let tl = Point::new(bl.x, bl.y - size);
         for dx in 0..size {
             for dy in 0..size {
                 let x = tl.x + dx;

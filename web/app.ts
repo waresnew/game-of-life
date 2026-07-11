@@ -2,8 +2,7 @@ import {
 	get_config,
 	type PerfStats,
 	Renderer,
-	CellPoint as RustCellPoint,
-	ScreenPoint as RustScreenPoint,
+	Point as RustCellPoint,
 } from "../pkg/game_of_life.js";
 
 export type Point = [number, number];
@@ -190,7 +189,4 @@ export function getEffectiveZoom() {
 }
 function toRustCellPoint(p: Point) {
 	return new RustCellPoint(BigInt(p[0]), BigInt(p[1]));
-}
-function toRustScreenPoint(p: Point) {
-	return new RustScreenPoint(p[0], p[1]);
 }

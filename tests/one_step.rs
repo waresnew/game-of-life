@@ -1,4 +1,4 @@
-use game_of_life::renderer::{CellPoint, Renderer};
+use game_of_life::renderer::{Point, Renderer};
 
 mod utils;
 #[test]
@@ -39,7 +39,7 @@ fn one_step_two() {
 }
 #[test]
 fn one_step_acorn() {
-    let alive: Vec<CellPoint> = vec![
+    let alive: Vec<Point> = vec![
         (-2, 1),
         (-2, -1),
         (-3, -1),
@@ -49,7 +49,7 @@ fn one_step_acorn() {
         (3, -1),
     ]
     .into_iter()
-    .map(CellPoint::from_tuple)
+    .map(Point::from_tuple)
     .collect();
     let mut renderer = Renderer::new(13);
     for p in alive {

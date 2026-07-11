@@ -1,4 +1,4 @@
-use crate::renderer::CellPoint;
+use crate::renderer::Point;
 use tsify::Ts;
 use tsify::Tsify;
 
@@ -26,7 +26,7 @@ macro_rules! define_config {
 }
 define_config! {
     MAX_HEIGHT:u32=47,
-    MIN_POINT:CellPoint=CellPoint {
+    MIN_POINT:Point=Point {
 
         x: -1 << (MAX_HEIGHT - 1),
         y: -1 << (MAX_HEIGHT - 1),

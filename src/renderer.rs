@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use tsify::{Ts, Tsify};
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 
 use crate::{
     config::MIN_POINT,
@@ -10,25 +9,24 @@ use crate::{
 mod controls;
 mod convert;
 mod image_bitmap;
-pub use controls::CellPoint;
-pub use convert::ScreenPoint;
+pub use controls::Point;
 use image_bitmap::*;
 #[derive(Tsify, Serialize, Deserialize, Copy, Clone)]
 pub struct ViewportInfo {
-    pub bound_min: CellPoint,
-    pub bound_max: CellPoint,
+    pub bound_min: Point,
+    pub bound_max: Point,
     pub zoom_out_exp: u32,
-    pub canvas_dims: CellPoint, //TODO: misleading name
-    pub centre: CellPoint,
+    pub canvas_dims: Point,
+    pub centre: Point,
 }
 impl Default for ViewportInfo {
     fn default() -> Self {
         Self {
-            bound_min: CellPoint::new(0, 0),
-            bound_max: CellPoint::new(0, 0),
+            bound_min: Point::new(0, 0),
+            bound_max: Point::new(0, 0),
             zoom_out_exp: 0,
-            canvas_dims: CellPoint::new(0, 0),
-            centre: CellPoint::new(0, 0), //TODO: this should be called WorldPoint
+            canvas_dims: Point::new(0, 0),
+            centre: Point::new(0, 0),
         }
     }
 }
@@ -66,7 +64,7 @@ impl Renderer {
     }
     pub fn toggle_cell(&mut self, x: i64, y: i64) {
         self.solver.root =
-            self.toggle_cell_and_return_root(CellPoint::new(x, y), self.solver.root, MIN_POINT);
+            self.toggle_cell_and_return_root(Point::new(x, y), self.solver.root, MIN_POINT);
         self.solver.update_stats();
     }
     pub fn clear_grid(&mut self) {
@@ -79,10 +77,10 @@ impl Renderer {
         self.update_viewport(
             ViewportInfo {
                 bound_min: MIN_POINT,
-                bound_max: CellPoint::negate(MIN_POINT),
+                bound_max: Point::negate(MIN_POINT),
                 zoom_out_exp: 0,
-                centre: CellPoint::new(0, 0),
-                canvas_dims: CellPoint::new(MIN_POINT.x, MIN_POINT.y),
+                centre: Point::new(0, 0),
+                canvas_dims: Point::new(MIN_POINT.x, MIN_POINT.y),
             }
             .into_ts()
             .unwrap(),

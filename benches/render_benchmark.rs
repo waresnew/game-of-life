@@ -1,11 +1,11 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use game_of_life::renderer::{CellPoint, Renderer};
+use game_of_life::renderer::{Point, Renderer};
 
 fn random_rect(c: &mut Criterion) {
     let mut input = Vec::new();
     for i in -32..=32 {
         for j in -32..=32 {
-            input.push(CellPoint::new(i, j))
+            input.push(Point::new(i, j))
         }
     }
     let mut renderer = Renderer::new(12);
