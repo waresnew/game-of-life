@@ -89,8 +89,6 @@ function updateCursors(event: PointerEvent) {
 	const dims = canvas.getBoundingClientRect();
 	const mouseX = event.clientX - dims.x;
 	const mouseY = event.clientY - dims.y;
-	console.log("cursor at ", mouseX, mouseY);
-	console.log("center at", world.centre);
 	if (
 		mouseX < 0 ||
 		mouseX > canvas.width ||

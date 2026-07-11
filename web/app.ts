@@ -79,88 +79,21 @@ function repaint(time: DOMHighResTimeStamp) {
 	}
 
 	const ctx = canvas.getContext("2d")!;
-	ctx.resetTransform();
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.fillStyle = "#808080";
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
-	ctx.setTransform(
-		getEffectiveZoom(),
-		0,
-		0,
-		-getEffectiveZoom(),
-		canvas.width / 2,
-		canvas.height / 2,
-	);
-	ctx.fillStyle = "#ffffff";
-	const border = translateToScreen([
-		-WORLD_BORDER * CELL_SIZE,
-		-WORLD_BORDER * CELL_SIZE,
-	]);
-	ctx.fillRect(
-		border[0],
-		border[1],
-		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
-		(WORLD_BORDER * 2 + 1) * CELL_SIZE,
-	);
-	const tl = screenToWorld([0, 0]).map((x) =>
-		Math.floor(x / CELL_SIZE),
-	) as Point;
-	const tr = screenToWorld([canvas.width, 0]).map((x) =>
-		Math.floor(x / CELL_SIZE),
-	) as Point;
-	const bl = screenToWorld([0, canvas.height]).map((x) =>
-		Math.floor(x / CELL_SIZE),
-	) as Point;
-	const br = screenToWorld([canvas.width, canvas.height]).map((x) =>
-		Math.floor(x / CELL_SIZE),
-	) as Point;
-	world.centre = [Math.floor(world.centre[0]), Math.floor(world.centre[1])];
+	world.centre = [Math.floor(world.centre[0]), Math.floor(world.centre[1])]; //TODO: enforce better
 	renderer.update_viewport({
-		bound_min: toRustCellPoint(bl),
-		bound_max: toRustCellPoint(tr),
 		zoom_out_exp: getEffectiveZoomOutExp(),
 		centre: toRustCellPoint(world.centre),
 		canvas_dims: toRustCellPoint([canvas.width, canvas.height]),
 	});
-	const imageData = ctx.createImageData(canvas.width, canvas.height);
-	const data = renderer.render();
-	for (let i = 0; i < data.length; i++) {
-		const val = data[i] == 1 ? 0 : 255;
-		const rgbaIndex = i * 4;
-		imageData.data[rgbaIndex] = val;
-		imageData.data[rgbaIndex + 1] = val;
-		imageData.data[rgbaIndex + 2] = val;
-		imageData.data[rgbaIndex + 3] = 255;
-	}
-	ctx.resetTransform();
+	const imageData = new ImageData(
+		new Uint8ClampedArray(renderer.render()),
+		canvas.width,
+		canvas.height,
+	);
 	ctx.putImageData(imageData, 0, 0);
 	updateStats();
-	ctx.setTransform(
-		//TODO: repeated
-		getEffectiveZoom(),
-		0,
-		0,
-		-getEffectiveZoom(),
-		canvas.width / 2,
-		canvas.height / 2,
-	);
-	if (config.CELL_SIZE_EXP - getEffectiveZoomOutExp() >= 0) {
-		ctx.beginPath();
-		ctx.strokeStyle = "#f0f0f0";
-		for (let i = tl[0]; i <= tr[0]; ++i) {
-			const start = translateToScreen([i * CELL_SIZE, (tl[1] + 1) * CELL_SIZE]);
-			const end = translateToScreen([i * CELL_SIZE, (bl[1] - 1) * CELL_SIZE]);
-			ctx.moveTo(...start);
-			ctx.lineTo(...end);
-		}
-		for (let j = bl[1]; j <= tl[1]; ++j) {
-			const start = translateToScreen([(tl[0] - 1) * CELL_SIZE, j * CELL_SIZE]);
-			const end = translateToScreen([(tr[0] + 1) * CELL_SIZE, j * CELL_SIZE]);
-			ctx.moveTo(...start);
-			ctx.lineTo(...end);
-		}
-		ctx.stroke();
-	}
+
 	document.body.classList.add("ready"); //fouc from empty spans
 	requestAnimationFrame(repaint);
 }

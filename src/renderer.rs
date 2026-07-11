@@ -13,8 +13,6 @@ pub use controls::Point;
 use image_bitmap::*;
 #[derive(Tsify, Serialize, Deserialize, Copy, Clone)]
 pub struct ViewportInfo {
-    pub bound_min: Point,
-    pub bound_max: Point,
     pub zoom_out_exp: u32,
     pub canvas_dims: Point,
     pub centre: Point,
@@ -22,8 +20,6 @@ pub struct ViewportInfo {
 impl Default for ViewportInfo {
     fn default() -> Self {
         Self {
-            bound_min: Point::new(0, 0),
-            bound_max: Point::new(0, 0),
             zoom_out_exp: 0,
             canvas_dims: Point::new(0, 0),
             centre: Point::new(0, 0),
@@ -59,7 +55,8 @@ impl Renderer {
     }
     pub fn render(&self) -> Vec<u8> {
         let mut ans = ImageBitmap::new(self.viewport_info.canvas_dims);
-        self.to_visible_alives(self.solver.root, MIN_POINT, &mut ans);
+        self.render_alives(self.solver.root, MIN_POINT, &mut ans);
+        self.draw_gridlines(&mut ans);
         ans.into_pixels()
     }
     pub fn toggle_cell(&mut self, x: i64, y: i64) {
@@ -76,8 +73,6 @@ impl Renderer {
     pub fn render_all(&mut self) -> Vec<u8> {
         self.update_viewport(
             ViewportInfo {
-                bound_min: MIN_POINT,
-                bound_max: Point::negate(MIN_POINT),
                 zoom_out_exp: 0,
                 centre: Point::new(0, 0),
                 canvas_dims: Point::new(MIN_POINT.x, MIN_POINT.y),
@@ -90,7 +85,7 @@ impl Renderer {
     /// tests/benches only
     pub fn render_visible(&self) -> Vec<u8> {
         let mut ans = ImageBitmap::new(self.viewport_info.canvas_dims);
-        self.to_visible_alives(self.solver.root, MIN_POINT, &mut ans);
+        self.render_alives(self.solver.root, MIN_POINT, &mut ans);
         ans.into_pixels()
     }
 }
