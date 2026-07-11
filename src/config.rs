@@ -25,7 +25,7 @@ macro_rules! define_config {
     };
 }
 define_config! {
-    MAX_HEIGHT:u32=47,
+    MAX_HEIGHT:u32=48,
     MIN_POINT:Point=Point {
 
         x: -1 << (MAX_HEIGHT - 1),
