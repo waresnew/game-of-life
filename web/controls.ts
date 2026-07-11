@@ -37,8 +37,8 @@ canvas.addEventListener("wheel", (event) => {
 	event.preventDefault();
 	const mouseDelta =
 		event.deltaMode == 0x00
-			? -event.deltaY * 0.004
-			: -Math.sign(event.deltaY) * 0.5;
+			? event.deltaY * 0.004
+			: Math.sign(event.deltaY) * 0.5;
 	zoom(mouseDelta);
 });
 
@@ -134,9 +134,9 @@ function endDrawSession(event: PointerEvent) {
 	prevTouchZoomDist = -1;
 }
 function zoom(zoomDelta: number) {
-	let newZoomExpFloat = world.zoomExpFloat + zoomDelta;
-	newZoomExpFloat = Math.max(-config.MAX_HEIGHT, Math.min(0, newZoomExpFloat));
-	const newZoom = 2 ** Math.trunc(newZoomExpFloat);
+	let newZoomExpFloat = world.zoomOutExpFloat + zoomDelta;
+	newZoomExpFloat = Math.min(config.MAX_HEIGHT, Math.max(0, newZoomExpFloat));
+	const newZoom = 2 ** -Math.trunc(newZoomExpFloat);
 	world.centre = [
 		newZoom * world.worldCursor[0] -
 			getEffectiveZoom() * world.worldCursor[0] +
@@ -145,7 +145,7 @@ function zoom(zoomDelta: number) {
 			getEffectiveZoom() * world.worldCursor[1] +
 			world.centre[1],
 	];
-	world.zoomExpFloat = newZoomExpFloat;
+	world.zoomOutExpFloat = newZoomExpFloat;
 }
 function doDraw() {
 	const cell: Point = [

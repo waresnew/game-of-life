@@ -19,7 +19,7 @@ if (WORLD_BORDER * CELL_SIZE > Number.MAX_SAFE_INTEGER) {
 class World {
 	centre: Point = [0, 0];
 	renderedCnt = 0;
-	zoomExpFloat = 0;
+	zoomOutExpFloat = 0;
 	ticking = false;
 	frameCounter = 0;
 	prevFpsTime = 0;
@@ -35,7 +35,7 @@ export const canvas = document.getElementById("grid") as HTMLCanvasElement;
 requestAnimationFrame(repaint);
 function updateStats() {
 	document.getElementById("stats-zoom")!.textContent =
-		`Zoom: 2^${world.zoomExpFloat}`;
+		`Zoom: 2^${-world.zoomOutExpFloat}`;
 	document.getElementById("stats-cursor")!.textContent =
 		`Cursor: (${Math.floor(world.worldCursor[0] / CELL_SIZE)},${Math.floor(world.worldCursor[1] / CELL_SIZE)})`;
 	document.getElementById("debug-rendered")!.textContent =
@@ -120,7 +120,7 @@ function repaint(time: DOMHighResTimeStamp) {
 	renderer.update_viewport({
 		bound_min: toRustCellPoint(bl),
 		bound_max: toRustCellPoint(tr),
-		zoom_exp: getEffectiveZoomExp(),
+		zoom_out_exp: getEffectiveZoomOutExp(),
 		centre: toRustScreenPoint(world.centre),
 		canvas_dims: toRustScreenPoint([canvas.width, canvas.height]),
 	});
@@ -142,7 +142,7 @@ function repaint(time: DOMHighResTimeStamp) {
 	}
 	ctx.fillStyle = "#000000";
 	ctx.fill();
-	if (config.CELL_SIZE_EXP + getEffectiveZoomExp() >= 0) {
+	if (config.CELL_SIZE_EXP - getEffectiveZoomOutExp() >= 0) {
 		ctx.beginPath();
 		ctx.strokeStyle = "#f0f0f0";
 		for (let i = tl[0]; i <= tr[0]; ++i) {
@@ -179,11 +179,11 @@ export function next_step() {
 	renderer.next_step();
 	world.generation += 2n ** BigInt(world.stepExp);
 }
-function getEffectiveZoomExp() {
-	return Math.trunc(world.zoomExpFloat);
+function getEffectiveZoomOutExp() {
+	return Math.trunc(world.zoomOutExpFloat);
 }
 export function getEffectiveZoom() {
-	return 2 ** getEffectiveZoomExp();
+	return 2 ** -getEffectiveZoomOutExp();
 }
 function toRustCellPoint(p: Point) {
 	return new RustCellPoint(BigInt(p[0]), BigInt(p[1]));

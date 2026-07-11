@@ -14,7 +14,7 @@ pub use convert::ScreenPoint;
 pub struct ViewportInfo {
     pub bound_min: CellPoint,
     pub bound_max: CellPoint,
-    pub zoom_exp: i32,
+    pub zoom_out_exp: u32,
     pub canvas_dims: ScreenPoint,
     pub centre: ScreenPoint,
 }
@@ -23,7 +23,7 @@ impl Default for ViewportInfo {
         Self {
             bound_min: CellPoint::new(0, 0),
             bound_max: CellPoint::new(0, 0),
-            zoom_exp: 0,
+            zoom_out_exp: 0,
             canvas_dims: ScreenPoint::new(0, 0),
             centre: ScreenPoint::new(0, 0),
         }
@@ -79,7 +79,7 @@ impl Renderer {
             ViewportInfo {
                 bound_min: MIN_POINT,
                 bound_max: CellPoint::negate(MIN_POINT),
-                zoom_exp: 0,
+                zoom_out_exp: 0,
                 centre: ScreenPoint::new(0, 0),
                 canvas_dims: ScreenPoint::new(
                     MIN_POINT.x.unsigned_abs() as usize,

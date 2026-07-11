@@ -26,7 +26,9 @@ impl Renderer {
                 }
 
                 //2^x mult/div
-                if (root.height as i32) + (CELL_SIZE_EXP as i32) + self.viewport_info.zoom_exp <= 0
+                if (root.height as i32) + (CELL_SIZE_EXP as i32)
+                    - (self.viewport_info.zoom_out_exp as i32)
+                    <= 0
                 {
                     if root.count > BigUint::ZERO {
                         ans.extend([min.x, min.y, root.height as i64]);
