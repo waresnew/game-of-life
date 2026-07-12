@@ -137,10 +137,10 @@ impl Solver {
             [bl.tl, bl.tr, br.tl, br.tr],
             [bl.bl, bl.br, br.bl, br.br],
         ];
-        let ans_tl = apply_gol(1, 1, &grid, self.rules());
-        let ans_tr = apply_gol(1, 2, &grid, self.rules());
-        let ans_bl = apply_gol(2, 1, &grid, self.rules());
-        let ans_br = apply_gol(2, 2, &grid, self.rules());
+        let ans_tl = apply_gol(1, 1, &grid, self.rule());
+        let ans_tr = apply_gol(1, 2, &grid, self.rule());
+        let ans_bl = apply_gol(2, 1, &grid, self.rule());
+        let ans_br = apply_gol(2, 2, &grid, self.rule());
         self.pool.join(ans_tl, ans_tr, ans_bl, ans_br, 1)
     }
 }

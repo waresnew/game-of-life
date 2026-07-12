@@ -1,3 +1,4 @@
+use gloo_console::log;
 use regex::regex;
 
 use crate::{
@@ -68,14 +69,20 @@ impl Renderer {
         let header_regex = regex!(r"^x = (\d+), y = (\d+), rule = [bB]?(\d+)\/[sS]?(\d+)");
         let (_, [width, height, borns, survives]) =
             header_regex.captures(content.remove(0)).unwrap().extract();
-        let (width, height) = (width.parse().unwrap(), height.parse().unwrap());
-        self.solver.set_rules(
-            borns.split("").map(|x| x.parse().unwrap()).collect(),
-            survives.split("").map(|x| x.parse().unwrap()).collect(),
+        let (width, height): (i64, i64) = (width.parse().unwrap(), height.parse().unwrap());
+        self.solver.set_rule(
+            borns
+                .chars()
+                .map(|x| x.to_digit(10).unwrap() as usize)
+                .collect(),
+            survives
+                .chars()
+                .map(|x| x.to_digit(10).unwrap() as usize)
+                .collect(),
         );
-        let mut x = -self.viewport_info.canvas_dims.x / 2;
-        let mut y = -self.viewport_info.canvas_dims.y / 2;
-        self.fit_camera_to_dims(ScreenPoint::new(width, height));
+        let mut x = -width / 2;
+        let mut y = height / 2;
+        self.fit_camera_to_dims(CellPoint::new(width, height));
         let lines: Vec<String> = content.join("").split("$").map(|x| x.to_string()).collect();
         for line in lines {
             let mut cnt_str = String::new();
@@ -110,10 +117,12 @@ impl Renderer {
             x = -width / 2;
         }
     }
-    fn fit_camera_to_dims(&mut self, dims: ScreenPoint) {
+    fn fit_camera_to_dims(&mut self, dims: CellPoint) {
         self.camera.centre = WorldPoint::new(0, 0);
-        self.camera.zoom_out_exp = ((dims.x * (1 << CELL_SIZE_EXP)) / (dims.x))
-            .max((dims.y * (1 << CELL_SIZE_EXP)) / (dims.y))
+        self.camera.zoom_out_exp = ((dims.x * (1 << CELL_SIZE_EXP))
+            / self.viewport_info.canvas_dims.x)
+            .max((dims.y * (1 << CELL_SIZE_EXP)) / self.viewport_info.canvas_dims.y)
+            .max(1)
             .ilog2()
             + 1;
     }

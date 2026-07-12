@@ -4,20 +4,25 @@ use crate::{
     config::CELL_SIZE_EXP,
     quadtree_pool::Quadtree,
     renderer::{
-        CellPoint, Renderer, ScreenPoint,
+        CellPoint, Renderer, ScreenPoint, WorldPoint,
         image_bitmap::{ImageBitmap, Rgb},
     },
 };
 
 impl Renderer {
     pub(super) fn screen_to_cell(&self, point: ScreenPoint) -> CellPoint {
+        let world = self.screen_to_world(point);
         CellPoint::new(
-            ((point.x + self.camera.centre.x - self.viewport_info.canvas_dims.x / 2)
-                * (1 << self.camera.zoom_out_exp))
-                .div_euclid(1 << CELL_SIZE_EXP),
-            ((point.y + self.camera.centre.y - self.viewport_info.canvas_dims.y / 2)
-                * -(1 << self.camera.zoom_out_exp))
-                .div_euclid(1 << CELL_SIZE_EXP),
+            world.x.div_euclid(1 << CELL_SIZE_EXP),
+            world.y.div_euclid(1 << CELL_SIZE_EXP),
+        )
+    }
+    pub(super) fn screen_to_world(&self, point: ScreenPoint) -> WorldPoint {
+        WorldPoint::new(
+            (point.x + self.camera.centre.x - self.viewport_info.canvas_dims.x / 2)
+                * (1 << self.camera.zoom_out_exp),
+            (point.y + self.camera.centre.y - self.viewport_info.canvas_dims.y / 2)
+                * -(1 << self.camera.zoom_out_exp),
         )
     }
     pub(super) fn cell_to_screen(&self, point: CellPoint) -> ScreenPoint {

@@ -4,9 +4,29 @@ use crate::{config::MAX_HEIGHT, quadtree_pool::QuadtreePool};
 
 mod hashlife;
 #[derive(Debug, Clone, Copy)]
+#[wasm_bindgen]
 pub struct LifeRule {
     born: [bool; 9],
     survive: [bool; 9],
+}
+#[wasm_bindgen]
+impl LifeRule {
+    #[wasm_bindgen(getter)]
+    pub fn born(&self) -> Vec<usize> {
+        self.born
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &x)| if x { Some(i) } else { None })
+            .collect::<Vec<usize>>()
+    }
+    #[wasm_bindgen(getter)]
+    pub fn survive(&self) -> Vec<usize> {
+        self.survive
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &x)| if x { Some(i) } else { None })
+            .collect::<Vec<usize>>()
+    }
 }
 impl LifeRule {
     pub fn is_born(&self, num: usize) -> bool {
@@ -25,7 +45,7 @@ pub struct Solver {
     pub pool: QuadtreePool,
     pub root: usize,
     step_exp: u32,
-    rules: LifeRule,
+    rule: LifeRule,
 }
 impl Solver {
     pub fn new(step_exp: u32, rules: LifeRule) -> Self {
@@ -36,7 +56,7 @@ impl Solver {
             pool,
             root,
             step_exp,
-            rules,
+            rule: rules,
         }
     }
     pub fn update_stats(&mut self) {
@@ -62,17 +82,17 @@ impl Solver {
         self.step_exp
     }
 
-    pub fn rules(&self) -> LifeRule {
-        self.rules
+    pub fn rule(&self) -> LifeRule {
+        self.rule
     }
-    pub fn set_rules(&mut self, b: Vec<usize>, s: Vec<usize>) {
-        self.rules.born = [false; 9];
-        self.rules.survive = [false; 9];
+    pub fn set_rule(&mut self, b: Vec<usize>, s: Vec<usize>) {
+        self.rule.born = [false; 9];
+        self.rule.survive = [false; 9];
         for x in b {
-            self.rules.born[x] = true;
+            self.rule.born[x] = true;
         }
         for x in s {
-            self.rules.survive[x] = true;
+            self.rule.survive[x] = true;
         }
         self.pool.clear_ans();
     }

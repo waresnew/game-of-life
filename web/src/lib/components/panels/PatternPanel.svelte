@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { uiState, canvasDims, CELL_SIZE, toRustScreenPoint } from '$lib/shared.svelte';
 	import { renderer } from '$lib/wasm';
-	import { updateRule } from '$lib/shared.svelte';
 
 	const patterns: Record<string, string> = import.meta.glob('$assets/patterns/*.rle', {
 		query: '?raw',
@@ -12,7 +11,11 @@
 	function applyRlePattern(pattern: string) {
 		uiState.generation = 0n;
 		uiState.ticking = false;
-		renderer.load_pattern(pattern);
+		if (!pattern) {
+			renderer.clear_grid();
+		} else {
+			renderer.load_pattern(pattern);
+		}
 	}
 </script>
 

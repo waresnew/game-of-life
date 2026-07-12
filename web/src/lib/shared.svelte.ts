@@ -1,4 +1,9 @@
-import { RenderStats, ScreenPoint as RustScreenPoint, type PerfStats } from '$wasm/game_of_life.js';
+import {
+	RenderStats,
+	ScreenPoint as RustScreenPoint,
+	ScreenPoint,
+	type PerfStats
+} from '$wasm/game_of_life.js';
 import { config, renderer } from './wasm.js';
 export type Point = [number, number];
 
@@ -42,23 +47,6 @@ export const uiState = $state({
 	stepExp: 0,
 	playRuntime: -1
 });
-
-const rule = $state({
-	b: [3],
-	s: [2, 3]
-});
-export function getRuleB() {
-	return rule.b;
-}
-export function getRuleS() {
-	return rule.s;
-}
-export function updateRule(b: number[], s: number[]) {
-	if (b.join('') != rule.b.join('') || s.join('') != rule.s.join('')) {
-		rule.b = b;
-		rule.s = s;
-	}
-}
 
 export function toRustScreenPoint(p: Point) {
 	return new RustScreenPoint(BigInt(Math.floor(p[0])), BigInt(Math.floor(p[1])));

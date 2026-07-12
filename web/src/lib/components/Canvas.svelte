@@ -31,15 +31,15 @@
 			uiState.playRuntime = elapsed;
 		}
 		updatePerfStats(renderer.perf_stats);
+		renderer.update_viewport({
+			canvas_dims: toRustScreenPoint([canvasDims.width, canvasDims.height]),
+			cursor: toRustScreenPoint(uiState.cursor)
+		});
 		renderer.update_render_stats();
 		updateRenderStats(renderer.render_stats);
 
 		const ctx = canvas.getContext('2d')!;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		renderer.update_viewport({
-			canvas_dims: toRustScreenPoint([canvasDims.width, canvasDims.height]),
-			cursor: toRustScreenPoint(uiState.cursor)
-		});
 		const imageData = new ImageData(
 			new Uint8ClampedArray(renderer.render()),
 			canvas.width,

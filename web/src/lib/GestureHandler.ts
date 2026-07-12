@@ -72,7 +72,7 @@ export class GestureHandler {
 			cursor: toRustScreenPoint([mouseX, mouseY]),
 			canvas_dims: toRustScreenPoint([canvasDims.width, canvasDims.height])
 		});
-		uiState.cursor = [mouseX, mouseY]; //TODO: maybe put drawsession in rust?
+		uiState.cursor = [mouseX, mouseY];
 		if (event.pointerType != 'mouse') {
 			this.currentPointers.set(event.pointerId, [event.clientX, event.clientY]);
 		}

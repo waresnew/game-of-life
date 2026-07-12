@@ -60,7 +60,7 @@ impl CellPoint {
         }
     }
 }
-#[derive(Serialize, Deserialize, Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
+#[derive(Serialize, Deserialize, Default, PartialEq, PartialOrd, Clone, Copy)]
 pub struct WorldPoint {
     pub x: i64,
     pub y: i64,

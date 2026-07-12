@@ -1,7 +1,7 @@
 <script>
-	import PatternPanel from './controls/PatternPanel.svelte';
-	import RulePanel from './controls/RulePanel.svelte';
-	import RunPanel from './controls/RunPanel.svelte';
+	import PatternPanel from './panels/PatternPanel.svelte';
+	import RulePanel from './panels/RulePanel.svelte';
+	import RunPanel from './panels/RunPanel.svelte';
 	import DebugStats from './DebugStats.svelte';
 </script>
 
