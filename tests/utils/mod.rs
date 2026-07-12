@@ -1,7 +1,7 @@
-use game_of_life::renderer::Point;
+use game_of_life::renderer::CellPoint;
 
-pub fn convert_coords(input: Vec<(i64, i64)>) -> Vec<Point> {
-    input.into_iter().map(Point::from_tuple).collect()
+pub fn convert_coords(input: Vec<(i64, i64)>) -> Vec<CellPoint> {
+    input.into_iter().map(CellPoint::from_tuple).collect()
 }
 
 #[macro_export]

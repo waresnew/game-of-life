@@ -4,15 +4,14 @@ use crate::{
     config::CELL_SIZE_EXP,
     quadtree_pool::Quadtree,
     renderer::{
-        Renderer,
-        controls::Point,
+        CellPoint, Renderer, ScreenPoint,
         image_bitmap::{ImageBitmap, Rgb},
     },
 };
 
 impl Renderer {
-    fn screen_to_cell(&self, point: Point) -> Point {
-        Point::new(
+    fn screen_to_cell(&self, point: ScreenPoint) -> CellPoint {
+        CellPoint::new(
             ((point.x + self.viewport_info.centre.x - self.viewport_info.canvas_dims.x / 2)
                 * (1 << self.viewport_info.zoom_out_exp))
                 .div_euclid(1 << CELL_SIZE_EXP),
@@ -21,14 +20,14 @@ impl Renderer {
                 .div_euclid(1 << CELL_SIZE_EXP),
         )
     }
-    fn cell_to_screen(&self, point: Point) -> Point {
+    fn cell_to_screen(&self, point: CellPoint) -> ScreenPoint {
         let x = (point.x * (1 << CELL_SIZE_EXP)).div_euclid(1 << self.viewport_info.zoom_out_exp)
             - self.viewport_info.centre.x
             + (self.viewport_info.canvas_dims.x / 2);
         let y = (-point.y * (1 << CELL_SIZE_EXP)).div_euclid(1 << self.viewport_info.zoom_out_exp)
             - self.viewport_info.centre.y
             + (self.viewport_info.canvas_dims.y / 2);
-        Point::new(x, y)
+        ScreenPoint::new(x, y)
     }
     pub(super) fn draw_grid(&self, ans: &mut ImageBitmap) {
         const GRID_CUTOFF: u32 = CELL_SIZE_EXP - 3;
@@ -37,22 +36,22 @@ impl Renderer {
             return;
         }
         const GRID_COLOUR: Rgb = Rgb::new(240, 240, 240);
-        let min = self.screen_to_cell(Point::new(0, self.viewport_info.canvas_dims.y));
-        let max = self.screen_to_cell(Point::new(self.viewport_info.canvas_dims.x, 0));
+        let min = self.screen_to_cell(ScreenPoint::new(0, self.viewport_info.canvas_dims.y));
+        let max = self.screen_to_cell(ScreenPoint::new(self.viewport_info.canvas_dims.x, 0));
         for x in min.x..=max.x {
             for y in 0..self.viewport_info.canvas_dims.y {
-                let transformed_x = self.cell_to_screen(Point::new(x, 0)).x;
-                ans.fill_pixel(Point::new(transformed_x, y), GRID_COLOUR);
+                let transformed_x = self.cell_to_screen(CellPoint::new(x, 0)).x;
+                ans.fill_pixel(ScreenPoint::new(transformed_x, y), GRID_COLOUR);
             }
         }
         for y in min.y..=max.y {
             for x in 0..self.viewport_info.canvas_dims.x {
-                let transformed_y = self.cell_to_screen(Point::new(0, y)).y;
-                ans.fill_pixel(Point::new(x, transformed_y), GRID_COLOUR);
+                let transformed_y = self.cell_to_screen(CellPoint::new(0, y)).y;
+                ans.fill_pixel(ScreenPoint::new(x, transformed_y), GRID_COLOUR);
             }
         }
     }
-    pub(super) fn render_visible_alives(&self, id: usize, min: Point, ans: &mut ImageBitmap) {
+    pub(super) fn render_visible_alives(&self, id: usize, min: CellPoint, ans: &mut ImageBitmap) {
         //2^x mult/div
         let pixels_exp_tmp = (CELL_SIZE_EXP as i32) - (self.viewport_info.zoom_out_exp as i32);
         match &self.solver.pool[id] {
@@ -73,10 +72,10 @@ impl Renderer {
                     return;
                 }
                 let mid = 1 << (root.height - 1);
-                self.render_visible_alives(root.tl, Point::new(min.x, min.y + mid), ans);
-                self.render_visible_alives(root.tr, Point::new(min.x + mid, min.y + mid), ans);
+                self.render_visible_alives(root.tl, CellPoint::new(min.x, min.y + mid), ans);
+                self.render_visible_alives(root.tr, CellPoint::new(min.x + mid, min.y + mid), ans);
                 self.render_visible_alives(root.bl, min, ans);
-                self.render_visible_alives(root.br, Point::new(min.x + mid, min.y), ans);
+                self.render_visible_alives(root.br, CellPoint::new(min.x + mid, min.y), ans);
             }
             &Quadtree::Cell(alive) => {
                 let (screen_min, screen_max) = self.get_screen_bounding_box(min, 0);
@@ -88,39 +87,43 @@ impl Renderer {
         }
     }
 
-    fn get_screen_bounding_box(&self, point: Point, size_exp: u32) -> (Point, Point) {
+    fn get_screen_bounding_box(
+        &self,
+        point: CellPoint,
+        size_exp: u32,
+    ) -> (ScreenPoint, ScreenPoint) {
         let point1 = self.cell_to_screen(point);
-        let point2 = self.cell_to_screen(Point::new(
+        let point2 = self.cell_to_screen(CellPoint::new(
             point.x + (1 << size_exp),
             point.y + (1 << size_exp),
         ));
         (
-            Point::new(point1.x.min(point2.x), point1.y.min(point2.y)),
-            Point::new(point1.x.max(point2.x), point1.y.max(point2.y)),
+            ScreenPoint::new(point1.x.min(point2.x), point1.y.min(point2.y)),
+            ScreenPoint::new(point1.x.max(point2.x), point1.y.max(point2.y)),
         )
     }
-    fn box_intersects_canvas(&self, min: Point, max: Point) -> bool {
+    fn box_intersects_canvas(&self, min: ScreenPoint, max: ScreenPoint) -> bool {
         !(min.x >= self.viewport_info.canvas_dims.x
             || min.y >= self.viewport_info.canvas_dims.y
             || max.x < 0
             || max.y < 0)
     }
 
-    pub(super) fn point_in_box(point: Point, box_min: Point, box_max: Point) -> bool {
+    pub(super) fn point_in_box(point: CellPoint, box_min: CellPoint, box_max: CellPoint) -> bool {
         !(point.x > box_max.x || point.x < box_min.x || point.y > box_max.y || point.y < box_min.y)
     }
     /// for tests only
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn query_cell(&self, point: Point) -> bool {
+    pub fn query_cell(&self, point: CellPoint) -> bool {
         use crate::{config::MIN_POINT, quadtree_pool::QuadtreePool};
 
-        fn traverse(point: Point, root: usize, min: Point, pool: &QuadtreePool) -> bool {
+        fn traverse(point: CellPoint, root: usize, min: CellPoint, pool: &QuadtreePool) -> bool {
             match &pool[root] {
                 Quadtree::Subtree(subtree) => {
                     if !Renderer::point_in_box(
                         point,
                         min,
-                        Point::new(
+                        CellPoint::new(
                             min.x + (1 << subtree.height) - 1,
                             min.y + (1 << subtree.height) - 1,
                         ),
@@ -131,15 +134,15 @@ impl Renderer {
                         return false;
                     }
                     let mid = 1 << (subtree.height - 1);
-                    traverse(point, subtree.tl, Point::new(min.x, min.y + mid), pool)
+                    traverse(point, subtree.tl, CellPoint::new(min.x, min.y + mid), pool)
                         || traverse(
                             point,
                             subtree.tr,
-                            Point::new(min.x + mid, min.y + mid),
+                            CellPoint::new(min.x + mid, min.y + mid),
                             pool,
                         )
                         || traverse(point, subtree.bl, min, pool)
-                        || traverse(point, subtree.br, Point::new(min.x + mid, min.y), pool)
+                        || traverse(point, subtree.br, CellPoint::new(min.x + mid, min.y), pool)
                 }
                 &Quadtree::Cell(alive) => {
                     if min == point {

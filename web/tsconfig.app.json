@@ -18,7 +18,8 @@
 		"moduleDetection": "force",
         "paths": {
             "$lib/*": ["./src/lib/*"],
-            "$assets/*": ["./src/assets/*"]
+            "$assets/*": ["./src/assets/*"],
+            "$wasm/*": ["../pkg/*"]
         }
 	},
 	"include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]

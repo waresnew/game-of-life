@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Point as RustCellPoint } from '../../../../pkg/game_of_life.js';
+	import { CellPoint as RustCellPoint } from '$wasm/game_of_life.js';
 	import { onMount } from 'svelte';
 	import {
 		camera,

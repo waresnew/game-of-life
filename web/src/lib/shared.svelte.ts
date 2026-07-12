@@ -1,4 +1,4 @@
-import { type PerfStats } from '../../../pkg/game_of_life.js';
+import { type PerfStats } from '$wasm/game_of_life.js';
 import { config, renderer } from './wasm.js';
 export type Point = [number, number];
 

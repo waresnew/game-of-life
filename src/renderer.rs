@@ -9,20 +9,21 @@ use crate::{
 mod controls;
 mod convert;
 mod image_bitmap;
-pub use controls::Point;
+mod point;
 use image_bitmap::*;
+pub use point::*;
 #[derive(Tsify, Serialize, Deserialize, Copy, Clone)]
 pub struct ViewportInfo {
     pub zoom_out_exp: u32,
-    pub canvas_dims: Point,
-    pub centre: Point,
+    pub canvas_dims: ScreenPoint,
+    pub centre: WorldPoint,
 }
 impl Default for ViewportInfo {
     fn default() -> Self {
         Self {
             zoom_out_exp: 0,
-            canvas_dims: Point::new(0, 0),
-            centre: Point::new(0, 0),
+            canvas_dims: ScreenPoint::new(0, 0),
+            centre: WorldPoint::new(0, 0),
         }
     }
 }
@@ -60,8 +61,9 @@ impl Renderer {
         ans.into_pixels()
     }
     pub fn toggle_cell(&mut self, x: i64, y: i64) {
+        //TODO: change to screenpoint
         self.solver.root =
-            self.toggle_cell_and_return_root(Point::new(x, y), self.solver.root, MIN_POINT);
+            self.toggle_cell_and_return_root(CellPoint::new(x, y), self.solver.root, MIN_POINT);
         self.solver.update_stats();
     }
     pub fn clear_grid(&mut self) {
@@ -77,8 +79,8 @@ impl Renderer {
         self.update_viewport(
             ViewportInfo {
                 zoom_out_exp: 0,
-                centre: Point::new(0, 0),
-                canvas_dims: Point::new(MIN_POINT.x, MIN_POINT.y),
+                centre: WorldPoint::new(0, 0),
+                canvas_dims: ScreenPoint::new(MIN_POINT.x, MIN_POINT.y),
             }
             .into_ts()
             .unwrap(),

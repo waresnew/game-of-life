@@ -1,6 +1,5 @@
-import { Bench } from "tinybench";
-import { bench, describe } from "vitest";
-import { Point, Renderer } from "../../pkg/game_of_life.js";
+import { bench, describe } from 'vitest';
+import { Point, Renderer } from '$wasm/game_of_life.js';
 
 function getRandomInt(min: number, max: number) {
 	min = Math.ceil(min);
@@ -20,14 +19,14 @@ const max = BigInt(1 << 50);
 renderer.update_viewport({
 	zoom_out_exp: 0,
 	canvas_dims: new Point(500n, 500n),
-	centre: new Point(0n, 0n),
+	centre: new Point(0n, 0n)
 });
-describe("wasm benchmark", () => {
+describe('wasm benchmark', () => {
 	bench(
-		"filled 16x16 render",
+		'filled 16x16 render',
 		async () => {
 			(globalThis as any).res = renderer.render();
 		},
-		{ time: 5000 },
+		{ time: 5000 }
 	);
 });

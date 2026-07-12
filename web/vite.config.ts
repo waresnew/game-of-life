@@ -10,7 +10,8 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			$lib: resolve('./src/lib'),
-			$assets: resolve('./src/assets')
+			$assets: resolve('./src/assets'),
+			$wasm: resolve('../pkg')
 		}
 	},
 	build: {

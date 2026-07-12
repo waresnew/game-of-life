@@ -1,4 +1,4 @@
-use crate::renderer::Point;
+use crate::renderer::ScreenPoint;
 
 pub struct ImageBitmap {
     pixels: Vec<u8>,
@@ -20,7 +20,7 @@ impl Rgb {
     }
 }
 impl ImageBitmap {
-    pub fn new(canvas_dims: Point) -> Self {
+    pub fn new(canvas_dims: ScreenPoint) -> Self {
         let width = usize::try_from(canvas_dims.x).unwrap();
         let height = usize::try_from(canvas_dims.y).unwrap();
         Self {
@@ -32,7 +32,7 @@ impl ImageBitmap {
             height,
         }
     }
-    pub fn fill_cell(&mut self, tl: Point, size_exp: u32) {
+    pub fn fill_cell(&mut self, tl: ScreenPoint, size_exp: u32) {
         let size = 1 << size_exp;
         for dx in 0..size {
             for dy in 0..size {
@@ -49,7 +49,7 @@ impl ImageBitmap {
             }
         }
     }
-    pub fn fill_pixel(&mut self, p: Point, colour: Rgb) {
+    pub fn fill_pixel(&mut self, p: ScreenPoint, colour: Rgb) {
         if p.x < 0 || p.y < 0 || p.x >= self.width as i64 || p.y >= self.height as i64 {
             return;
         }
