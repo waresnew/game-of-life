@@ -1,3 +1,13 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
+button {
+    touch-action: none;
+}
+html,
+body {
+    margin: 0;
+}
+:root {
+    --page-padding: 1rem;
+}

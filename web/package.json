@@ -1,25 +1,25 @@
 {
   "name": "game-of-life",
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.3.2",
-    "@types/bun": "latest",
-    "@types/node": "^26.1.0",
-    "@vitest/browser-playwright": "^4.1.10",
-    "tailwindcss": "^4.3.2",
-    "tinybench": "^6.0.2",
-    "vite": "^8.1.3",
-    "vite-plugin-singlefile": "^2.3.3",
-    "vitest": "^4.1.10"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test:browser": "vitest --config=vitest.browser.config.ts"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
   },
-  "dependencies": {
-    "vite-plugin-checker": "^0.14.4"
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@tailwindcss/vite": "^4.3.2",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^24.13.2",
+    "prettier-plugin-svelte": "^4.1.1",
+    "svelte": "^5.56.4",
+    "svelte-check": "^4.7.1",
+    "tailwindcss": "^4.3.2",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.4",
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }

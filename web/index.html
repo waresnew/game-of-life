@@ -1,131 +1,19 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 	<head>
-		<meta charset="utf-8">
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="text-scale" content="scale" />
+		<link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+		<link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+		<link rel="shortcut icon" href="/favicon/favicon.ico" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+		<meta name="apple-mobile-web-app-title" content="Game of Life" />
+		<link rel="manifest" href="/favicon/site.webmanifest" />
 		<title>Game of Life</title>
-		<link
-			rel="icon"
-			type="image/png"
-			href="./favicon/favicon-96x96.png"
-			sizes="96x96"
-		>
-		<link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg">
-		<link rel="shortcut icon" href="./favicon/favicon.ico">
-		<link
-			rel="apple-touch-icon"
-			sizes="180x180"
-			href="./favicon/apple-touch-icon.png"
-		>
-		<meta name="apple-mobile-web-app-title" content="Game of Life">
-		<link rel="manifest" href="./favicon/site.webmanifest">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link href="app.css" rel="stylesheet">
-		<style>
-		button {
-			touch-action: none;
-		}
-		html,
-		body {
-			margin: 0;
-		}
-		body:not(.ready) {
-			visibility: hidden;
-		}
-		:root {
-			--page-padding: 1rem;
-		}
-		</style>
 	</head>
 	<body>
-		<div class="flex gap-4 items-center-safe flex-wrap p-(--page-padding)">
-			<div
-				class="flex flex-col gap-2 flex-1 h-[calc(100dvh-2*var(--page-padding))] w-full min-w-100"
-			>
-				<div class="flex flex-col gap-2 w-full flex-none">
-					<div class="flex gap-8" id="stats-world">
-						<span class="min-w-0 flex-1 truncate" id="stats-generation"></span>
-						<span class="min-w-0 flex-1 truncate" id="stats-alive"></span>
-					</div>
-					<div class="flex gap-8" id="stats-display">
-						<span class="min-w-0 flex-1 truncate" id="stats-fps"></span>
-						<span class="min-w-0 flex-1 truncate" id="stats-cursor"></span>
-						<span class="min-w-0 flex-1 truncate" id="stats-zoom"></span>
-					</div>
-				</div>
-				<canvas
-					id="grid"
-					class="border border-black [image-rendering:pixelated] h-full w-full touch-none min-h-0 min-w-0"
-					>Game of Life grid</canvas
-				>
-				<div class="flex justify-between w-full gap-8" id="footer">
-					<span class="pointer-coarse:hidden"
-						>Left click to draw, right click to pan, scroll to zoom.</span
-					>
-					<span class="pointer-fine:hidden"
-						>Drag with one finger to draw, two fingers to pan, pinch to zoom.</span
-					>
-					<a href="https://github.com/waresnew/game-of-life" target="_blank"
-						>Source</a
-					>
-				</div>
-			</div>
-			<div class="flex flex-col gap-4 w-60 flex-none">
-				<div>
-					<span>Rule:</span>
-					<label for="rule-b">B</label>
-					<input
-						class="max-w-8 invalid:border-red-400"
-						title="Condition for cell to be born (# of alive neighbours)"
-						name="rule-b"
-						id="rule-b-input"
-						maxlength="9"
-						value="3"
-						autocomplete="off"
-						pattern="[0-8]*"
-					>
-					<span>/</span>
-					<label for="rule-s">S</label>
-					<input
-						class="max-w-8 invalid:border-red-400"
-						title="Condition for a cell to survive (# of alive neighbours)"
-						name="rule-s"
-						id="rule-s-input"
-						maxlength="9"
-						value="23"
-						autocomplete="off"
-						pattern="[0-8]*"
-					>
-				</div>
-				<div class="flex gap-2 flex-col" id="patterns">
-					<label for="pattern-presets">Patterns:</label>
-					<select name="pattern-presets" id="pattern-dropdown">
-						<option selected value="blank">Blank</option>
-					</select>
-					<input type="file" id="pattern-from-file" accept=".rle">
-				</div>
-				<div class="h-px w-full bg-zinc-300"></div>
-				<div class="flex flex-col gap-2">
-					<div class="flex gap-2" id="stepsize">
-						<button id="stepsize-less">-</button>
-						<span id="stepsize-display"></span>
-						<button id="stepsize-more">+</button>
-					</div>
-					<div class="flex gap-2" id="once">
-						<button id="once-button">Run once</button>
-						<span class="min-w-0 flex-1 truncate" id="once-runtime"></span>
-					</div>
-					<div class="flex gap-2" id="play">
-						<button id="play-button">Play</button>
-						<span class="min-w-0 flex-1 truncate" id="play-runtime"></span>
-					</div>
-				</div>
-				<div class="h-px w-full bg-zinc-300"></div>
-				<div class="flex flex-col gap-1">
-					<span class="min-w-0 flex-1 truncate" id="debug-cache_hitrate"></span>
-					<span class="min-w-0 flex-1 truncate" id="debug-pool_mem"></span>
-				</div>
-			</div>
-		</div>
-		<script type="module" src="./index.ts"></script>
+		<div id="app"></div>
+		<script type="module" src="/src/main.ts"></script>
 	</body>
 </html>
