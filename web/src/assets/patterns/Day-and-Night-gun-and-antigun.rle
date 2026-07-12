@@ -1,0 +1,20 @@
+#CXRLE Pos=0,0
+x = 107, y = 80, rule = B3678/S34678
+87b2obob2o$76b2o9b7o9b2o$76b2o10b5o10b2o$75b4o8b7o8b4o$75b3obo7b7o7bob
+3o$74b4obo7b7o7bob4o$74b4obo8b5o8bob4o$74b4obo8b5o8bob4o$75b3obo7b7o7b
+ob3o$75b3obo8b5o8bob3o$74b4obo7b7o7bob4o$74b4obo8b5o8bob4o$74b4obo7b7o
+7bob4o$75b3obo7b7o7bob3o$75b4o11bo11b4o$76b2o25b2o$76b2o25b2o$89bobo$
+88bobobo$88b5o$89b3o$89b3o$88b5o$89b3o$87bob3obo$87b7o$88b5o$88b5o$89b
+3o$89b3o$90bo$88bobobo$86b2ob3ob2o$86b9o$87b7o$3bo2bo2bo2bo2bo2bo2bo2b
+o2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo7b9o$b80o3b13o$
+b80o3bob9obo$82o3b11o$b8o3b2o3b65o3bob7obo$b6o12b62o7b5o$5o16b60o6b7o$
+b4o16b61o6b5o$b6ob10ob62o8b3o$8o10b31o2b2o2b26o9bo$b46o4b2o4b25o$b46o
+3bo2bo3b24o$49o2b2o2b26o$b81o$b80o$81o$b36ob8o2b34o$b3o2bo3b2obobo2b
+11ob6o2b8o4b22o2b7o$4o14b4o2b2ob2ob2ob3o3bo2b3obo3bob4o3b13o2b7o$b4o
+13b3obo8b2ob2o8b2o5bob4o3b22o$4o15b3o39b21o$b4o13b3obo8b2ob2o8b2o14b
+21o$4o14b4o2b2ob2ob2ob3o3bo2b3obo9b2ob22o$b3o2bo3b2obobo2b11ob6o2b8o8b
+obob22o$b36ob8o2bo2b4ob24o$50ob28o$b78o$b77o$78o$b76o$b76o$8o10b52o2b
+4o$b6ob10ob46o2bo4b4o$b4o16b44o6b4o$5o16b43o7b4o$b6o12b45o3b2ob4o$b8o
+3b2o3b45o5b2ob4o$62o9b2o$b59o5b4ob3o$b59o5b2ob2o3b2o$3bo2bo2bo2bo2bo2b
+o2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo2bo12b2o2b3o$70b2ob4o$71bob2o$70b
+2o$70b2o!
