@@ -53,7 +53,7 @@ fn one_step_acorn() {
     .collect();
     let mut renderer = Renderer::new(13);
     for p in alive {
-        renderer.toggle_cell(p.x, p.y);
+        renderer.toggle_cell(p);
     }
     renderer.next_step();
     assert_eq!(renderer.perf_stats().alives, "633");

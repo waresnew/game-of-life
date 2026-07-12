@@ -12,7 +12,7 @@ macro_rules! test_solve {
         let alive = $crate::utils::convert_coords($input);
         let mut renderer = Renderer::new($k);
         for p in alive {
-            renderer.toggle_cell(p.x, p.y);
+            renderer.toggle_cell(p);
         }
         renderer.next_step();
         assert_eq!(renderer.perf_stats().alives, output.len().to_string());

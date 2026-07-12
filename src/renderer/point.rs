@@ -3,6 +3,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
+//TODO: reduce duplication
 #[derive(Serialize, Deserialize, Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
 #[wasm_bindgen]
 pub struct ScreenPoint {
@@ -45,14 +46,10 @@ impl fmt::Debug for CellPoint {
         write!(f, "({}, {})", self.x, self.y)
     }
 }
-#[wasm_bindgen]
 impl CellPoint {
-    #[wasm_bindgen(constructor)]
     pub fn new(x: i64, y: i64) -> Self {
         Self { x, y }
     }
-}
-impl CellPoint {
     pub fn from_tuple((x, y): (i64, i64)) -> Self {
         Self::new(x, y)
     }

@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { CellPoint as RustCellPoint } from '$wasm/game_of_life.js';
+	import { ScreenPoint as RustScreenPoint } from '$wasm/game_of_life.js';
 	import { onMount } from 'svelte';
 	import {
-		camera,
-		getEffectiveZoomOutExp,
 		uiState,
 		updatePerfStats,
 		canvasDims,
 		fpsCounters,
 		next_step,
 		setCanvasDims,
-		type Point
+		type Point,
+		updateRenderStats,
+		toRustScreenPoint
 	} from '$lib/shared.svelte';
 	import { GestureHandler } from '$lib/GestureHandler.js';
 	import { renderer } from '$lib/wasm.js';
@@ -31,13 +31,14 @@
 			uiState.playRuntime = elapsed;
 		}
 		updatePerfStats(renderer.perf_stats);
+		renderer.update_render_stats();
+		updateRenderStats(renderer.render_stats);
 
 		const ctx = canvas.getContext('2d')!;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		renderer.update_viewport({
-			zoom_out_exp: getEffectiveZoomOutExp(),
-			centre: toRustCellPoint(camera.centre),
-			canvas_dims: toRustCellPoint([canvas.width, canvas.height])
+			canvas_dims: toRustScreenPoint([canvasDims.width, canvasDims.height]),
+			cursor: toRustScreenPoint(uiState.cursor)
 		});
 		const imageData = new ImageData(
 			new Uint8ClampedArray(renderer.render()),
@@ -56,11 +57,10 @@
 		}
 		const canvasResizeObserver = new ResizeObserver(resizeCanvas);
 		canvasResizeObserver.observe(canvas);
+		resizeCanvas();
+		setCanvasDims(canvas.getBoundingClientRect());
 		requestAnimationFrame(repaint);
 	});
-	function toRustCellPoint(p: Point) {
-		return new RustCellPoint(BigInt(p[0]), BigInt(p[1]));
-	}
 </script>
 
 <canvas

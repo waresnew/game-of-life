@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { camera, uiState, canvasDims, CELL_SIZE } from '$lib/shared.svelte';
+	import { uiState, canvasDims, CELL_SIZE, toRustScreenPoint } from '$lib/shared.svelte';
 	import { renderer } from '$lib/wasm';
 	import { updateRule } from '$lib/shared.svelte';
 
@@ -12,52 +12,7 @@
 	function applyRlePattern(pattern: string) {
 		uiState.generation = 0n;
 		uiState.ticking = false;
-		renderer.clear_grid();
-		const content = pattern
-			.trim()
-			.split('\n')
-			.map((x) => x.trim())
-			.filter((x) => x.length && !x.startsWith('#'));
-		const header = /^x = (\d+), y = (\d+), rule = [bB]?(\d+)\/[sS]?(\d+)/.exec(content.shift()!);
-		const width = parseInt(header![1]!);
-		const height = parseInt(header![2]!);
-		const borns = header![3]!.split('').map((x) => parseInt(x));
-		const survives = header![4]!.split('').map((x) => parseInt(x));
-		updateRule(borns, survives);
-		let x = Math.floor(-width / 2);
-		let y = Math.floor(height / 2);
-		camera.centre = [0, 0];
-		camera.zoomOutExpFloat = Math.max(
-			0,
-			Math.ceil(
-				Math.log2(
-					Math.max((width * CELL_SIZE) / canvasDims.width, (height * CELL_SIZE) / canvasDims.height)
-				)
-			)
-		);
-		const lines = content.join('').split('$');
-		for (const line of lines) {
-			let cnt_str = '';
-			for (const c of line) {
-				if (c == '!') return;
-				if (/\d/.test(c)) {
-					cnt_str += c;
-				} else {
-					const cnt = cnt_str ? parseInt(cnt_str) : 1;
-					if (c != 'b') {
-						for (let _ = 0; _ < cnt; _++) {
-							renderer.toggle_cell(BigInt(x), BigInt(y));
-							x += 1;
-						}
-					} else {
-						x += cnt;
-					}
-					cnt_str = '';
-				}
-			}
-			y -= cnt_str ? parseInt(cnt_str) : 1;
-			x = Math.floor(-width / 2);
-		}
+		renderer.load_pattern(pattern);
 	}
 </script>
 

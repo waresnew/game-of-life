@@ -24,6 +24,7 @@
 			if (!ruleChangedOnce) {
 				ruleChangedOnce = true;
 			} else {
+				//TODO: flash the b and s textboxes independently
 				succeeded = true;
 				setTimeout(() => {
 					succeeded = false;

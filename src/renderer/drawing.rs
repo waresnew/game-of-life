@@ -10,29 +10,29 @@ use crate::{
 };
 
 impl Renderer {
-    fn screen_to_cell(&self, point: ScreenPoint) -> CellPoint {
+    pub(super) fn screen_to_cell(&self, point: ScreenPoint) -> CellPoint {
         CellPoint::new(
-            ((point.x + self.viewport_info.centre.x - self.viewport_info.canvas_dims.x / 2)
-                * (1 << self.viewport_info.zoom_out_exp))
+            ((point.x + self.camera.centre.x - self.viewport_info.canvas_dims.x / 2)
+                * (1 << self.camera.zoom_out_exp))
                 .div_euclid(1 << CELL_SIZE_EXP),
-            ((point.y + self.viewport_info.centre.y - self.viewport_info.canvas_dims.y / 2)
-                * -(1 << self.viewport_info.zoom_out_exp))
+            ((point.y + self.camera.centre.y - self.viewport_info.canvas_dims.y / 2)
+                * -(1 << self.camera.zoom_out_exp))
                 .div_euclid(1 << CELL_SIZE_EXP),
         )
     }
-    fn cell_to_screen(&self, point: CellPoint) -> ScreenPoint {
-        let x = (point.x * (1 << CELL_SIZE_EXP)).div_euclid(1 << self.viewport_info.zoom_out_exp)
-            - self.viewport_info.centre.x
+    pub(super) fn cell_to_screen(&self, point: CellPoint) -> ScreenPoint {
+        let x = (point.x * (1 << CELL_SIZE_EXP)).div_euclid(1 << self.camera.zoom_out_exp)
+            - self.camera.centre.x
             + (self.viewport_info.canvas_dims.x / 2);
-        let y = (-point.y * (1 << CELL_SIZE_EXP)).div_euclid(1 << self.viewport_info.zoom_out_exp)
-            - self.viewport_info.centre.y
+        let y = (-point.y * (1 << CELL_SIZE_EXP)).div_euclid(1 << self.camera.zoom_out_exp)
+            - self.camera.centre.y
             + (self.viewport_info.canvas_dims.y / 2);
         ScreenPoint::new(x, y)
     }
     pub(super) fn draw_grid(&self, ans: &mut ImageBitmap) {
         const GRID_CUTOFF: u32 = CELL_SIZE_EXP - 3;
         //aka CELL_SIZE_EXP-zoom_out_exp<cutoff
-        if CELL_SIZE_EXP < GRID_CUTOFF + self.viewport_info.zoom_out_exp {
+        if CELL_SIZE_EXP < GRID_CUTOFF + self.camera.zoom_out_exp {
             return;
         }
         const GRID_COLOUR: Rgb = Rgb::new(240, 240, 240);
@@ -51,9 +51,9 @@ impl Renderer {
             }
         }
     }
-    pub(super) fn render_visible_alives(&self, id: usize, min: CellPoint, ans: &mut ImageBitmap) {
+    pub(super) fn draw_visible_alives(&self, id: usize, min: CellPoint, ans: &mut ImageBitmap) {
         //2^x mult/div
-        let pixels_exp_tmp = (CELL_SIZE_EXP as i32) - (self.viewport_info.zoom_out_exp as i32);
+        let pixels_exp_tmp = (CELL_SIZE_EXP as i32) - (self.camera.zoom_out_exp as i32);
         match &self.solver.pool[id] {
             Quadtree::Subtree(root) => {
                 let (screen_min, screen_max) = self.get_screen_bounding_box(min, root.height);
@@ -72,10 +72,10 @@ impl Renderer {
                     return;
                 }
                 let mid = 1 << (root.height - 1);
-                self.render_visible_alives(root.tl, CellPoint::new(min.x, min.y + mid), ans);
-                self.render_visible_alives(root.tr, CellPoint::new(min.x + mid, min.y + mid), ans);
-                self.render_visible_alives(root.bl, min, ans);
-                self.render_visible_alives(root.br, CellPoint::new(min.x + mid, min.y), ans);
+                self.draw_visible_alives(root.tl, CellPoint::new(min.x, min.y + mid), ans);
+                self.draw_visible_alives(root.tr, CellPoint::new(min.x + mid, min.y + mid), ans);
+                self.draw_visible_alives(root.bl, min, ans);
+                self.draw_visible_alives(root.br, CellPoint::new(min.x + mid, min.y), ans);
             }
             &Quadtree::Cell(alive) => {
                 let (screen_min, screen_max) = self.get_screen_bounding_box(min, 0);
@@ -111,48 +111,5 @@ impl Renderer {
 
     pub(super) fn point_in_box(point: CellPoint, box_min: CellPoint, box_max: CellPoint) -> bool {
         !(point.x > box_max.x || point.x < box_min.x || point.y > box_max.y || point.y < box_min.y)
-    }
-    /// for tests only
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn query_cell(&self, point: CellPoint) -> bool {
-        use crate::{config::MIN_POINT, quadtree_pool::QuadtreePool};
-
-        fn traverse(point: CellPoint, root: usize, min: CellPoint, pool: &QuadtreePool) -> bool {
-            match &pool[root] {
-                Quadtree::Subtree(subtree) => {
-                    if !Renderer::point_in_box(
-                        point,
-                        min,
-                        CellPoint::new(
-                            min.x + (1 << subtree.height) - 1,
-                            min.y + (1 << subtree.height) - 1,
-                        ),
-                    ) {
-                        return false;
-                    }
-                    if subtree.count == BigUint::ZERO {
-                        return false;
-                    }
-                    let mid = 1 << (subtree.height - 1);
-                    traverse(point, subtree.tl, CellPoint::new(min.x, min.y + mid), pool)
-                        || traverse(
-                            point,
-                            subtree.tr,
-                            CellPoint::new(min.x + mid, min.y + mid),
-                            pool,
-                        )
-                        || traverse(point, subtree.bl, min, pool)
-                        || traverse(point, subtree.br, CellPoint::new(min.x + mid, min.y), pool)
-                }
-                &Quadtree::Cell(alive) => {
-                    if min == point {
-                        alive
-                    } else {
-                        false
-                    }
-                }
-            }
-        }
-        traverse(point, self.solver.root, MIN_POINT, &self.solver.pool)
     }
 }

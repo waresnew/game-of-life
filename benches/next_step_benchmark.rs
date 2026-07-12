@@ -17,7 +17,7 @@ fn random_rect(c: &mut Criterion) {
     let input: Vec<CellPoint> = alive.into_iter().map(CellPoint::from_tuple).collect();
     let mut renderer = Renderer::new(12);
     for p in input.clone() {
-        renderer.toggle_cell(p.x, p.y);
+        renderer.toggle_cell(p);
     }
     c.bench_function("random 64x64 next_step", |b| {
         b.iter(|| {

@@ -1,14 +1,28 @@
-import { canvasDims, CELL_SIZE, WORLD_BORDER, type Point } from './shared.svelte';
-import { camera, getEffectiveZoomOutExp, uiState } from './shared.svelte';
+import {
+	canvasDims,
+	CELL_SIZE,
+	toRustScreenPoint,
+	WORLD_BORDER,
+	type Point
+} from './shared.svelte';
+import { uiState } from './shared.svelte';
 import { config, renderer } from './wasm';
 
 export class GestureHandler {
 	currentPointers: Map<number, Point> = new Map();
-	drawSession: Set<string> = new Set(); // js quirk
 	prevPanX = -1;
 	prevPanY = -1;
 	pointerInCanvas = false;
 	prevTouchZoomDist = -1;
+	zoomProgress = 0;
+	zoom(delta: number) {
+		this.zoomProgress += delta;
+		if (Math.abs(this.zoomProgress) >= 1) {
+			const whole = Math.trunc(this.zoomProgress);
+			this.zoomProgress -= whole;
+			renderer.handle_zoom(whole);
+		}
+	}
 	handleTouchZoom(event: PointerEvent) {
 		if (this.currentPointers.size == 2) {
 			const [[x1, y1], [x2, y2]] = Array.from(this.currentPointers.values()) as [Point, Point];
@@ -39,10 +53,9 @@ export class GestureHandler {
 		pointerY -= canvasDims.y;
 		if (event.buttons == 2 || this.currentPointers.size == 2) {
 			if (this.prevPanX != -1 && this.prevPanY != -1) {
-				camera.centre = [
-					-(pointerX - this.prevPanX) + camera.centre[0],
-					-(pointerY - this.prevPanY) + camera.centre[1]
-				];
+				renderer.handle_pan(
+					toRustScreenPoint([-(pointerX - this.prevPanX), -(pointerY - this.prevPanY)])
+				);
 			}
 			this.prevPanX = pointerX;
 			this.prevPanY = pointerY;
@@ -55,7 +68,11 @@ export class GestureHandler {
 			this.currentPointers.delete(event.pointerId);
 			return;
 		}
-		uiState.worldCursor = this.screenToWorld([mouseX, mouseY]);
+		renderer.update_viewport({
+			cursor: toRustScreenPoint([mouseX, mouseY]),
+			canvas_dims: toRustScreenPoint([canvasDims.width, canvasDims.height])
+		});
+		uiState.cursor = [mouseX, mouseY]; //TODO: maybe put drawsession in rust?
 		if (event.pointerType != 'mouse') {
 			this.currentPointers.set(event.pointerId, [event.clientX, event.clientY]);
 		}
@@ -85,55 +102,11 @@ export class GestureHandler {
 	}
 	endDrawSession(event: PointerEvent) {
 		this.currentPointers.delete(event.pointerId);
-		this.drawSession.clear();
+		renderer.end_draw_session();
 		this.prevPanX = this.prevPanY = -1;
 		this.prevTouchZoomDist = -1;
 	}
-	zoom(zoomDelta: number) {
-		let newZoomExpFloat = camera.zoomOutExpFloat + zoomDelta;
-		newZoomExpFloat = Math.min(config.MAX_HEIGHT, Math.max(0, newZoomExpFloat));
-		const newZoom = 2 ** -Math.trunc(newZoomExpFloat);
-		camera.centre = [
-			newZoom * uiState.worldCursor[0] -
-				this.getEffectiveZoom() * uiState.worldCursor[0] +
-				camera.centre[0],
-			-newZoom * uiState.worldCursor[1] +
-				this.getEffectiveZoom() * uiState.worldCursor[1] +
-				camera.centre[1]
-		];
-		camera.zoomOutExpFloat = newZoomExpFloat;
-	}
 	doDraw() {
-		const cell: Point = [
-			Math.floor(uiState.worldCursor[0] / CELL_SIZE),
-			Math.floor(uiState.worldCursor[1] / CELL_SIZE)
-		];
-		if (
-			cell[0] > WORLD_BORDER ||
-			cell[0] < -WORLD_BORDER ||
-			cell[1] > WORLD_BORDER ||
-			cell[1] < -WORLD_BORDER
-		) {
-			alert(
-				`Cannot draw if x or y is outside of [-${WORLD_BORDER.toExponential()}, ${WORLD_BORDER.toExponential()}]`
-			);
-			this.drawSession.clear();
-			return;
-		}
-		const strCell = cell.join(' ');
-		if (this.drawSession.has(strCell)) {
-			return;
-		}
-		this.drawSession.add(strCell);
-		renderer.toggle_cell(BigInt(cell[0]), BigInt(cell[1]));
-	}
-	screenToWorld(p: Point): Point {
-		return [
-			(p[0] + camera.centre[0] - canvasDims.width / 2) / this.getEffectiveZoom(),
-			(p[1] + camera.centre[1] - canvasDims.height / 2) / -this.getEffectiveZoom()
-		];
-	}
-	getEffectiveZoom() {
-		return 2 ** -getEffectiveZoomOutExp();
+		renderer.handle_draw();
 	}
 }

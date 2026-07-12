@@ -1,4 +1,4 @@
-import { type PerfStats } from '$wasm/game_of_life.js';
+import { RenderStats, ScreenPoint as RustScreenPoint, type PerfStats } from '$wasm/game_of_life.js';
 import { config, renderer } from './wasm.js';
 export type Point = [number, number];
 
@@ -27,9 +27,16 @@ export function getPerfStats() {
 export function updatePerfStats(stats: PerfStats) {
 	perfStats = stats;
 }
+let renderStats = $state(renderer.render_stats);
+export function getRenderStats() {
+	return renderStats;
+}
+export function updateRenderStats(stats: RenderStats) {
+	renderStats = stats;
+}
 export const uiState = $state({
 	fps: 0,
-	worldCursor: [0, 0] as Point,
+	cursor: [0, 0] as Point,
 	generation: 0n,
 	ticking: false,
 	stepExp: 0,
@@ -52,19 +59,7 @@ export function updateRule(b: number[], s: number[]) {
 		rule.s = s;
 	}
 }
-class Camera {
-	#centre: Point = [0, 0];
-	zoomOutExpFloat = $state(0);
-	get centre() {
-		return this.#centre;
-	}
-	set centre(p) {
-		this.#centre = [Math.floor(p[0]), Math.floor(p[1])];
-	}
-}
-export const camera = $state(new Camera());
 
-const effectiveZoomOutExp = $derived(Math.trunc(camera.zoomOutExpFloat));
-export function getEffectiveZoomOutExp() {
-	return effectiveZoomOutExp;
+export function toRustScreenPoint(p: Point) {
+	return new RustScreenPoint(BigInt(Math.floor(p[0])), BigInt(Math.floor(p[1])));
 }

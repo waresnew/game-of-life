@@ -10,7 +10,7 @@ fn random_rect(c: &mut Criterion) {
     }
     let mut renderer = Renderer::new(12);
     for p in input.clone() {
-        renderer.toggle_cell(p.x, p.y);
+        renderer.toggle_cell(p);
     }
     c.bench_function("filled 64x64 render", |b| b.iter(|| renderer.render_all()));
 }
