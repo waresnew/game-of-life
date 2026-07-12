@@ -20,3 +20,9 @@ The demo website is fully client-side and can be visited here: https://waresnew.
 
 You can build it locally by running `just build` and opening `./dist/index.html` in a web browser.
 
+System dependencies:
+
+- just
+- wasm-pack
+- bun
+- watchexec

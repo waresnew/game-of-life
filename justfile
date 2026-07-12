@@ -1,6 +1,10 @@
 [default]
-dev:
-    wasm-pack build --release --target bundler
+[parallel]
+dev: watch-wasm vite-dev
+
+watch-wasm:
+    watchexec -w src -e rs -- wasm-pack build --release --target bundler
+vite-dev:
     cd web && bunx vite
 
 profile:
