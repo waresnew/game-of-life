@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ScreenPoint as RustScreenPoint } from '$wasm/game_of_life.js';
+	import { ScreenPoint as RustScreenPoint, ViewportInfo } from '$wasm/game_of_life.js';
 	import { onMount } from 'svelte';
 	import {
 		uiState,
@@ -31,10 +31,12 @@
 			uiState.playRuntime = elapsed;
 		}
 		updatePerfStats(renderer.perf_stats);
-		renderer.update_viewport({
-			canvas_dims: toRustScreenPoint([canvasDims.width, canvasDims.height]),
-			cursor: toRustScreenPoint(uiState.cursor)
-		});
+		renderer.update_viewport(
+			new ViewportInfo(
+				toRustScreenPoint([canvasDims.width, canvasDims.height]),
+				toRustScreenPoint(uiState.cursor)
+			)
+		);
 		renderer.update_render_stats();
 		updateRenderStats(renderer.render_stats);
 

@@ -1,3 +1,4 @@
+//TODO: fix this
 import { bench, describe } from 'vitest';
 import { Point, Renderer } from '$wasm/game_of_life.js';
 

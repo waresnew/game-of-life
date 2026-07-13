@@ -1,3 +1,4 @@
+import { ViewportInfo } from '$wasm/game_of_life';
 import { canvasDims, toRustScreenPoint, type Point } from './shared.svelte';
 import { uiState } from './shared.svelte';
 import { renderer } from './wasm';
@@ -62,10 +63,12 @@ export class GestureHandler {
 			this.currentPointers.delete(event.pointerId);
 			return;
 		}
-		renderer.update_viewport({
-			cursor: toRustScreenPoint([mouseX, mouseY]),
-			canvas_dims: toRustScreenPoint([canvasDims.width, canvasDims.height])
-		});
+		renderer.update_viewport(
+			new ViewportInfo(
+				toRustScreenPoint([canvasDims.width, canvasDims.height]),
+				toRustScreenPoint([mouseX, mouseY])
+			)
+		);
 		uiState.cursor = [mouseX, mouseY];
 		if (event.pointerType != 'mouse') {
 			this.currentPointers.set(event.pointerId, [event.clientX, event.clientY]);

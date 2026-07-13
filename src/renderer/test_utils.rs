@@ -1,5 +1,4 @@
 use num_bigint::BigUint;
-use tsify::Tsify;
 
 use crate::{
     quadtree_pool::{Quadtree, QuadtreePool},
@@ -12,14 +11,10 @@ use crate::{
 impl Renderer {
     /// ignores size_exp
     pub fn render_all(&mut self) -> Vec<u8> {
-        self.update_viewport(
-            ViewportInfo {
-                canvas_dims: ScreenPoint::new(MIN_POINT.x, MIN_POINT.y),
-                ..Default::default()
-            }
-            .into_ts()
-            .unwrap(),
-        );
+        self.update_viewport(ViewportInfo {
+            canvas_dims: ScreenPoint::new(MIN_POINT.x, MIN_POINT.y),
+            ..Default::default()
+        });
         self.render_visible()
     }
     pub fn render_visible(&self) -> Vec<u8> {

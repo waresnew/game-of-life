@@ -6,7 +6,7 @@ use rand::{distr::Uniform, prelude::*};
 
 fn random_rect(c: &mut Criterion) {
     let seed = 1234;
-    let mut alive: HashSet<(i64, i64)> = HashSet::new();
+    let mut alive: HashSet<(i128, i128)> = HashSet::new();
     let mut rng = SmallRng::seed_from_u64(seed);
     let distr = Uniform::new(-32, 32).unwrap();
     while alive.len() < 2048 {

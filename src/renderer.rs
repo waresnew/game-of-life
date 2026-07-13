@@ -21,10 +21,21 @@ pub const MIN_POINT: CellPoint = CellPoint {
     y: -1 << (MAX_HEIGHT - 1),
 };
 pub const CELL_SIZE_EXP: u32 = 5;
-#[derive(Tsify, Serialize, Deserialize, Copy, Clone)]
+#[derive(Copy, Clone)]
+#[wasm_bindgen]
 pub struct ViewportInfo {
     pub canvas_dims: ScreenPoint,
     pub cursor: ScreenPoint,
+}
+#[wasm_bindgen]
+impl ViewportInfo {
+    #[wasm_bindgen(constructor)]
+    pub fn new(canvas_dims: ScreenPoint, cursor: ScreenPoint) -> Self {
+        Self {
+            canvas_dims,
+            cursor,
+        }
+    }
 }
 pub struct Camera {
     pub centre: WorldPoint,
@@ -96,8 +107,8 @@ impl Renderer {
     pub fn set_step_exp(&mut self, step_exp: u32) {
         self.solver.set_step_exp(step_exp);
     }
-    pub fn update_viewport(&mut self, viewport_info: Ts<ViewportInfo>) {
-        self.viewport_info = viewport_info.to_rust().unwrap();
+    pub fn update_viewport(&mut self, viewport_info: ViewportInfo) {
+        self.viewport_info = viewport_info;
         self.update_cursors();
     }
     pub fn update_render_stats(&mut self) {
