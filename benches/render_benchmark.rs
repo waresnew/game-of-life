@@ -1,5 +1,6 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use game_of_life::renderer::{CellPoint, Renderer, ScreenPoint, ViewportInfo};
+use num_bigint::BigInt;
 
 fn random_rect(c: &mut Criterion) {
     let mut input = Vec::new();

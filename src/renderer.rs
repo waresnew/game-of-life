@@ -1,6 +1,8 @@
 use ahash::HashSet;
 use gloo_console::log;
-use serde::{Deserialize, Serialize};
+use num_bigint::BigInt;
+use num_integer::Integer;
+use serde::Serialize;
 use tsify::{Ts, Tsify};
 use wasm_bindgen::prelude::*;
 
@@ -16,10 +18,6 @@ mod point;
 mod test_utils;
 use image_bitmap::*;
 pub use point::*;
-pub const MIN_POINT: CellPoint = CellPoint {
-    x: -1 << (MAX_HEIGHT - 1),
-    y: -1 << (MAX_HEIGHT - 1),
-};
 pub const CELL_SIZE_EXP: u32 = 5;
 #[derive(Copy, Clone)]
 #[wasm_bindgen]
