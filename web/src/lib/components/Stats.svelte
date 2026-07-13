@@ -22,8 +22,8 @@
 	<div class="flex gap-8" id="stats-display">
 		<span class="min-w-0 flex-1 truncate">FPS: {uiState.fps}</span>
 		<span class="min-w-0 flex-1 truncate"
-			>Cursor: ({formatBigInt(getRenderStats().cell_cursor.x)}, {formatBigInt(
-				getRenderStats().cell_cursor.y
+			>Cursor: ({formatBigInt(BigInt(getRenderStats().cell_cursor[0]))}, {formatBigInt(
+				BigInt(getRenderStats().cell_cursor[1])
 			)})</span
 		>
 		<span class="min-w-0 flex-1 truncate">Zoom: 2^{-getRenderStats().zoom_out_exp}</span>
