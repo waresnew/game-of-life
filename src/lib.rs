@@ -1,6 +1,5 @@
 use wasm_bindgen::prelude::*;
 
-pub mod config;
 pub mod quadtree_pool;
 pub mod renderer;
 pub mod solver;

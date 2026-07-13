@@ -15,7 +15,7 @@
 			const b = formattedB.split('').map((x) => parseInt(x));
 			const s = formattedS.split('').map((x) => parseInt(x));
 			if (b.length < 9 && s.length < 9) {
-				renderer.set_rules(new Uint32Array(b), new Uint32Array(s));
+				renderer.set_rule(new Uint32Array(b), new Uint32Array(s));
 			}
 		}
 	}

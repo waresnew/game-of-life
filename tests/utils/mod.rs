@@ -1,7 +1,12 @@
 use game_of_life::renderer::CellPoint;
+use num_bigint::BigInt;
 
-pub fn convert_coords(input: Vec<(i128, i128)>) -> Vec<CellPoint> {
-    input.into_iter().map(CellPoint::from_tuple).collect()
+pub fn convert_coords(input: Vec<(i64, i64)>) -> Vec<CellPoint> {
+    input
+        .into_iter()
+        .map(|(x, y)| (BigInt::from(x), BigInt::from(y)))
+        .map(CellPoint::from_tuple)
+        .collect()
 }
 
 #[macro_export]
@@ -12,12 +17,12 @@ macro_rules! test_solve {
         let alive = $crate::utils::convert_coords($input);
         let mut renderer = Renderer::new($k);
         for p in alive {
-            renderer.toggle_cell(p);
+            renderer.toggle_cell(&p);
         }
         renderer.next_step();
         assert_eq!(renderer.perf_stats().alives, output.len().to_string());
         for p in output {
-            assert_eq!(renderer.query_cell(p), true);
+            assert_eq!(renderer.query_cell(&p), true);
         }
     };
 }

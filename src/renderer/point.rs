@@ -1,5 +1,6 @@
 use std::fmt;
 
+use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -36,11 +37,10 @@ impl ScreenPoint {
         }
     }
 }
-#[derive(Serialize, Deserialize, Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
-#[wasm_bindgen]
+#[derive(Deserialize, Serialize, Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone)]
 pub struct CellPoint {
-    pub x: i128,
-    pub y: i128,
+    pub x: BigInt,
+    pub y: BigInt,
 }
 impl fmt::Debug for CellPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -48,10 +48,10 @@ impl fmt::Debug for CellPoint {
     }
 }
 impl CellPoint {
-    pub fn new(x: i128, y: i128) -> Self {
+    pub fn new(x: BigInt, y: BigInt) -> Self {
         Self { x, y }
     }
-    pub fn from_tuple((x, y): (i128, i128)) -> Self {
+    pub fn from_tuple((x, y): (BigInt, BigInt)) -> Self {
         Self::new(x, y)
     }
     pub fn negate(self) -> Self {
@@ -61,10 +61,10 @@ impl CellPoint {
         }
     }
 }
-#[derive(Serialize, Deserialize, Default, PartialEq, PartialOrd, Clone, Copy)]
+#[derive(Default, PartialEq, PartialOrd, Clone)]
 pub struct WorldPoint {
-    pub x: i128,
-    pub y: i128,
+    pub x: BigInt,
+    pub y: BigInt,
 }
 impl fmt::Debug for WorldPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -73,10 +73,10 @@ impl fmt::Debug for WorldPoint {
 }
 
 impl WorldPoint {
-    pub fn new(x: i128, y: i128) -> Self {
+    pub fn new(x: BigInt, y: BigInt) -> Self {
         Self { x, y }
     }
-    pub fn from_tuple((x, y): (i128, i128)) -> Self {
+    pub fn from_tuple((x, y): (BigInt, BigInt)) -> Self {
         Self::new(x, y)
     }
     pub fn negate(self) -> Self {

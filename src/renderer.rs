@@ -6,10 +6,7 @@ use serde::Serialize;
 use tsify::{Ts, Tsify};
 use wasm_bindgen::prelude::*;
 
-use crate::{
-    config::MAX_HEIGHT,
-    solver::{GOL_RULES, LifeRule, PerfStats, Solver},
-};
+use crate::solver::{GOL_RULES, LifeRule, PerfStats, Solver};
 mod controls;
 mod drawing;
 mod image_bitmap;
@@ -36,13 +33,13 @@ impl ViewportInfo {
     }
 }
 pub struct Camera {
-    pub centre: WorldPoint,
+    pub centre: WorldPoint, //FIX: pan drift occurs prob bc no float component
     pub zoom_out_exp: u32,
 }
 impl Default for Camera {
     fn default() -> Self {
         Self {
-            centre: WorldPoint::new(0, 0),
+            centre: WorldPoint::new(BigInt::from(0), BigInt::from(0)),
             zoom_out_exp: 0,
         }
     }
@@ -55,17 +52,16 @@ impl Default for ViewportInfo {
         }
     }
 }
-#[wasm_bindgen]
-#[derive(Debug, Clone, Copy)]
+#[derive(Tsify, Debug, Clone, Serialize)]
 pub struct RenderStats {
-    pub cell_cursor: CellPoint,
+    pub cell_cursor: (String, String),
     pub zoom_out_exp: u32,
     pub rule: LifeRule,
 }
 impl Default for RenderStats {
     fn default() -> Self {
         Self {
-            cell_cursor: CellPoint::new(0, 0),
+            cell_cursor: ("0".to_string(), "0".to_string()),
             zoom_out_exp: 0,
             rule: GOL_RULES,
         }
@@ -75,7 +71,7 @@ impl Default for RenderStats {
 pub struct Renderer {
     solver: Solver,
     viewport_info: ViewportInfo,
-    pub render_stats: RenderStats,
+    render_stats: RenderStats,
     camera: Camera,
     cell_cursor: CellPoint,
     world_cursor: WorldPoint,
@@ -94,10 +90,14 @@ impl Renderer {
             viewport_info: ViewportInfo::default(),
             render_stats: RenderStats::default(),
             camera: Camera::default(),
-            cell_cursor: CellPoint::new(0, 0),
-            world_cursor: WorldPoint::new(0, 0),
+            cell_cursor: CellPoint::new(BigInt::from(0), BigInt::from(0)),
+            world_cursor: WorldPoint::new(BigInt::from(0), BigInt::from(0)),
             draw_session: HashSet::default(),
         }
+    }
+    #[wasm_bindgen(getter)]
+    pub fn render_stats(&self) -> Ts<RenderStats> {
+        self.render_stats.into_ts().unwrap()
     }
     pub fn next_step(&mut self) {
         self.solver.next_step();
@@ -110,13 +110,16 @@ impl Renderer {
         self.update_cursors();
     }
     pub fn update_render_stats(&mut self) {
-        self.render_stats.cell_cursor = self.cell_cursor;
+        self.render_stats.cell_cursor = (
+            self.cell_cursor.x.to_string(),
+            self.cell_cursor.y.to_string(),
+        );
         self.render_stats.zoom_out_exp = self.camera.zoom_out_exp;
         self.render_stats.rule = self.solver.rule()
     }
     pub fn render(&self) -> Vec<u8> {
         let mut ans = ImageBitmap::new(self.viewport_info.canvas_dims);
-        self.draw_visible_alives(self.solver.root, MIN_POINT, &mut ans);
+        self.draw_visible_alives(self.solver.root, &self.solver.get_min_point(), &mut ans);
         self.draw_grid(&mut ans);
         ans.into_pixels()
     }
@@ -129,40 +132,44 @@ impl Renderer {
     pub fn load_pattern(&mut self, pattern: String) {
         self.load_rle_pattern(pattern);
     }
-    pub fn set_rules(&mut self, b: Vec<usize>, s: Vec<usize>) {
+    pub fn set_rule(&mut self, b: Vec<usize>, s: Vec<usize>) {
         self.solver.set_rule(b, s);
     }
     pub fn handle_zoom(&mut self, delta: i32) {
-        let new_zoom_out_exp =
-            ((self.camera.zoom_out_exp as i32 + delta).max(0) as u32).min(MAX_HEIGHT);
+        let new_zoom_out_exp = (self.camera.zoom_out_exp as i32 + delta).max(0) as u32;
         self.camera.centre = WorldPoint::new(
-            self.world_cursor.x.div_euclid(1 << new_zoom_out_exp)
+            self.world_cursor
+                .x
+                .div_floor(&(BigInt::from(1) << new_zoom_out_exp))
                 - self
                     .world_cursor
                     .x
-                    .div_euclid(1 << self.camera.zoom_out_exp)
-                + self.camera.centre.x,
-            -self.world_cursor.y.div_euclid(1 << new_zoom_out_exp)
+                    .div_floor(&(BigInt::from(1) << self.camera.zoom_out_exp))
+                + &self.camera.centre.x,
+            -self
+                .world_cursor
+                .y
+                .div_floor(&(BigInt::from(1) << new_zoom_out_exp))
                 + self
                     .world_cursor
                     .y
-                    .div_euclid(1 << self.camera.zoom_out_exp)
-                + self.camera.centre.y,
+                    .div_floor(&(BigInt::from(1) << self.camera.zoom_out_exp))
+                + &self.camera.centre.y,
         );
         self.camera.zoom_out_exp = new_zoom_out_exp;
         self.update_cursors();
     }
     pub fn handle_pan(&mut self, delta: ScreenPoint) {
         self.camera.centre = WorldPoint::new(
-            delta.x + self.camera.centre.x,
-            delta.y + self.camera.centre.y,
+            delta.x + &self.camera.centre.x,
+            delta.y + &self.camera.centre.y,
         );
         self.update_cursors();
     }
     pub fn handle_draw(&mut self) {
         if !self.draw_session.contains(&self.cell_cursor) {
-            self.draw_session.insert(self.cell_cursor);
-            self.toggle_cell(self.cell_cursor);
+            self.draw_session.insert(self.cell_cursor.clone());
+            self.toggle_cell(&self.cell_cursor.clone()); //TODO: is a clone needed here conceptaully
         }
     }
     fn update_cursors(&mut self) {

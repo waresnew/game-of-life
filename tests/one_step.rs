@@ -1,4 +1,5 @@
 use game_of_life::renderer::{CellPoint, Renderer};
+use num_bigint::BigInt;
 
 mod utils;
 #[test]
@@ -49,11 +50,12 @@ fn one_step_acorn() {
         (3, -1),
     ]
     .into_iter()
+    .map(|(x, y)| (BigInt::from(x), BigInt::from(y)))
     .map(CellPoint::from_tuple)
     .collect();
     let mut renderer = Renderer::new(13);
     for p in alive {
-        renderer.toggle_cell(p);
+        renderer.toggle_cell(&p);
     }
     renderer.next_step();
     assert_eq!(renderer.perf_stats().alives, "633");

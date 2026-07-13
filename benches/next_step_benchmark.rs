@@ -2,22 +2,23 @@ use std::{collections::HashSet, hint::black_box};
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use game_of_life::renderer::{CellPoint, Renderer};
+use num_bigint::BigInt;
 use rand::{distr::Uniform, prelude::*};
 
 fn random_rect(c: &mut Criterion) {
     let seed = 1234;
-    let mut alive: HashSet<(i128, i128)> = HashSet::new();
+    let mut alive: HashSet<(BigInt, BigInt)> = HashSet::new();
     let mut rng = SmallRng::seed_from_u64(seed);
     let distr = Uniform::new(-32, 32).unwrap();
     while alive.len() < 2048 {
         let x = rng.sample(distr);
         let y = rng.sample(distr);
-        alive.insert((x, y));
+        alive.insert((BigInt::from(x), BigInt::from(y)));
     }
     let input: Vec<CellPoint> = alive.into_iter().map(CellPoint::from_tuple).collect();
     let mut renderer = Renderer::new(12);
     for p in input.clone() {
-        renderer.toggle_cell(p);
+        renderer.toggle_cell(&p);
     }
     c.bench_function("random 64x64 next_step", |b| {
         b.iter(|| {

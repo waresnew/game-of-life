@@ -273,6 +273,7 @@ dependencies = [
  "getrandom 0.3.4",
  "gloo-console",
  "num-bigint",
+ "num-integer",
  "rand",
  "regex",
  "serde",
@@ -404,6 +405,7 @@ checksum = "7032fbb7ef662c18e806aa75b311f68ddf5c94e8fc62832c0039d79095ab6abf"
 dependencies = [
  "num-integer",
  "num-traits",
+ "serde",
 ]
 
 [[package]]

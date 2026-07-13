@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { uiState, next_step } from '$lib/shared.svelte';
-	import { config, renderer } from '$lib/wasm';
+	import { renderer } from '$lib/wasm';
 	function changeStepExp(delta: number) {
-		uiState.stepExp = Math.max(0, Math.min(config.MAX_HEIGHT + 1 - 2, uiState.stepExp + delta));
+		uiState.stepExp = Math.max(0, uiState.stepExp + delta);
 		renderer.set_step_exp(uiState.stepExp);
 	}
 	function play() {

@@ -6,12 +6,12 @@ fn random_rect(c: &mut Criterion) {
     let mut input = Vec::new();
     for i in -32..=32 {
         for j in -32..=32 {
-            input.push(CellPoint::new(i, j))
+            input.push(CellPoint::new(BigInt::from(i), BigInt::from(j)))
         }
     }
     let mut renderer = Renderer::new(12);
     for p in input.clone() {
-        renderer.toggle_cell(p);
+        renderer.toggle_cell(&p);
     }
     renderer.update_viewport(ViewportInfo {
         canvas_dims: ScreenPoint::new(1000, 1000),
