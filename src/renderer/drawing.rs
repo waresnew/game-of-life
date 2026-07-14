@@ -13,29 +13,24 @@ use crate::{
 impl Renderer {
     pub(super) fn screen_to_cell(&self, point: ScreenPoint) -> CellPoint {
         let world = self.screen_to_world(point);
-        CellPoint::new(
-            world.x.div_floor(&(BigInt::from(1) << CELL_SIZE_EXP)),
-            world.y.div_floor(&(BigInt::from(1) << CELL_SIZE_EXP)),
-        )
+        let cell_size = BigInt::from(1) << CELL_SIZE_EXP;
+        CellPoint::new(world.x.div_floor(&cell_size), world.y.div_floor(&cell_size))
     }
     pub(super) fn screen_to_world(&self, point: ScreenPoint) -> WorldPoint {
+        let zoom_out = BigInt::from(1) << self.camera.zoom_out_exp;
         WorldPoint::new(
             (BigInt::from(point.x) + &self.camera.centre.x - self.viewport_info.canvas_dims.x / 2)
-                * (&(BigInt::from(1) << self.camera.zoom_out_exp)),
+                * &zoom_out,
             (BigInt::from(point.y) + &self.camera.centre.y - self.viewport_info.canvas_dims.y / 2)
-                * -(&(BigInt::from(1) << self.camera.zoom_out_exp)),
+                * -&zoom_out,
         )
     }
-    //OPTIMIZE:
-    //TODO: i rpefer min.x over min_x cloning, also don't recompute 1<<etc
     pub(super) fn cell_to_screen(&self, point: &CellPoint) -> ScreenPoint {
-        let x = (&point.x * (BigInt::from(1) << CELL_SIZE_EXP))
-            .div_floor(&(BigInt::from(1) << self.camera.zoom_out_exp))
-            - &self.camera.centre.x
+        let cell_size = BigInt::from(1) << CELL_SIZE_EXP;
+        let zoom_out = BigInt::from(1) << self.camera.zoom_out_exp;
+        let x = (&point.x * &cell_size).div_floor(&zoom_out) - &self.camera.centre.x
             + (self.viewport_info.canvas_dims.x / 2);
-        let y = (-&point.y * (BigInt::from(1) << CELL_SIZE_EXP))
-            .div_floor(&(BigInt::from(1) << self.camera.zoom_out_exp))
-            - &self.camera.centre.y
+        let y = (-&point.y * &cell_size).div_floor(&zoom_out) - &self.camera.centre.y
             + (self.viewport_info.canvas_dims.y / 2);
         fn into_clamped_i64(n: BigInt) -> i64 {
             if n < BigInt::from(i64::MIN) {
@@ -99,21 +94,20 @@ impl Renderer {
                     return;
                 }
                 let mid = BigInt::from(1) << (root.height - 1);
-                let CellPoint { x: min_x, y: min_y } = min.clone();
                 self.draw_visible_alives(
                     root.tl,
-                    &CellPoint::new(min_x.clone(), &min_y + &mid),
+                    &CellPoint::new(min.x.clone(), &min.y + &mid),
                     ans,
                 );
                 self.draw_visible_alives(
                     root.tr,
-                    &CellPoint::new(&min_x + &mid, &min_y + &mid),
+                    &CellPoint::new(&min.x + &mid, &min.y + &mid),
                     ans,
                 );
                 self.draw_visible_alives(root.bl, min, ans);
                 self.draw_visible_alives(
                     root.br,
-                    &CellPoint::new(&min_x + &mid, min_y.clone()),
+                    &CellPoint::new(&min.x + &mid, min.y.clone()),
                     ans,
                 );
             }
@@ -132,10 +126,11 @@ impl Renderer {
         point: &CellPoint,
         size_exp: u32,
     ) -> (ScreenPoint, ScreenPoint) {
+        let cell_size = BigInt::from(1) << size_exp;
         let point1 = self.cell_to_screen(point);
         let point2 = self.cell_to_screen(&CellPoint::new(
-            &point.x + (BigInt::from(1) << size_exp),
-            &point.y + (BigInt::from(1) << size_exp),
+            &point.x + &cell_size,
+            &point.y + &cell_size,
         ));
         (
             ScreenPoint::new(point1.x.min(point2.x), point1.y.min(point2.y)),

@@ -18,13 +18,11 @@ impl Renderer {
         fn traverse(point: &CellPoint, root: usize, min: &CellPoint, pool: &QuadtreePool) -> bool {
             match &pool[root] {
                 Quadtree::Subtree(subtree) => {
+                    let cell_size = BigInt::from(1) << subtree.height;
                     if !Renderer::point_in_box(
                         point,
                         min,
-                        &CellPoint::new(
-                            &min.x + (BigInt::from(1) << subtree.height) - 1,
-                            &min.y + (BigInt::from(1) << subtree.height) - 1,
-                        ),
+                        &CellPoint::new(&min.x + &cell_size - 1, &min.y + &cell_size - 1),
                     ) {
                         return false;
                     }
@@ -32,22 +30,21 @@ impl Renderer {
                         return false;
                     }
                     let mid = BigInt::from(1) << (subtree.height - 1);
-                    let CellPoint { x: min_x, y: min_y } = min.clone();
                     traverse(
                         point,
                         subtree.tl,
-                        &CellPoint::new(min_x.clone(), &min_y + &mid),
+                        &CellPoint::new(min.x.clone(), &min.y + &mid),
                         pool,
                     ) || traverse(
                         point,
                         subtree.tr,
-                        &CellPoint::new(&min_x + &mid, &min_y + &mid),
+                        &CellPoint::new(&min.x + &mid, &min.y + &mid),
                         pool,
                     ) || traverse(point, subtree.bl, min, pool)
                         || traverse(
                             point,
                             subtree.br,
-                            &CellPoint::new(&min_x + &mid, min_y.clone()),
+                            &CellPoint::new(&min.x + &mid, min.y.clone()),
                             pool,
                         )
                 }

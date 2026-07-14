@@ -34,14 +34,11 @@ impl Renderer {
                 height,
                 ..
             }) => {
-                let CellPoint { x: min_x, y: min_y } = min.clone();
+                let cell_size = BigInt::from(1) << height;
                 if !Self::point_in_box(
                     point,
                     &min,
-                    &CellPoint::new(
-                        &min_x + (BigInt::from(1) << height) - 1,
-                        &min_y + (BigInt::from(1) << height) - 1,
-                    ),
+                    &CellPoint::new(&min.x + &cell_size - 1, &min.y + &cell_size - 1),
                 ) {
                     return root;
                 }
@@ -49,18 +46,18 @@ impl Renderer {
                 let tl = self.toggle_cell_and_return_root(
                     point,
                     tl,
-                    CellPoint::new(min_x.clone(), &min_y + &mid),
+                    CellPoint::new(min.x.clone(), &min.y + &mid),
                 );
                 let tr = self.toggle_cell_and_return_root(
                     point,
                     tr,
-                    CellPoint::new(&min_x + &mid, &min_y + &mid),
+                    CellPoint::new(&min.x + &mid, &min.y + &mid),
                 );
                 let bl = self.toggle_cell_and_return_root(point, bl, min.clone());
                 let br = self.toggle_cell_and_return_root(
                     point,
                     br,
-                    CellPoint::new(&min_x + &mid, min_y.clone()),
+                    CellPoint::new(&min.x + &mid, min.y.clone()),
                 );
                 self.solver.pool.join(tl, tr, bl, br, height)
             }
@@ -135,9 +132,9 @@ impl Renderer {
     }
     fn fit_camera_to_dims(&mut self, dims: &CellPoint) {
         self.camera.centre = WorldPoint::new(BigInt::from(0), BigInt::from(0));
-        self.camera.zoom_out_exp = (((&dims.x * (BigInt::from(1) << CELL_SIZE_EXP))
-            / self.viewport_info.canvas_dims.x)
-            .max((&dims.y * (1 << CELL_SIZE_EXP)) / self.viewport_info.canvas_dims.y)
+        let cell_size = BigInt::from(1) << CELL_SIZE_EXP;
+        self.camera.zoom_out_exp = (((&dims.x * &cell_size) / self.viewport_info.canvas_dims.x)
+            .max((&dims.y * &cell_size) / self.viewport_info.canvas_dims.y)
             .bits()
             .max(1)
             .min(u32::MAX as u64)

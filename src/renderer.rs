@@ -155,20 +155,13 @@ impl Renderer {
     pub fn handle_zoom(&mut self, delta: i32, cursor: ScreenPoint) {
         let new_zoom_out_exp = (self.camera.zoom_out_exp as i32 + delta).max(0) as u32;
         let world_cursor = self.screen_to_world(cursor);
+        let new_zoom_out = BigInt::from(1) << new_zoom_out_exp;
+        let old_zoom_out = BigInt::from(1) << self.camera.zoom_out_exp;
         self.camera.centre = WorldPoint::new(
-            world_cursor
-                .x
-                .div_floor(&(BigInt::from(1) << new_zoom_out_exp))
-                - world_cursor
-                    .x
-                    .div_floor(&(BigInt::from(1) << self.camera.zoom_out_exp))
+            world_cursor.x.div_floor(&new_zoom_out) - world_cursor.x.div_floor(&old_zoom_out)
                 + &self.camera.centre.x,
-            -world_cursor
-                .y
-                .div_floor(&(BigInt::from(1) << new_zoom_out_exp))
-                + world_cursor
-                    .y
-                    .div_floor(&(BigInt::from(1) << self.camera.zoom_out_exp))
+            -world_cursor.y.div_floor(&new_zoom_out)
+                + world_cursor.y.div_floor(&old_zoom_out)
                 + &self.camera.centre.y,
         );
         self.camera.zoom_out_exp = new_zoom_out_exp;
