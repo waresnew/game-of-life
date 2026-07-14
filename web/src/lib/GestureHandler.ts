@@ -25,7 +25,7 @@ export class GestureHandler {
 			const dy = y1 - y2;
 			const dist = Math.sqrt(dx * dx + dy * dy);
 			if (this.prevTouchZoomDist != -1) {
-				this.zoom((dist - this.prevTouchZoomDist) * 0.002);
+				this.zoom((dist - this.prevTouchZoomDist) * -0.01);
 			}
 			this.prevTouchZoomDist = dist;
 		}
