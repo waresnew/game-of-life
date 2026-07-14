@@ -59,20 +59,20 @@ impl Renderer {
         let max = self.screen_to_cell(ScreenPoint::new(self.viewport_info.canvas_dims.x, 0));
         let mut x = min.x;
         while x <= max.x {
+            let transformed_x = self
+                .cell_to_screen(&CellPoint::new(x.clone(), BigInt::from(0)))
+                .x;
             for y in 0..self.viewport_info.canvas_dims.y {
-                let transformed_x = self
-                    .cell_to_screen(&CellPoint::new(x.clone(), BigInt::from(0)))
-                    .x;
                 ans.fill_pixel(ScreenPoint::new(transformed_x, y), GRID_COLOUR);
             }
             x += 1;
         }
         let mut y = min.y;
         while y <= max.y {
+            let transformed_y = self
+                .cell_to_screen(&CellPoint::new(BigInt::from(0), y.clone()))
+                .y;
             for x in 0..self.viewport_info.canvas_dims.x {
-                let transformed_y = self
-                    .cell_to_screen(&CellPoint::new(BigInt::from(0), y.clone()))
-                    .y;
                 ans.fill_pixel(ScreenPoint::new(x, transformed_y), GRID_COLOUR);
             }
             y += 1;
