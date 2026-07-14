@@ -1,4 +1,8 @@
-import { RenderStats, ScreenPoint as RustScreenPoint, type PerfStats } from '$wasm/game_of_life.js';
+import {
+	type RenderStats,
+	ScreenPoint as RustScreenPoint,
+	type PerfStats
+} from '$wasm/game_of_life.js';
 import { renderer } from './wasm.js';
 export type Point = [number, number];
 

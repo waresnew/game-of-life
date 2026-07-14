@@ -10,8 +10,8 @@ use wasm_bindgen::prelude::*;
 pub struct ScreenPoint {
     // can be negative for out of bounds pixels
     //TODO: is 128 really necessary?
-    pub x: i128,
-    pub y: i128,
+    pub x: i64,
+    pub y: i64,
 }
 impl fmt::Debug for ScreenPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -22,12 +22,12 @@ impl fmt::Debug for ScreenPoint {
 #[wasm_bindgen]
 impl ScreenPoint {
     #[wasm_bindgen(constructor)]
-    pub fn new(x: i128, y: i128) -> Self {
+    pub fn new(x: i64, y: i64) -> Self {
         Self { x, y }
     }
 }
 impl ScreenPoint {
-    pub fn from_tuple((x, y): (i128, i128)) -> Self {
+    pub fn from_tuple((x, y): (i64, i64)) -> Self {
         Self::new(x, y)
     }
     pub fn negate(self) -> Self {

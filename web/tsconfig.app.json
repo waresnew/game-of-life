@@ -22,5 +22,5 @@
             "$wasm/*": ["../pkg/*"]
         }
 	},
-	"include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]
+	"include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "benches/**/*.ts"]
 }

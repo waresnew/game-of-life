@@ -32,12 +32,9 @@
 		}
 		updatePerfStats(renderer.perf_stats);
 		renderer.update_viewport(
-			new ViewportInfo(
-				toRustScreenPoint([canvasDims.width, canvasDims.height]),
-				toRustScreenPoint(uiState.cursor)
-			)
+			new ViewportInfo(toRustScreenPoint([canvasDims.width, canvasDims.height]))
 		);
-		renderer.update_render_stats();
+		renderer.update_render_stats(toRustScreenPoint(uiState.cursor));
 		updateRenderStats(renderer.render_stats);
 
 		const ctx = canvas.getContext('2d')!;

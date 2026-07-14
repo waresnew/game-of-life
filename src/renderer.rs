@@ -20,20 +20,16 @@ pub const CELL_SIZE_EXP: u32 = 5;
 #[wasm_bindgen]
 pub struct ViewportInfo {
     pub canvas_dims: ScreenPoint,
-    pub cursor: ScreenPoint,
 }
 #[wasm_bindgen]
 impl ViewportInfo {
     #[wasm_bindgen(constructor)]
-    pub fn new(canvas_dims: ScreenPoint, cursor: ScreenPoint) -> Self {
-        Self {
-            canvas_dims,
-            cursor,
-        }
+    pub fn new(canvas_dims: ScreenPoint) -> Self {
+        Self { canvas_dims }
     }
 }
 pub struct Camera {
-    pub centre: WorldPoint, //FIX: pan drift occurs prob bc no float component
+    pub centre: WorldPoint,
     pub zoom_out_exp: u32,
 }
 impl Default for Camera {
@@ -48,7 +44,6 @@ impl Default for ViewportInfo {
     fn default() -> Self {
         Self {
             canvas_dims: ScreenPoint::new(0, 0),
-            cursor: ScreenPoint::new(0, 0),
         }
     }
 }
@@ -73,8 +68,6 @@ pub struct Renderer {
     viewport_info: ViewportInfo,
     render_stats: RenderStats,
     camera: Camera,
-    cell_cursor: CellPoint,
-    world_cursor: WorldPoint,
     draw_session: HashSet<CellPoint>,
 }
 #[wasm_bindgen]
@@ -90,8 +83,6 @@ impl Renderer {
             viewport_info: ViewportInfo::default(),
             render_stats: RenderStats::default(),
             camera: Camera::default(),
-            cell_cursor: CellPoint::new(BigInt::from(0), BigInt::from(0)),
-            world_cursor: WorldPoint::new(BigInt::from(0), BigInt::from(0)),
             draw_session: HashSet::default(),
         }
     }
@@ -107,13 +98,10 @@ impl Renderer {
     }
     pub fn update_viewport(&mut self, viewport_info: ViewportInfo) {
         self.viewport_info = viewport_info;
-        self.update_cursors();
     }
-    pub fn update_render_stats(&mut self) {
-        self.render_stats.cell_cursor = (
-            self.cell_cursor.x.to_string(),
-            self.cell_cursor.y.to_string(),
-        );
+    pub fn update_render_stats(&mut self, cursor: ScreenPoint) {
+        let cell_cursor = self.screen_to_cell(cursor);
+        self.render_stats.cell_cursor = (cell_cursor.x.to_string(), cell_cursor.y.to_string());
         self.render_stats.zoom_out_exp = self.camera.zoom_out_exp;
         self.render_stats.rule = self.solver.rule()
     }
@@ -135,45 +123,38 @@ impl Renderer {
     pub fn set_rule(&mut self, b: Vec<usize>, s: Vec<usize>) {
         self.solver.set_rule(b, s);
     }
-    pub fn handle_zoom(&mut self, delta: i32) {
+    pub fn handle_zoom(&mut self, delta: i32, cursor: ScreenPoint) {
         let new_zoom_out_exp = (self.camera.zoom_out_exp as i32 + delta).max(0) as u32;
+        let world_cursor = self.screen_to_world(cursor);
         self.camera.centre = WorldPoint::new(
-            self.world_cursor
+            world_cursor
                 .x
                 .div_floor(&(BigInt::from(1) << new_zoom_out_exp))
-                - self
-                    .world_cursor
+                - world_cursor
                     .x
                     .div_floor(&(BigInt::from(1) << self.camera.zoom_out_exp))
                 + &self.camera.centre.x,
-            -self
-                .world_cursor
+            -world_cursor
                 .y
                 .div_floor(&(BigInt::from(1) << new_zoom_out_exp))
-                + self
-                    .world_cursor
+                + world_cursor
                     .y
                     .div_floor(&(BigInt::from(1) << self.camera.zoom_out_exp))
                 + &self.camera.centre.y,
         );
         self.camera.zoom_out_exp = new_zoom_out_exp;
-        self.update_cursors();
     }
     pub fn handle_pan(&mut self, delta: ScreenPoint) {
         self.camera.centre = WorldPoint::new(
             delta.x + &self.camera.centre.x,
             delta.y + &self.camera.centre.y,
         );
-        self.update_cursors();
     }
-    pub fn handle_draw(&mut self) {
-        if !self.draw_session.contains(&self.cell_cursor) {
-            self.draw_session.insert(self.cell_cursor.clone());
-            self.toggle_cell(&self.cell_cursor.clone()); //TODO: is a clone needed here conceptaully
+    pub fn handle_draw(&mut self, cursor: ScreenPoint) {
+        let cell_cursor = self.screen_to_cell(cursor);
+        if !self.draw_session.contains(&cell_cursor) {
+            self.draw_session.insert(cell_cursor.clone());
+            self.toggle_cell(&cell_cursor.clone()); //TODO: is a clone needed here conceptaully
         }
-    }
-    fn update_cursors(&mut self) {
-        self.cell_cursor = self.screen_to_cell(self.viewport_info.cursor);
-        self.world_cursor = self.screen_to_world(self.viewport_info.cursor);
     }
 }

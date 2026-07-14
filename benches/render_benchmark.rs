@@ -15,8 +15,8 @@ fn random_rect(c: &mut Criterion) {
     }
     renderer.update_viewport(ViewportInfo {
         canvas_dims: ScreenPoint::new(1000, 1000),
-        cursor: ScreenPoint::new(0, 0),
     });
+    renderer.handle_zoom(-3, ScreenPoint::new(0, 0));
     c.bench_function("filled 64x64 render", |b| {
         b.iter(|| renderer.render_visible())
     });

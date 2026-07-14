@@ -1,6 +1,5 @@
-//TODO: fix this
 import { bench, describe } from 'vitest';
-import { get_config, Point, Renderer } from '$wasm/game_of_life.js';
+import { ScreenPoint as RustScreenPoint, Renderer, ViewportInfo } from '$wasm/game_of_life.js';
 
 function getRandomInt(min: number, max: number) {
 	min = Math.ceil(min);
@@ -9,32 +8,26 @@ function getRandomInt(min: number, max: number) {
 }
 
 const renderer = new Renderer(0);
-const GRID_SIZE = 8;
-for (let i = -GRID_SIZE; i <= GRID_SIZE; i++) {
-	for (let j = -GRID_SIZE; j <= GRID_SIZE; j++) {
-		renderer.toggle_cell(BigInt(i), BigInt(j));
+const GRID_SIZE = 16;
+const CANVAS_DIMS = 1500;
+renderer.update_viewport(
+	new ViewportInfo(new RustScreenPoint(BigInt(CANVAS_DIMS), BigInt(CANVAS_DIMS)))
+);
+for (let i = 0; i <= GRID_SIZE; i++) {
+	for (let j = 0; j <= GRID_SIZE; j++) {
+		renderer.handle_draw(new RustScreenPoint(BigInt(i * 64), BigInt(j * 64)));
 	}
 }
-const min = BigInt(-1 << 50);
-const max = BigInt(1 << 50);
-const config = get_config();
-const CELL_SIZE = 1 << config.CELL_SIZE_EXP;
 const canvas = document.createElement('canvas');
-canvas.width = 500;
-canvas.height = 500;
+canvas.width = CANVAS_DIMS;
+canvas.height = CANVAS_DIMS;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d')!;
-renderer.update_viewport({
-	zoom_out_exp: 0,
-	canvas_dims: new Point(500n, 500n),
-	centre: new Point(0n, 0n)
-});
+renderer.handle_zoom(-3, new RustScreenPoint(0n, 0n));
 describe('render benchmark', () => {
 	bench(
 		'filled 16x16 canvas render',
 		async () => {
-			//assume 1 zoom, camera at (0,0)
-			const alives = renderer.render();
 			const imageData = new ImageData(
 				new Uint8ClampedArray(renderer.render()),
 				canvas.width,

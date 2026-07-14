@@ -15,7 +15,7 @@ export class GestureHandler {
 		if (Math.abs(this.zoomProgress) >= 1) {
 			const whole = Math.trunc(this.zoomProgress);
 			this.zoomProgress -= whole;
-			renderer.handle_zoom(whole);
+			renderer.handle_zoom(whole, toRustScreenPoint(uiState.cursor));
 		}
 	}
 	handleTouchZoom(event: PointerEvent) {
@@ -46,6 +46,13 @@ export class GestureHandler {
 				: this.getAveragePoint(Array.from(this.currentPointers.values()));
 		pointerX -= canvasDims.x;
 		pointerY -= canvasDims.y;
+
+		renderer.update_viewport(
+			new ViewportInfo(
+				toRustScreenPoint([canvasDims.width, canvasDims.height]),
+				toRustScreenPoint(uiState.cursor)
+			)
+		);
 		if (event.buttons == 2 || this.currentPointers.size == 2) {
 			if (this.prevPanX != -1 && this.prevPanY != -1) {
 				renderer.handle_pan(
@@ -104,6 +111,6 @@ export class GestureHandler {
 		this.prevTouchZoomDist = -1;
 	}
 	doDraw() {
-		renderer.handle_draw();
+		renderer.handle_draw(toRustScreenPoint(uiState.cursor));
 	}
 }

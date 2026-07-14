@@ -85,7 +85,7 @@ impl Renderer {
         let header_regex = regex!(r"^x = (\d+), y = (\d+), rule = [bB]?(\d+)\/[sS]?(\d+)");
         let (_, [width, height, borns, survives]) =
             header_regex.captures(content.remove(0)).unwrap().extract();
-        let (width, height): (i128, i128) = (width.parse().unwrap(), height.parse().unwrap());
+        let (width, height): (i64, i64) = (width.parse().unwrap(), height.parse().unwrap());
         self.solver.set_rule(
             borns
                 .chars()
