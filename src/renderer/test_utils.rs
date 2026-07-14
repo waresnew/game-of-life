@@ -2,9 +2,10 @@ use num_bigint::BigUint;
 use tsify::Tsify;
 
 use crate::{
-    config::MIN_POINT,
-    quadtree_pool::Quadtree,
-    renderer::{CellPoint, Renderer, ScreenPoint, ViewportInfo, image_bitmap::ImageBitmap},
+    quadtree_pool::{Quadtree, QuadtreePool},
+    renderer::{
+        CellPoint, MIN_POINT, Renderer, ScreenPoint, ViewportInfo, image_bitmap::ImageBitmap,
+    },
 };
 
 /// test/benches only
@@ -27,8 +28,6 @@ impl Renderer {
         ans.into_pixels()
     }
     pub fn query_cell(&self, point: CellPoint) -> bool {
-        use crate::{config::MIN_POINT, quadtree_pool::QuadtreePool};
-
         fn traverse(point: CellPoint, root: usize, min: CellPoint, pool: &QuadtreePool) -> bool {
             match &pool[root] {
                 Quadtree::Subtree(subtree) => {

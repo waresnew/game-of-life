@@ -4,7 +4,6 @@ use tsify::Tsify;
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
-use crate::renderer::CellPoint;
 //serde the config to avoid wasm calls every time js reads them
 macro_rules! define_config {
     ($($name:ident: $type:ty = $val:expr,)*) => {
@@ -26,11 +25,5 @@ macro_rules! define_config {
     };
 }
 define_config! {
-    MAX_HEIGHT:u32=48,
-    MIN_POINT:CellPoint=CellPoint {
-
-        x: -1 << (MAX_HEIGHT - 1),
-        y: -1 << (MAX_HEIGHT - 1),
-    },
-    CELL_SIZE_EXP:u32=5,
+    MAX_HEIGHT:u32=121,
 }

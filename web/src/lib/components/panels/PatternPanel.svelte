@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { uiState, canvasDims, CELL_SIZE, toRustScreenPoint } from '$lib/shared.svelte';
+	import { uiState, canvasDims, toRustScreenPoint } from '$lib/shared.svelte';
 	import { renderer } from '$lib/wasm';
 
 	const patterns: Record<string, string> = import.meta.glob('$assets/patterns/*.rle', {

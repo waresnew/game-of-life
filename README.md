@@ -12,7 +12,7 @@ The thresholds for becoming dead/alive can be configured in this program, but th
 
 To support very sparse patterns, the world is stored in a quadtree with a hash table for deduplication of subtrees. Since most Game of Life seeds tend to exhibit repeating patterns across time and space, like gliders, oscillators, or empty space, a lot of repeated computation can be avoided with memoization, which allows the recursive algorithm to quickly advance the grid by an exponential number of generations each time.
 
-Note: For simplification, the grid is constrained by (+-2^47, +-2^47). Any cells that exit that region will die.
+Note: For simplification, the grid is constrained by (+-2^120, +-2^120). Any cells that exit that region will die.
 
 ## Building
 

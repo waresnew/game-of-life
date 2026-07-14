@@ -1,12 +1,6 @@
-import {
-	canvasDims,
-	CELL_SIZE,
-	toRustScreenPoint,
-	WORLD_BORDER,
-	type Point
-} from './shared.svelte';
+import { canvasDims, toRustScreenPoint, type Point } from './shared.svelte';
 import { uiState } from './shared.svelte';
-import { config, renderer } from './wasm';
+import { renderer } from './wasm';
 
 export class GestureHandler {
 	currentPointers: Map<number, Point> = new Map();

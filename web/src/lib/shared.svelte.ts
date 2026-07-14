@@ -1,18 +1,7 @@
-import {
-	RenderStats,
-	ScreenPoint as RustScreenPoint,
-	ScreenPoint,
-	type PerfStats
-} from '$wasm/game_of_life.js';
-import { config, renderer } from './wasm.js';
+import { RenderStats, ScreenPoint as RustScreenPoint, type PerfStats } from '$wasm/game_of_life.js';
+import { renderer } from './wasm.js';
 export type Point = [number, number];
 
-export const WORLD_BORDER = Number(1n << BigInt(config.MAX_HEIGHT - 1));
-export const CELL_SIZE = 1 << config.CELL_SIZE_EXP;
-
-if (WORLD_BORDER * CELL_SIZE > Number.MAX_SAFE_INTEGER) {
-	throw 'WORLD_BORDER*CELL_SIZE>max safe int';
-}
 export const fpsCounters = {
 	frameCounter: 0,
 	prevFpsTime: 0

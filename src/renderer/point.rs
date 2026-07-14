@@ -8,8 +8,9 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct ScreenPoint {
     // can be negative for out of bounds pixels
-    pub x: i64,
-    pub y: i64,
+    //TODO: is 128 really necessary?
+    pub x: i128,
+    pub y: i128,
 }
 impl fmt::Debug for ScreenPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -20,12 +21,12 @@ impl fmt::Debug for ScreenPoint {
 #[wasm_bindgen]
 impl ScreenPoint {
     #[wasm_bindgen(constructor)]
-    pub fn new(x: i64, y: i64) -> Self {
+    pub fn new(x: i128, y: i128) -> Self {
         Self { x, y }
     }
 }
 impl ScreenPoint {
-    pub fn from_tuple((x, y): (i64, i64)) -> Self {
+    pub fn from_tuple((x, y): (i128, i128)) -> Self {
         Self::new(x, y)
     }
     pub fn negate(self) -> Self {
@@ -38,8 +39,8 @@ impl ScreenPoint {
 #[derive(Serialize, Deserialize, Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
 #[wasm_bindgen]
 pub struct CellPoint {
-    pub x: i64,
-    pub y: i64,
+    pub x: i128,
+    pub y: i128,
 }
 impl fmt::Debug for CellPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -47,10 +48,10 @@ impl fmt::Debug for CellPoint {
     }
 }
 impl CellPoint {
-    pub fn new(x: i64, y: i64) -> Self {
+    pub fn new(x: i128, y: i128) -> Self {
         Self { x, y }
     }
-    pub fn from_tuple((x, y): (i64, i64)) -> Self {
+    pub fn from_tuple((x, y): (i128, i128)) -> Self {
         Self::new(x, y)
     }
     pub fn negate(self) -> Self {
@@ -62,8 +63,8 @@ impl CellPoint {
 }
 #[derive(Serialize, Deserialize, Default, PartialEq, PartialOrd, Clone, Copy)]
 pub struct WorldPoint {
-    pub x: i64,
-    pub y: i64,
+    pub x: i128,
+    pub y: i128,
 }
 impl fmt::Debug for WorldPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -72,10 +73,10 @@ impl fmt::Debug for WorldPoint {
 }
 
 impl WorldPoint {
-    pub fn new(x: i64, y: i64) -> Self {
+    pub fn new(x: i128, y: i128) -> Self {
         Self { x, y }
     }
-    pub fn from_tuple((x, y): (i64, i64)) -> Self {
+    pub fn from_tuple((x, y): (i128, i128)) -> Self {
         Self::new(x, y)
     }
     pub fn negate(self) -> Self {

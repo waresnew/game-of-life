@@ -1,10 +1,9 @@
 use num_bigint::BigUint;
 
 use crate::{
-    config::CELL_SIZE_EXP,
     quadtree_pool::Quadtree,
     renderer::{
-        CellPoint, Renderer, ScreenPoint, WorldPoint,
+        CELL_SIZE_EXP, CellPoint, Renderer, ScreenPoint, WorldPoint,
         image_bitmap::{ImageBitmap, Rgb},
     },
 };

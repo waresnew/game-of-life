@@ -5,7 +5,7 @@ use tsify::{Ts, Tsify};
 use wasm_bindgen::prelude::*;
 
 use crate::{
-    config::{MAX_HEIGHT, MIN_POINT},
+    config::MAX_HEIGHT,
     solver::{GOL_RULES, LifeRule, PerfStats, Solver},
 };
 mod controls;
@@ -16,6 +16,11 @@ mod point;
 mod test_utils;
 use image_bitmap::*;
 pub use point::*;
+pub const MIN_POINT: CellPoint = CellPoint {
+    x: -1 << (MAX_HEIGHT - 1),
+    y: -1 << (MAX_HEIGHT - 1),
+};
+pub const CELL_SIZE_EXP: u32 = 5;
 #[derive(Tsify, Serialize, Deserialize, Copy, Clone)]
 pub struct ViewportInfo {
     pub canvas_dims: ScreenPoint,

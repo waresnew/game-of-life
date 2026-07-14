@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getPerfStats, uiState, CELL_SIZE, getRenderStats } from '$lib/shared.svelte';
+	import { getPerfStats, uiState, getRenderStats } from '$lib/shared.svelte';
 </script>
 
 <div class="flex flex-col gap-2 w-full flex-none">
