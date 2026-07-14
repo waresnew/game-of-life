@@ -1,11 +1,10 @@
 use std::fmt;
 
 use num_bigint::BigInt;
-use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 //TODO: reduce duplication
-#[derive(Serialize, Deserialize, Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
+#[derive(Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone, Copy)]
 #[wasm_bindgen]
 pub struct ScreenPoint {
     // can be negative for out of bounds pixels
@@ -37,7 +36,7 @@ impl ScreenPoint {
         }
     }
 }
-#[derive(Deserialize, Serialize, Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone)]
+#[derive(Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone)]
 pub struct CellPoint {
     pub x: BigInt,
     pub y: BigInt,

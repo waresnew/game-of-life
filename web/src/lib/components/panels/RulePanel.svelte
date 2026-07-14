@@ -20,10 +20,7 @@
 		}
 	}
 	$effect(() => {
-		tryUpdateRuleTextbox(
-			Array.from(getRenderStats().rule.born),
-			Array.from(getRenderStats().rule.survive)
-		);
+		tryUpdateRuleTextbox(Array.from(getRenderStats().rule_b), Array.from(getRenderStats().rule_s));
 	});
 	function tryUpdateRuleTextbox(b: number[], s: number[]) {
 		if (b.join('') != prevB.join('')) {

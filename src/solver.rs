@@ -1,12 +1,8 @@
 use gloo_console::log;
 use num_bigint::{BigInt, BigUint};
-use serde::{Deserialize, Serialize, ser::SerializeStruct};
 use wasm_bindgen::prelude::*;
 
-use crate::{
-    quadtree_pool::{self, QuadtreePool},
-    renderer::CellPoint,
-};
+use crate::{quadtree_pool::QuadtreePool, renderer::CellPoint};
 
 mod hashlife;
 mod liferule;

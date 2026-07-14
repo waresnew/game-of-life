@@ -2,8 +2,6 @@ use ahash::HashSet;
 use gloo_console::log;
 use num_bigint::BigInt;
 use num_integer::Integer;
-use serde::Serialize;
-use tsify::{Ts, Tsify};
 use wasm_bindgen::prelude::*;
 
 use crate::solver::{GOL_RULES, LifeRule, PerfStats, Solver};
@@ -47,16 +45,48 @@ impl Default for ViewportInfo {
         }
     }
 }
-#[derive(Tsify, Debug, Clone, Serialize)]
-pub struct RenderStats {
-    pub cell_cursor: (String, String),
+#[derive(Debug, Clone)]
+#[wasm_bindgen]
+pub struct RenderStatsDisplay {
+    cell_cursor: CellPoint,
     pub zoom_out_exp: u32,
-    pub rule: LifeRule,
+    rule: LifeRule,
 }
-impl Default for RenderStats {
+#[wasm_bindgen]
+impl RenderStatsDisplay {
+    #[wasm_bindgen(getter)]
+    pub fn rule_b(&self) -> Vec<usize> {
+        let mut ans = Vec::new();
+        for i in 0..9 {
+            if self.rule.is_born(i) {
+                ans.push(i);
+            }
+        }
+        ans
+    }
+    #[wasm_bindgen(getter)]
+    pub fn rule_s(&self) -> Vec<usize> {
+        let mut ans = Vec::new();
+        for i in 0..9 {
+            if self.rule.survives(i) {
+                ans.push(i);
+            }
+        }
+        ans
+    }
+    #[wasm_bindgen(getter)]
+    pub fn cell_cursor_x(&self) -> String {
+        self.cell_cursor.x.to_string()
+    }
+    #[wasm_bindgen(getter)]
+    pub fn cell_cursor_y(&self) -> String {
+        self.cell_cursor.y.to_string()
+    }
+}
+impl Default for RenderStatsDisplay {
     fn default() -> Self {
         Self {
-            cell_cursor: ("0".to_string(), "0".to_string()),
+            cell_cursor: CellPoint::new(BigInt::from(0), BigInt::from(0)),
             zoom_out_exp: 0,
             rule: GOL_RULES,
         }
@@ -66,7 +96,7 @@ impl Default for RenderStats {
 pub struct Renderer {
     solver: Solver,
     viewport_info: ViewportInfo,
-    render_stats: RenderStats,
+    render_stats: RenderStatsDisplay,
     camera: Camera,
     draw_session: HashSet<CellPoint>,
 }
@@ -81,14 +111,14 @@ impl Renderer {
         Self {
             solver: Solver::new(step_exp, GOL_RULES),
             viewport_info: ViewportInfo::default(),
-            render_stats: RenderStats::default(),
+            render_stats: RenderStatsDisplay::default(),
             camera: Camera::default(),
             draw_session: HashSet::default(),
         }
     }
     #[wasm_bindgen(getter)]
-    pub fn render_stats(&self) -> Ts<RenderStats> {
-        self.render_stats.into_ts().unwrap()
+    pub fn render_stats(&self) -> RenderStatsDisplay {
+        self.render_stats.clone()
     }
     pub fn next_step(&mut self) {
         self.solver.next_step();
@@ -100,8 +130,7 @@ impl Renderer {
         self.viewport_info = viewport_info;
     }
     pub fn update_render_stats(&mut self, cursor: ScreenPoint) {
-        let cell_cursor = self.screen_to_cell(cursor);
-        self.render_stats.cell_cursor = (cell_cursor.x.to_string(), cell_cursor.y.to_string());
+        self.render_stats.cell_cursor = self.screen_to_cell(cursor);
         self.render_stats.zoom_out_exp = self.camera.zoom_out_exp;
         self.render_stats.rule = self.solver.rule()
     }

@@ -1,5 +1,5 @@
 import {
-	type RenderStats,
+	RenderStatsDisplay,
 	ScreenPoint as RustScreenPoint,
 	type PerfStats
 } from '$wasm/game_of_life.js';
@@ -29,7 +29,7 @@ let renderStats = $state(renderer.render_stats);
 export function getRenderStats() {
 	return renderStats;
 }
-export function updateRenderStats(stats: RenderStats) {
+export function updateRenderStats(stats: RenderStatsDisplay) {
 	renderStats = stats;
 }
 export const uiState = $state({

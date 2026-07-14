@@ -48,10 +48,7 @@ export class GestureHandler {
 		pointerY -= canvasDims.y;
 
 		renderer.update_viewport(
-			new ViewportInfo(
-				toRustScreenPoint([canvasDims.width, canvasDims.height]),
-				toRustScreenPoint(uiState.cursor)
-			)
+			new ViewportInfo(toRustScreenPoint([canvasDims.width, canvasDims.height]))
 		);
 		if (event.buttons == 2 || this.currentPointers.size == 2) {
 			if (this.prevPanX != -1 && this.prevPanY != -1) {
@@ -70,12 +67,6 @@ export class GestureHandler {
 			this.currentPointers.delete(event.pointerId);
 			return;
 		}
-		renderer.update_viewport(
-			new ViewportInfo(
-				toRustScreenPoint([canvasDims.width, canvasDims.height]),
-				toRustScreenPoint([mouseX, mouseY])
-			)
-		);
 		uiState.cursor = [mouseX, mouseY];
 		if (event.pointerType != 'mouse') {
 			this.currentPointers.set(event.pointerId, [event.clientX, event.clientY]);

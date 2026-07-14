@@ -28,6 +28,7 @@ describe('render benchmark', () => {
 	bench(
 		'filled 16x16 canvas render',
 		async () => {
+			renderer.render();
 			const imageData = new ImageData(
 				new Uint8ClampedArray(renderer.render()),
 				canvas.width,
