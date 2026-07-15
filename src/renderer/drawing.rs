@@ -1,6 +1,8 @@
 use gloo_console::log;
-use num_bigint::{BigInt, BigUint};
-use num_integer::Integer;
+use malachite::{
+    Integer,
+    base::{num::arithmetic::traits::DivRound, rounding_modes::RoundingMode},
+};
 
 use crate::{
     quadtree_pool::Quadtree,
@@ -13,32 +15,43 @@ use crate::{
 impl Renderer {
     pub(super) fn screen_to_cell(&self, point: ScreenPoint) -> CellPoint {
         let world = self.screen_to_world(point);
-        let cell_size = BigInt::from(1) << CELL_SIZE_EXP;
-        CellPoint::new(world.x.div_floor(&cell_size), world.y.div_floor(&cell_size))
+        let cell_size = Integer::from(1) << CELL_SIZE_EXP;
+        CellPoint::new(
+            world.x.div_round(&cell_size, RoundingMode::Floor).0,
+            world.y.div_round(&cell_size, RoundingMode::Floor).0,
+        )
     }
     pub(super) fn screen_to_world(&self, point: ScreenPoint) -> WorldPoint {
-        let zoom_out = BigInt::from(1) << self.camera.zoom_out_exp;
+        let zoom_out = Integer::from(1) << self.camera.zoom_out_exp;
         WorldPoint::new(
-            (BigInt::from(point.x) + &self.camera.centre.x - self.viewport_info.canvas_dims.x / 2)
+            (Integer::from(point.x) + &self.camera.centre.x
+                - Integer::from(self.viewport_info.canvas_dims.x / 2))
                 * &zoom_out,
-            (BigInt::from(point.y) + &self.camera.centre.y - self.viewport_info.canvas_dims.y / 2)
+            (Integer::from(point.y) + &self.camera.centre.y
+                - Integer::from(self.viewport_info.canvas_dims.y / 2))
                 * -&zoom_out,
         )
     }
     pub(super) fn cell_to_screen(&self, point: &CellPoint) -> ScreenPoint {
-        let cell_size = BigInt::from(1) << CELL_SIZE_EXP;
-        let zoom_out = BigInt::from(1) << self.camera.zoom_out_exp;
-        let x = (&point.x * &cell_size).div_floor(&zoom_out) - &self.camera.centre.x
-            + (self.viewport_info.canvas_dims.x / 2);
-        let y = (-&point.y * &cell_size).div_floor(&zoom_out) - &self.camera.centre.y
-            + (self.viewport_info.canvas_dims.y / 2);
-        fn into_clamped_i64(n: BigInt) -> i64 {
-            if n < BigInt::from(i64::MIN) {
+        let cell_size = Integer::from(1) << CELL_SIZE_EXP;
+        let zoom_out = Integer::from(1) << self.camera.zoom_out_exp;
+        let x = (&point.x * &cell_size)
+            .div_round(&zoom_out, RoundingMode::Floor)
+            .0
+            - &self.camera.centre.x
+            + Integer::from(self.viewport_info.canvas_dims.x / 2);
+        let y = (-&point.y * &cell_size)
+            .div_round(&zoom_out, RoundingMode::Floor)
+            .0
+            - &self.camera.centre.y
+            + Integer::from(self.viewport_info.canvas_dims.y / 2);
+        fn into_clamped_i64(n: Integer) -> i64 {
+            if n < i64::MIN {
                 i64::MIN
-            } else if n > BigInt::from(i64::MAX) {
+            } else if n > i64::MAX {
                 i64::MAX
             } else {
-                i64::try_from(n).unwrap()
+                i64::try_from(&n).unwrap()
             }
         }
         ScreenPoint::new(into_clamped_i64(x), into_clamped_i64(y))
@@ -55,22 +68,22 @@ impl Renderer {
         let mut x = min.x;
         while x <= max.x {
             let transformed_x = self
-                .cell_to_screen(&CellPoint::new(x.clone(), BigInt::from(0)))
+                .cell_to_screen(&CellPoint::new(x.clone(), Integer::from(0)))
                 .x;
             for y in 0..self.viewport_info.canvas_dims.y {
                 ans.fill_pixel(ScreenPoint::new(transformed_x, y), GRID_COLOUR);
             }
-            x += 1;
+            x += Integer::from(1);
         }
         let mut y = min.y;
         while y <= max.y {
             let transformed_y = self
-                .cell_to_screen(&CellPoint::new(BigInt::from(0), y.clone()))
+                .cell_to_screen(&CellPoint::new(Integer::from(0), y.clone()))
                 .y;
             for x in 0..self.viewport_info.canvas_dims.x {
                 ans.fill_pixel(ScreenPoint::new(x, transformed_y), GRID_COLOUR);
             }
-            y += 1;
+            y += Integer::from(1);
         }
     }
     pub(super) fn draw_visible_alives(&self, id: usize, min: &CellPoint, ans: &mut ImageBitmap) {
@@ -82,18 +95,18 @@ impl Renderer {
                 if !self.box_intersects_canvas(screen_min, screen_max) {
                     return;
                 }
-                if root.count == BigUint::ZERO {
+                if root.count == 0 {
                     return;
                 }
 
                 let pixels_exp = (pixels_exp_tmp + (root.height as i32)).max(0) as u32;
                 if pixels_exp == 0 {
-                    if root.count > BigUint::ZERO {
+                    if root.count > 0 {
                         ans.fill_cell(screen_min, pixels_exp);
                     }
                     return;
                 }
-                let mid = BigInt::from(1) << (root.height - 1);
+                let mid = Integer::from(1) << (root.height - 1);
                 self.draw_visible_alives(
                     root.tl,
                     &CellPoint::new(min.x.clone(), &min.y + &mid),
@@ -126,7 +139,7 @@ impl Renderer {
         point: &CellPoint,
         size_exp: u32,
     ) -> (ScreenPoint, ScreenPoint) {
-        let cell_size = BigInt::from(1) << size_exp;
+        let cell_size = Integer::from(1) << size_exp;
         let point1 = self.cell_to_screen(point);
         let point2 = self.cell_to_screen(&CellPoint::new(
             &point.x + &cell_size,

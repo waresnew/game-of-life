@@ -1,4 +1,4 @@
-use num_bigint::BigUint;
+use malachite::Natural;
 
 // disable accidental Copy
 #[derive(Debug)]
@@ -13,7 +13,7 @@ pub struct Subtree {
     pub bl: usize,
     pub br: usize,
     pub height: u32,
-    pub count: BigUint,
+    pub count: Natural,
 }
 impl Quadtree {
     pub fn as_subtree(&self) -> &Subtree {

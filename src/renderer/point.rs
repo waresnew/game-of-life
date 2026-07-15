@@ -1,6 +1,6 @@
 use std::fmt;
 
-use num_bigint::BigInt;
+use malachite::Integer;
 use wasm_bindgen::prelude::*;
 
 //TODO: reduce duplication
@@ -38,8 +38,8 @@ impl ScreenPoint {
 }
 #[derive(Default, Hash, Eq, Ord, PartialEq, PartialOrd, Clone)]
 pub struct CellPoint {
-    pub x: BigInt,
-    pub y: BigInt,
+    pub x: Integer,
+    pub y: Integer,
 }
 impl fmt::Debug for CellPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -47,10 +47,10 @@ impl fmt::Debug for CellPoint {
     }
 }
 impl CellPoint {
-    pub fn new(x: BigInt, y: BigInt) -> Self {
+    pub fn new(x: Integer, y: Integer) -> Self {
         Self { x, y }
     }
-    pub fn from_tuple((x, y): (BigInt, BigInt)) -> Self {
+    pub fn from_tuple((x, y): (Integer, Integer)) -> Self {
         Self::new(x, y)
     }
     pub fn negate(self) -> Self {
@@ -62,8 +62,8 @@ impl CellPoint {
 }
 #[derive(Default, PartialEq, PartialOrd, Clone)]
 pub struct WorldPoint {
-    pub x: BigInt,
-    pub y: BigInt,
+    pub x: Integer,
+    pub y: Integer,
 }
 impl fmt::Debug for WorldPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -72,10 +72,10 @@ impl fmt::Debug for WorldPoint {
 }
 
 impl WorldPoint {
-    pub fn new(x: BigInt, y: BigInt) -> Self {
+    pub fn new(x: Integer, y: Integer) -> Self {
         Self { x, y }
     }
-    pub fn from_tuple((x, y): (BigInt, BigInt)) -> Self {
+    pub fn from_tuple((x, y): (Integer, Integer)) -> Self {
         Self::new(x, y)
     }
     pub fn negate(self) -> Self {

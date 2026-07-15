@@ -1,5 +1,5 @@
 use gloo_console::log;
-use num_bigint::{BigInt, BigUint};
+use malachite::Integer;
 use wasm_bindgen::prelude::*;
 
 use crate::{quadtree_pool::QuadtreePool, renderer::CellPoint};
@@ -29,11 +29,11 @@ impl Solver {
     }
     pub fn get_min_point(&self) -> CellPoint {
         //TODO: reutrn borrowed value?
-        let offset = BigInt::from(1) << (self.pool[self.root].as_subtree().height - 1);
+        let offset = Integer::from(1) << (self.pool[self.root].as_subtree().height - 1);
         CellPoint::new(-offset.clone(), -offset.clone())
     }
     pub fn update_stats(&mut self) {
-        self.perf_stats.alives = self.pool[self.root].as_subtree().count.to_str_radix(10);
+        self.perf_stats.alives = self.pool[self.root].as_subtree().count.to_string();
         self.perf_stats.pool_mem = self.pool.estimate_pool_mem();
         self.perf_stats.height = self.pool[self.root].as_subtree().height;
     }
@@ -54,7 +54,7 @@ impl Solver {
             let centre = pool.get_centre(root);
             let root_count = &pool[root].as_subtree().count;
             let centre_count = &pool[centre].as_subtree().count;
-            let needed = root_count - centre_count > BigUint::ZERO;
+            let needed = root_count - centre_count > 0;
             if needed {
                 root = pool.add_border(root);
             }

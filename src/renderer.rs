@@ -1,7 +1,9 @@
 use ahash::HashSet;
 use gloo_console::log;
-use num_bigint::BigInt;
-use num_integer::Integer;
+use malachite::{
+    Integer,
+    base::{num::arithmetic::traits::DivRound, rounding_modes::RoundingMode},
+};
 use wasm_bindgen::prelude::*;
 
 use crate::solver::{GOL_RULES, LifeRule, PerfStats, Solver};
@@ -33,7 +35,7 @@ pub struct Camera {
 impl Default for Camera {
     fn default() -> Self {
         Self {
-            centre: WorldPoint::new(BigInt::from(0), BigInt::from(0)),
+            centre: WorldPoint::new(Integer::from(0), Integer::from(0)),
             zoom_out_exp: 0,
         }
     }
@@ -86,7 +88,7 @@ impl RenderStatsDisplay {
 impl Default for RenderStatsDisplay {
     fn default() -> Self {
         Self {
-            cell_cursor: CellPoint::new(BigInt::from(0), BigInt::from(0)),
+            cell_cursor: CellPoint::new(Integer::from(0), Integer::from(0)),
             zoom_out_exp: 0,
             rule: GOL_RULES,
         }
@@ -155,21 +157,30 @@ impl Renderer {
     pub fn handle_zoom(&mut self, delta: i32, cursor: ScreenPoint) {
         let new_zoom_out_exp = (self.camera.zoom_out_exp as i32 + delta).max(0) as u32;
         let world_cursor = self.screen_to_world(cursor);
-        let new_zoom_out = BigInt::from(1) << new_zoom_out_exp;
-        let old_zoom_out = BigInt::from(1) << self.camera.zoom_out_exp;
+        let new_zoom_out = Integer::from(1) << new_zoom_out_exp;
+        let old_zoom_out = Integer::from(1) << self.camera.zoom_out_exp;
         self.camera.centre = WorldPoint::new(
-            world_cursor.x.div_floor(&new_zoom_out) - world_cursor.x.div_floor(&old_zoom_out)
+            (&world_cursor.x)
+                .div_round(&new_zoom_out, RoundingMode::Floor)
+                .0
+                - (&world_cursor.x)
+                    .div_round(&old_zoom_out, RoundingMode::Floor)
+                    .0
                 + &self.camera.centre.x,
-            -world_cursor.y.div_floor(&new_zoom_out)
-                + world_cursor.y.div_floor(&old_zoom_out)
+            -(&world_cursor.y)
+                .div_round(&new_zoom_out, RoundingMode::Floor)
+                .0
+                + (&world_cursor.y)
+                    .div_round(&old_zoom_out, RoundingMode::Floor)
+                    .0
                 + &self.camera.centre.y,
         );
         self.camera.zoom_out_exp = new_zoom_out_exp;
     }
     pub fn handle_pan(&mut self, delta: ScreenPoint) {
         self.camera.centre = WorldPoint::new(
-            delta.x + &self.camera.centre.x,
-            delta.y + &self.camera.centre.y,
+            Integer::from(delta.x) + &self.camera.centre.x,
+            Integer::from(delta.y) + &self.camera.centre.y,
         );
     }
     pub fn handle_draw(&mut self, cursor: ScreenPoint) {

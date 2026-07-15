@@ -1,5 +1,5 @@
 use game_of_life::renderer::{CellPoint, Renderer};
-use num_bigint::BigInt;
+use malachite::Integer;
 
 mod utils;
 #[test]
@@ -50,7 +50,7 @@ fn one_step_acorn() {
         (3, -1),
     ]
     .into_iter()
-    .map(|(x, y)| (BigInt::from(x), BigInt::from(y)))
+    .map(|(x, y)| (Integer::from(x), Integer::from(y)))
     .map(CellPoint::from_tuple)
     .collect();
     let mut renderer = Renderer::new(13);

@@ -1,18 +1,20 @@
-use num_bigint::BigUint;
+use malachite::Natural;
 
 use crate::quadtree_pool::{DEAD_CELL_ID, Quadtree, QuadtreePool, Subtree};
 
 impl QuadtreePool {
     pub fn join(&mut self, tl: usize, tr: usize, bl: usize, br: usize, height: u32) -> usize {
+        let one = Natural::from(1_u32);
+        let zero = Natural::from(0_u32);
         let count = [tl, tr, bl, br]
             .iter()
             .map(|&id| match &self.pool[id] {
                 Quadtree::Subtree(subtree) => &subtree.count,
                 &Quadtree::Cell(alive) => {
                     if alive {
-                        &BigUint::ONE
+                        &one
                     } else {
-                        &BigUint::ZERO
+                        &zero
                     }
                 }
             })

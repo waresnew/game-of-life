@@ -1,10 +1,10 @@
 use game_of_life::renderer::CellPoint;
-use num_bigint::BigInt;
+use malachite::Integer;
 
 pub fn convert_coords(input: Vec<(i64, i64)>) -> Vec<CellPoint> {
     input
         .into_iter()
-        .map(|(x, y)| (BigInt::from(x), BigInt::from(y)))
+        .map(|(x, y)| (Integer::from(x), Integer::from(y)))
         .map(CellPoint::from_tuple)
         .collect()
 }

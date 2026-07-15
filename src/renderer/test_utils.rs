@@ -1,4 +1,4 @@
-use num_bigint::{BigInt, BigUint};
+use malachite::Integer;
 
 use crate::{
     quadtree_pool::Quadtree,
@@ -18,18 +18,21 @@ impl Renderer {
         fn traverse(point: &CellPoint, root: usize, min: &CellPoint, pool: &QuadtreePool) -> bool {
             match &pool[root] {
                 Quadtree::Subtree(subtree) => {
-                    let cell_size = BigInt::from(1) << subtree.height;
+                    let cell_size = Integer::from(1) << subtree.height;
                     if !Renderer::point_in_box(
                         point,
                         min,
-                        &CellPoint::new(&min.x + &cell_size - 1, &min.y + &cell_size - 1),
+                        &CellPoint::new(
+                            &min.x + &cell_size - Integer::from(1),
+                            &min.y + &cell_size - Integer::from(1),
+                        ),
                     ) {
                         return false;
                     }
-                    if subtree.count == BigUint::ZERO {
+                    if subtree.count == 0 {
                         return false;
                     }
-                    let mid = BigInt::from(1) << (subtree.height - 1);
+                    let mid = Integer::from(1) << (subtree.height - 1);
                     traverse(
                         point,
                         subtree.tl,

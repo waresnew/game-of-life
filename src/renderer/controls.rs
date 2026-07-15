@@ -1,5 +1,7 @@
 use gloo_console::log;
-use num_bigint::{BigInt, BigUint};
+use malachite::{
+    Integer, base::num::arithmetic::traits::Abs, base::num::logic::traits::SignificantBits,
+};
 use regex::regex;
 
 use crate::{
@@ -9,8 +11,8 @@ use crate::{
 
 impl Renderer {
     pub fn toggle_cell(&mut self, point: &CellPoint) {
-        while BigUint::from(1_u32) << (self.solver.pool[self.solver.root].as_subtree().height - 1)
-            <= *point.x.magnitude().max(point.y.magnitude())
+        while Integer::from(1) << (self.solver.pool[self.solver.root].as_subtree().height - 1)
+            <= (&point.x).abs().max((&point.y).abs())
         {
             self.solver.root = self.solver.pool.add_border(self.solver.root);
         }
@@ -34,15 +36,18 @@ impl Renderer {
                 height,
                 ..
             }) => {
-                let cell_size = BigInt::from(1) << height;
+                let cell_size = Integer::from(1) << height;
                 if !Self::point_in_box(
                     point,
                     &min,
-                    &CellPoint::new(&min.x + &cell_size - 1, &min.y + &cell_size - 1),
+                    &CellPoint::new(
+                        &min.x + &cell_size - Integer::from(1),
+                        &min.y + &cell_size - Integer::from(1),
+                    ),
                 ) {
                     return root;
                 }
-                let mid = BigInt::from(1) << (height - 1);
+                let mid = Integer::from(1) << (height - 1);
                 let tl = self.toggle_cell_and_return_root(
                     point,
                     tl,
@@ -95,7 +100,7 @@ impl Renderer {
         );
         let mut x = -width / 2;
         let mut y = height / 2;
-        self.fit_camera_to_dims(&CellPoint::new(BigInt::from(width), BigInt::from(height)));
+        self.fit_camera_to_dims(&CellPoint::new(Integer::from(width), Integer::from(height)));
         let lines: Vec<String> = content.join("").split("$").map(|x| x.to_string()).collect();
         for line in lines {
             let mut cnt_str = String::new();
@@ -113,7 +118,7 @@ impl Renderer {
                     };
                     if c != 'b' {
                         for _ in 0..cnt {
-                            self.toggle_cell(&CellPoint::new(BigInt::from(x), BigInt::from(y)));
+                            self.toggle_cell(&CellPoint::new(Integer::from(x), Integer::from(y)));
                             x += 1;
                         }
                     } else {
@@ -131,13 +136,14 @@ impl Renderer {
         }
     }
     fn fit_camera_to_dims(&mut self, dims: &CellPoint) {
-        self.camera.centre = WorldPoint::new(BigInt::from(0), BigInt::from(0));
-        let cell_size = BigInt::from(1) << CELL_SIZE_EXP;
-        self.camera.zoom_out_exp = (((&dims.x * &cell_size) / self.viewport_info.canvas_dims.x)
-            .max((&dims.y * &cell_size) / self.viewport_info.canvas_dims.y)
-            .bits()
-            .max(1)
-            .min(u32::MAX as u64)
+        self.camera.centre = WorldPoint::new(Integer::from(0), Integer::from(0));
+        let cell_size = Integer::from(1) << CELL_SIZE_EXP;
+        self.camera.zoom_out_exp = (((&dims.x * &cell_size)
+            / Integer::from(self.viewport_info.canvas_dims.x))
+        .max((&dims.y * &cell_size) / Integer::from(self.viewport_info.canvas_dims.y))
+        .significant_bits()
+        .max(1)
+        .min(u32::MAX as u64)
             + 1) as u32;
     }
 }
