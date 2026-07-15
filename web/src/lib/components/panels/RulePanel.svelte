@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { getRenderStats } from '$lib/shared.svelte';
-	import { renderer } from '$lib/wasm';
-	//TODO: cleanup div ids
+	import { getRenderStats, renderer } from '$lib/shared.svelte';
 
 	let formattedB = $state('3');
 	let formattedS = $state('23');
@@ -14,9 +12,7 @@
 		if (regex.test(formattedB) && regex.test(formattedS)) {
 			const b = formattedB.split('').map((x) => parseInt(x));
 			const s = formattedS.split('').map((x) => parseInt(x));
-			if (b.length < 9 && s.length < 9) {
-				renderer.set_rule(new Uint32Array(b), new Uint32Array(s));
-			}
+			renderer.set_rule(new Uint32Array(b), new Uint32Array(s));
 		}
 	}
 	$effect(() => {
@@ -53,7 +49,6 @@
 		onchange={handleRuleTextboxChange}
 		class={['max-w-8 invalid:border-red-400', { 'border-green-400': succeededB }]}
 		name="rule-b"
-		id="rule-b-input"
 		maxlength="9"
 		bind:value={formattedB}
 		autocomplete="off"
@@ -69,7 +64,6 @@
 		onchange={handleRuleTextboxChange}
 		class={['max-w-8 invalid:border-red-400', { 'border-green-400': succeededS }]}
 		name="rule-s"
-		id="rule-s-input"
 		maxlength="9"
 		bind:value={formattedS}
 		autocomplete="off"

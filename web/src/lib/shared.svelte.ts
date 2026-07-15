@@ -3,7 +3,8 @@ import {
 	ScreenPoint as RustScreenPoint,
 	type PerfStats
 } from '$wasm/game_of_life.js';
-import { renderer } from './wasm.js';
+import { Renderer } from '$wasm/game_of_life.js';
+export const renderer = new Renderer(0);
 export type Point = [number, number];
 
 export const fpsCounters = {

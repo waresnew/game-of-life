@@ -1,7 +1,6 @@
 import { ViewportInfo } from '$wasm/game_of_life';
-import { canvasDims, toRustScreenPoint, type Point } from './shared.svelte';
+import { canvasDims, renderer, toRustScreenPoint, type Point } from './shared.svelte';
 import { uiState } from './shared.svelte';
-import { renderer } from './wasm';
 
 export class GestureHandler {
 	currentPointers: Map<number, Point> = new Map();

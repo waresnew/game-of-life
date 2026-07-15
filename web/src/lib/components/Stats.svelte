@@ -19,7 +19,7 @@
 		<span class="min-w-0 flex-1 truncate">Alive: {formatBigInt(BigInt(getPerfStats().alives))}</span
 		>
 	</div>
-	<div class="flex gap-8" id="stats-display">
+	<div class="flex gap-8">
 		<span class="min-w-0 flex-1 truncate">FPS: {uiState.fps}</span>
 		<span class="min-w-0 flex-1 truncate"
 			>Cursor: ({formatBigInt(BigInt(getRenderStats().cell_cursor_x))}, {formatBigInt(

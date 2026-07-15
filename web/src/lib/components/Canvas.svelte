@@ -10,10 +10,10 @@
 		setCanvasDims,
 		type Point,
 		updateRenderStats,
-		toRustScreenPoint
+		toRustScreenPoint,
+		renderer
 	} from '$lib/shared.svelte';
 	import { GestureHandler } from '$lib/GestureHandler.js';
-	import { renderer } from '$lib/wasm.js';
 
 	let canvas: HTMLCanvasElement;
 	const gestureHandler = new GestureHandler();
@@ -88,7 +88,6 @@
 		gestureHandler.zoom(mouseDelta);
 	}}
 	oncontextmenu={(event) => event.preventDefault()}
-	id="grid"
 	class="border border-black [image-rendering:pixelated] h-full w-full touch-none min-h-0 min-w-0"
 	>Game of Life grid</canvas
 >

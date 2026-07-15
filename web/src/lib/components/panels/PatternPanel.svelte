@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { uiState, canvasDims, toRustScreenPoint } from '$lib/shared.svelte';
-	import { renderer } from '$lib/wasm';
+	import { uiState, canvasDims, toRustScreenPoint, renderer } from '$lib/shared.svelte';
 
 	const patterns: Record<string, string> = import.meta.glob('$assets/patterns/*.rle', {
 		query: '?raw',
@@ -19,7 +18,7 @@
 	}
 </script>
 
-<div class="flex gap-2 flex-col" id="patterns">
+<div class="flex gap-2 flex-col">
 	<label for="pattern-presets">Patterns:</label>
 	<select
 		onchange={(event) => {
@@ -27,7 +26,6 @@
 			applyRlePattern(patterns[option]!);
 		}}
 		name="pattern-presets"
-		id="pattern-dropdown"
 	>
 		<option selected value="blank">Blank</option>
 		{#each Object.keys(patterns) as key}
@@ -41,7 +39,6 @@
 			applyRlePattern(await file.text());
 		}}
 		type="file"
-		id="pattern-from-file"
 		accept=".rle"
 	/>
 </div>
