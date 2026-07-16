@@ -6,7 +6,7 @@ mod convert;
 mod manip;
 pub mod quadtree;
 
-pub use crate::quadtree_pool::quadtree::*;
+pub use quadtree::*;
 
 type QuadtreeKey = (usize, usize, usize, usize);
 

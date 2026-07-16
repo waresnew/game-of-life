@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { uiState, next_step, renderer } from '$lib/shared.svelte';
+	import { uiState, next_step, backend } from '$lib/shared.svelte';
 	function changeStepExp(delta: number) {
 		uiState.stepExp = Math.max(0, uiState.stepExp + delta);
-		renderer.set_step_exp(uiState.stepExp);
+		backend.set_step_exp(uiState.stepExp);
 	}
 	function play() {
 		uiState.ticking = !uiState.ticking;

@@ -1,20 +1,36 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use game_of_life::renderer::{CELL_SIZE_EXP, Renderer, ScreenPoint, ViewportInfo};
+use game_of_life::{
+    Camera, CellPoint, ScreenPoint, Viewport,
+    app::CELL_SIZE_EXP,
+    {GOL_RULES, Solver},
+};
+use malachite::Integer;
 
 fn filled_rect(c: &mut Criterion) {
-    let mut renderer = Renderer::new(0);
-    renderer.handle_zoom(CELL_SIZE_EXP as i32, ScreenPoint::new(0, 0));
-    const CANVAS_SIZE: i64 = 100;
-    for i in 0..CANVAS_SIZE {
-        for j in 0..CANVAS_SIZE {
-            renderer.handle_draw(ScreenPoint::new(i, j));
+    let mut solver = Solver::new(0, GOL_RULES);
+    const CANVAS_SIZE: i64 = 512;
+    for i in -256..=256 {
+        for j in -256..=256 {
+            solver.toggle_cell(&CellPoint::new(Integer::from(i), Integer::from(j)));
         }
     }
-    renderer.update_viewport(ViewportInfo {
-        canvas_dims: ScreenPoint::new(CANVAS_SIZE, CANVAS_SIZE),
-    });
-    c.bench_function("filled 1:1 pixel:cell ratio render", |b| {
-        b.iter(|| renderer.render())
+    let canvas_dims = ScreenPoint::new(CANVAS_SIZE, CANVAS_SIZE);
+    let viewport = Viewport {
+        canvas_dims,
+        camera: Camera {
+            zoom_out_exp: CELL_SIZE_EXP,
+            ..Default::default()
+        },
+    };
+    c.bench_function("filled 512x512 render", |b| {
+        b.iter(|| {
+            game_of_life::render_to_image(
+                &viewport,
+                solver.root,
+                &solver.pool,
+                &solver.get_min_point(),
+            )
+        })
     });
 }
 

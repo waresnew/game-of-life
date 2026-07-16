@@ -1,6 +1,6 @@
-use crate::renderer::ScreenPoint;
+use crate::point::ScreenPoint;
 
-pub struct ImageBitmap {
+pub(super) struct ImageBitmap {
     pixels: Vec<u8>,
     width: usize,
     height: usize,
@@ -9,7 +9,7 @@ const RGBA_LEN: usize = 4;
 const DEAD_COLOUR: Rgb = Rgb::new(255, 255, 255);
 const ALIVE_COLOUR: Rgb = Rgb::new(0, 0, 0);
 #[derive(Debug, Clone, Copy)]
-pub struct Rgb {
+pub(super) struct Rgb {
     pub r: u8,
     pub g: u8,
     pub b: u8,

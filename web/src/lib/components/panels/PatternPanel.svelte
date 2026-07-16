@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { uiState, canvasDims, toRustScreenPoint, renderer } from '$lib/shared.svelte';
+	import { uiState, canvasDims, toRustScreenPoint, backend } from '$lib/shared.svelte';
 
 	const patterns: Record<string, string> = import.meta.glob('$assets/patterns/*.rle', {
 		query: '?raw',
@@ -11,9 +11,9 @@
 		uiState.generation = 0n;
 		uiState.ticking = false;
 		if (!pattern) {
-			renderer.clear_grid();
+			backend.clear_grid();
 		} else {
-			renderer.load_pattern(pattern);
+			backend.load_pattern(pattern);
 		}
 	}
 </script>

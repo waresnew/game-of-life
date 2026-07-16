@@ -1,14 +1,14 @@
 use gloo_console::log;
-use malachite::Integer;
-use wasm_bindgen::prelude::*;
+use malachite::{Integer, Natural};
 
-use crate::{quadtree_pool::QuadtreePool, renderer::CellPoint};
+use crate::{point::CellPoint, quadtree_pool::QuadtreePool};
 
+mod cell_ops;
 mod hashlife;
 mod liferule;
 pub use liferule::*;
 pub struct Solver {
-    pub perf_stats: PerfStats,
+    stats: SolverStats,
     pub pool: QuadtreePool,
     pub root: usize,
     step_exp: u32,
@@ -20,26 +20,30 @@ impl Solver {
         let mut pool = QuadtreePool::new();
         let root = pool.zeros(INITIAL_HEIGHT);
         Self {
-            perf_stats: PerfStats::default(),
+            stats: SolverStats::default(),
             pool,
             root,
             step_exp,
             rule: rules,
         }
     }
+    pub fn clear_grid(&mut self) {
+        self.root = self.pool.zeros(INITIAL_HEIGHT);
+    }
     pub fn get_min_point(&self) -> CellPoint {
         //TODO: reutrn borrowed value?
         let offset = Integer::from(1) << (self.pool[self.root].as_subtree().height - 1);
         CellPoint::new(-offset.clone(), -offset.clone())
     }
-    pub fn update_stats(&mut self) {
-        self.perf_stats.alives = self.pool[self.root].as_subtree().count.to_string();
-        self.perf_stats.pool_mem = self.pool.estimate_pool_mem();
-        self.perf_stats.height = self.pool[self.root].as_subtree().height;
+    pub fn stats(&mut self) -> SolverStats {
+        self.stats.alives = self.pool[self.root].as_subtree().count.clone();
+        self.stats.pool_mem = self.pool.estimate_pool_mem();
+        self.stats.height = self.pool[self.root].as_subtree().height;
+        self.stats.clone()
     }
     pub fn next_step(&mut self) {
-        self.perf_stats.cache_hits = 0;
-        self.perf_stats.cache_misses = 0;
+        self.stats.cache_hits = 0;
+        self.stats.cache_misses = 0;
         let mut input = self.pool.add_border(self.root);
         while self.pool[input].as_subtree().height - 2 < self.step_exp {
             input = self.pool.add_border(input);
@@ -61,14 +65,10 @@ impl Solver {
             root
         }
         self.root = try_grow_quadtree(&mut self.pool, self.root);
-        self.update_stats();
     }
     pub fn set_step_exp(&mut self, step_exp: u32) {
         self.step_exp = step_exp;
         self.pool.clear_ans();
-    }
-    pub fn step_exp(&self) -> u32 {
-        self.step_exp
     }
 
     pub fn rule(&self) -> LifeRule {
@@ -79,19 +79,18 @@ impl Solver {
         self.pool.clear_ans();
     }
 }
-#[wasm_bindgen(getter_with_clone)]
 #[derive(Clone, Debug)]
-pub struct PerfStats {
-    pub alives: String,
+pub struct SolverStats {
+    pub alives: Natural,
     pub pool_mem: usize,
     pub cache_hits: u64,
     pub cache_misses: u64,
     pub height: u32,
 }
-impl Default for PerfStats {
+impl Default for SolverStats {
     fn default() -> Self {
         Self {
-            alives: String::from("0"),
+            alives: Natural::from(0_u32),
             pool_mem: 0,
             cache_hits: 0,
             cache_misses: 0,

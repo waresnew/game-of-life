@@ -1,17 +1,15 @@
 <script lang="ts">
-	import { ScreenPoint as RustScreenPoint, ViewportInfo } from '$wasm/game_of_life.js';
 	import { onMount } from 'svelte';
 	import {
 		uiState,
-		updatePerfStats,
 		canvasDims,
 		fpsCounters,
 		next_step,
 		setCanvasDims,
 		type Point,
-		updateRenderStats,
 		toRustScreenPoint,
-		renderer
+		updateStats,
+		backend
 	} from '$lib/shared.svelte';
 	import { GestureHandler } from '$lib/GestureHandler.js';
 
@@ -30,17 +28,13 @@
 			const elapsed = (performance.now() - start) / 1000;
 			uiState.playRuntime = elapsed;
 		}
-		updatePerfStats(renderer.perf_stats);
-		renderer.update_viewport(
-			new ViewportInfo(toRustScreenPoint([canvasDims.width, canvasDims.height]))
-		);
-		renderer.update_render_stats(toRustScreenPoint(uiState.cursor));
-		updateRenderStats(renderer.render_stats);
+		backend.update_canvas_dims(toRustScreenPoint([canvasDims.width, canvasDims.height]));
+		updateStats(backend.get_stats(toRustScreenPoint(uiState.cursor)));
 
 		const ctx = canvas.getContext('2d')!;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		const imageData = new ImageData(
-			new Uint8ClampedArray(renderer.render()),
+			new Uint8ClampedArray(backend.render()),
 			canvas.width,
 			canvas.height
 		);

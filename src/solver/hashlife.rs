@@ -4,7 +4,7 @@ use crate::{
 };
 
 impl Solver {
-    pub fn evolve(&mut self, cur_id: usize) -> usize {
+    pub(super) fn evolve(&mut self, cur_id: usize) -> usize {
         let &Subtree {
             tl,
             tr,
@@ -15,7 +15,7 @@ impl Solver {
         } = self.pool[cur_id].as_subtree();
         let cur_ans = self.pool.get_ans(cur_id);
         if cur_ans.is_none() {
-            self.perf_stats.cache_misses += 1;
+            self.stats.cache_misses += 1;
             if cur_height == 2 {
                 let ans = self.solve_4x4(cur_id);
                 self.pool.set_ans(cur_id, ans);
@@ -94,7 +94,7 @@ impl Solver {
             };
             self.pool.set_ans(cur_id, ans);
         } else {
-            self.perf_stats.cache_hits += 1;
+            self.stats.cache_hits += 1;
         }
         self.pool.get_ans(cur_id).unwrap()
     }
