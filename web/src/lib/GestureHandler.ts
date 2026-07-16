@@ -1,5 +1,4 @@
-import { ViewportInfo } from '$wasm/game_of_life';
-import { canvasDims, renderer, toRustScreenPoint, type Point } from './shared.svelte';
+import { canvasDims, backend, toRustScreenPoint, type Point } from './shared.svelte';
 import { uiState } from './shared.svelte';
 
 export class GestureHandler {
@@ -14,7 +13,7 @@ export class GestureHandler {
 		if (Math.abs(this.zoomProgress) >= 1) {
 			const whole = Math.trunc(this.zoomProgress);
 			this.zoomProgress -= whole;
-			renderer.handle_zoom(whole, toRustScreenPoint(uiState.cursor));
+			backend.handle_zoom(whole, toRustScreenPoint(uiState.cursor));
 		}
 	}
 	handleTouchZoom(event: PointerEvent) {
@@ -46,12 +45,9 @@ export class GestureHandler {
 		pointerX -= canvasDims.x;
 		pointerY -= canvasDims.y;
 
-		renderer.update_viewport(
-			new ViewportInfo(toRustScreenPoint([canvasDims.width, canvasDims.height]))
-		);
 		if (event.buttons == 2 || this.currentPointers.size == 2) {
 			if (this.prevPanX != -1 && this.prevPanY != -1) {
-				renderer.handle_pan(
+				backend.handle_pan(
 					toRustScreenPoint([-(pointerX - this.prevPanX), -(pointerY - this.prevPanY)])
 				);
 			}
@@ -96,11 +92,11 @@ export class GestureHandler {
 	}
 	endDrawSession(event: PointerEvent) {
 		this.currentPointers.delete(event.pointerId);
-		renderer.end_draw_session();
+		backend.end_draw_session();
 		this.prevPanX = this.prevPanY = -1;
 		this.prevTouchZoomDist = -1;
 	}
 	doDraw() {
-		renderer.handle_draw(toRustScreenPoint(uiState.cursor));
+		backend.handle_draw(toRustScreenPoint(uiState.cursor));
 	}
 }

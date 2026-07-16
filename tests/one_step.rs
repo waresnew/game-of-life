@@ -1,4 +1,6 @@
-use game_of_life::renderer::{CellPoint, Renderer};
+use game_of_life::{
+    CellPoint, {GOL_RULES, Solver},
+};
 use malachite::Integer;
 
 mod utils;
@@ -53,10 +55,10 @@ fn one_step_acorn() {
     .map(|(x, y)| (Integer::from(x), Integer::from(y)))
     .map(CellPoint::from_tuple)
     .collect();
-    let mut renderer = Renderer::new(13);
+    let mut solver = Solver::new(13, GOL_RULES);
     for p in alive {
-        renderer.toggle_cell(&p);
+        solver.toggle_cell(&p);
     }
-    renderer.next_step();
-    assert_eq!(renderer.perf_stats().alives, "633");
+    solver.next_step();
+    assert_eq!(solver.stats().alives, 633);
 }

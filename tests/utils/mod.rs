@@ -1,4 +1,4 @@
-use game_of_life::renderer::CellPoint;
+use game_of_life::CellPoint;
 use malachite::Integer;
 
 pub fn convert_coords(input: Vec<(i64, i64)>) -> Vec<CellPoint> {
@@ -12,17 +12,17 @@ pub fn convert_coords(input: Vec<(i64, i64)>) -> Vec<CellPoint> {
 #[macro_export]
 macro_rules! test_solve {
     ($input:expr, $k:expr, $output:expr, $min_point:expr) => {
-        use game_of_life::renderer::Renderer;
+        use game_of_life::{GOL_RULES, Solver};
         let output = $crate::utils::convert_coords($output);
         let alive = $crate::utils::convert_coords($input);
-        let mut renderer = Renderer::new($k);
+        let mut solver = Solver::new($k, GOL_RULES);
         for p in alive {
-            renderer.toggle_cell(&p);
+            solver.toggle_cell(&p);
         }
-        renderer.next_step();
-        assert_eq!(renderer.perf_stats().alives, output.len().to_string());
+        solver.next_step();
+        assert_eq!(solver.stats().alives, output.len());
         for p in output {
-            assert_eq!(renderer.query_cell(&p), true);
+            assert_eq!(solver.query_cell(&p), true);
         }
     };
 }

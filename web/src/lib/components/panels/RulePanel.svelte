@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getRenderStats, renderer } from '$lib/shared.svelte';
+	import { getStats, backend } from '$lib/shared.svelte';
 
 	let formattedB = $state('3');
 	let formattedS = $state('23');
@@ -12,11 +12,11 @@
 		if (regex.test(formattedB) && regex.test(formattedS)) {
 			const b = formattedB.split('').map((x) => parseInt(x));
 			const s = formattedS.split('').map((x) => parseInt(x));
-			renderer.set_rule(new Uint32Array(b), new Uint32Array(s));
+			backend.set_rule(new Uint32Array(b), new Uint32Array(s));
 		}
 	}
 	$effect(() => {
-		tryUpdateRuleTextbox(Array.from(getRenderStats().rule_b), Array.from(getRenderStats().rule_s));
+		tryUpdateRuleTextbox(Array.from(getStats().rule_b), Array.from(getStats().rule_s));
 	});
 	function tryUpdateRuleTextbox(b: number[], s: number[]) {
 		if (b.join('') != prevB.join('')) {

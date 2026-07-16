@@ -1,10 +1,13 @@
-use wasm_bindgen::prelude::*;
+pub mod app;
 
-pub mod quadtree_pool;
-pub mod renderer;
-pub mod solver;
+mod image_bitmap;
+mod input_handler;
+mod point;
+mod quadtree_pool;
+mod renderer;
+mod solver;
 
-#[wasm_bindgen(start, private)]
-pub fn init_panic_hook() {
-    console_error_panic_hook::set_once();
-}
+pub use crate::input_handler::{Camera, Viewport};
+pub use crate::point::{CellPoint, ScreenPoint};
+pub use crate::renderer::render_to_image;
+pub use crate::solver::{GOL_RULES, Solver};

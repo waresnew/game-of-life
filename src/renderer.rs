@@ -1,193 +1,128 @@
-use ahash::HashSet;
 use gloo_console::log;
-use malachite::{
-    Integer,
-    base::{num::arithmetic::traits::DivRound, rounding_modes::RoundingMode},
-};
-use wasm_bindgen::prelude::*;
+use malachite::Integer;
 
-use crate::solver::{GOL_RULES, LifeRule, PerfStats, Solver};
-mod controls;
-mod drawing;
-mod image_bitmap;
-mod point;
-#[cfg(not(target_arch = "wasm32"))]
-mod test_utils;
-use image_bitmap::*;
-pub use point::*;
-pub const CELL_SIZE_EXP: u32 = 5;
-#[derive(Copy, Clone)]
-#[wasm_bindgen]
-pub struct ViewportInfo {
-    pub canvas_dims: ScreenPoint,
+use crate::{
+    app::CELL_SIZE_EXP,
+    image_bitmap::{ImageBitmap, Rgb},
+    input_handler::Viewport,
+    point::{CellPoint, ScreenPoint},
+    quadtree_pool::{Quadtree, QuadtreePool},
+};
+
+pub fn render_to_image(
+    viewport: &Viewport,
+    root: usize,
+    pool: &QuadtreePool,
+    min: &CellPoint,
+) -> Vec<u8> {
+    let mut image = ImageBitmap::new(viewport.canvas_dims);
+    render_alives(viewport, root, pool, min, &mut image);
+    render_grid(viewport, &mut image);
+    image.into_pixels()
 }
-#[wasm_bindgen]
-impl ViewportInfo {
-    #[wasm_bindgen(constructor)]
-    pub fn new(canvas_dims: ScreenPoint) -> Self {
-        Self { canvas_dims }
+fn render_grid(viewport: &Viewport, ans: &mut ImageBitmap) {
+    const GRID_CUTOFF: u32 = CELL_SIZE_EXP - 3;
+    //aka CELL_SIZE_EXP-zoom_out_exp<cutoff
+    if CELL_SIZE_EXP < GRID_CUTOFF + viewport.camera.zoom_out_exp {
+        return;
     }
-}
-pub struct Camera {
-    pub centre: WorldPoint,
-    pub zoom_out_exp: u32,
-}
-impl Default for Camera {
-    fn default() -> Self {
-        Self {
-            centre: WorldPoint::new(Integer::from(0), Integer::from(0)),
-            zoom_out_exp: 0,
+    const GRID_COLOUR: Rgb = Rgb::new(240, 240, 240);
+    let min = ScreenPoint::new(0, viewport.canvas_dims.y).to_cell(viewport);
+    let max = ScreenPoint::new(viewport.canvas_dims.x, 0).to_cell(viewport);
+    let mut x = min.x;
+    while x <= max.x {
+        let transformed_x = CellPoint::new(x.clone(), Integer::from(0))
+            .to_screen(viewport)
+            .x;
+        for y in 0..viewport.canvas_dims.y {
+            ans.fill_pixel(ScreenPoint::new(transformed_x, y), GRID_COLOUR);
         }
+        x += Integer::from(1);
     }
-}
-impl Default for ViewportInfo {
-    fn default() -> Self {
-        Self {
-            canvas_dims: ScreenPoint::new(0, 0),
+    let mut y = min.y;
+    while y <= max.y {
+        let transformed_y = CellPoint::new(Integer::from(0), y.clone())
+            .to_screen(viewport)
+            .y;
+        for x in 0..viewport.canvas_dims.x {
+            ans.fill_pixel(ScreenPoint::new(x, transformed_y), GRID_COLOUR);
         }
+        y += Integer::from(1);
     }
 }
-#[derive(Debug, Clone)]
-#[wasm_bindgen]
-pub struct RenderStatsDisplay {
-    cell_cursor: CellPoint,
-    pub zoom_out_exp: u32,
-    rule: LifeRule,
-}
-#[wasm_bindgen]
-impl RenderStatsDisplay {
-    #[wasm_bindgen(getter)]
-    pub fn rule_b(&self) -> Vec<usize> {
-        let mut ans = Vec::new();
-        for i in 0..9 {
-            if self.rule.is_born(i) {
-                ans.push(i);
+fn render_alives(
+    viewport: &Viewport,
+    id: usize,
+    pool: &QuadtreePool,
+    min: &CellPoint,
+    ans: &mut ImageBitmap,
+) {
+    //2^x mult/div
+    let pixels_exp_tmp = (CELL_SIZE_EXP as i32) - (viewport.camera.zoom_out_exp as i32);
+    match &pool[id] {
+        Quadtree::Subtree(root) => {
+            let (screen_min, screen_max) = get_screen_bounding_box(viewport, min, root.height);
+            if !box_intersects_canvas(viewport, screen_min, screen_max) {
+                return;
+            }
+            if root.count == 0 {
+                return;
+            }
+
+            let pixels_exp = (pixels_exp_tmp + (root.height as i32)).max(0) as u32;
+            if pixels_exp == 0 {
+                if root.count > 0 {
+                    ans.fill_cell(screen_min, pixels_exp);
+                }
+                return;
+            }
+            let mid = Integer::from(1) << (root.height - 1);
+            render_alives(
+                viewport,
+                root.tl,
+                pool,
+                &CellPoint::new(min.x.clone(), &min.y + &mid),
+                ans,
+            );
+            render_alives(
+                viewport,
+                root.tr,
+                pool,
+                &CellPoint::new(&min.x + &mid, &min.y + &mid),
+                ans,
+            );
+            render_alives(viewport, root.bl, pool, min, ans);
+            render_alives(
+                viewport,
+                root.br,
+                pool,
+                &CellPoint::new(&min.x + &mid, min.y.clone()),
+                ans,
+            );
+        }
+        &Quadtree::Cell(alive) => {
+            let (screen_min, screen_max) = get_screen_bounding_box(viewport, min, 0);
+            if alive && box_intersects_canvas(viewport, screen_min, screen_max) {
+                let pixels_exp = pixels_exp_tmp.max(0) as u32;
+                ans.fill_cell(screen_min, pixels_exp);
             }
         }
-        ans
-    }
-    #[wasm_bindgen(getter)]
-    pub fn rule_s(&self) -> Vec<usize> {
-        let mut ans = Vec::new();
-        for i in 0..9 {
-            if self.rule.survives(i) {
-                ans.push(i);
-            }
-        }
-        ans
-    }
-    #[wasm_bindgen(getter)]
-    pub fn cell_cursor_x(&self) -> String {
-        self.cell_cursor.x.to_string()
-    }
-    #[wasm_bindgen(getter)]
-    pub fn cell_cursor_y(&self) -> String {
-        self.cell_cursor.y.to_string()
     }
 }
-impl Default for RenderStatsDisplay {
-    fn default() -> Self {
-        Self {
-            cell_cursor: CellPoint::new(Integer::from(0), Integer::from(0)),
-            zoom_out_exp: 0,
-            rule: GOL_RULES,
-        }
-    }
+
+fn get_screen_bounding_box(
+    viewport: &Viewport,
+    point: &CellPoint,
+    size_exp: u32,
+) -> (ScreenPoint, ScreenPoint) {
+    let cell_size = Integer::from(1) << size_exp;
+    let point1 = point.to_screen(viewport);
+    let point2 = CellPoint::new(&point.x + &cell_size, &point.y + &cell_size).to_screen(viewport);
+    (
+        ScreenPoint::new(point1.x.min(point2.x), point1.y.min(point2.y)),
+        ScreenPoint::new(point1.x.max(point2.x), point1.y.max(point2.y)),
+    )
 }
-#[wasm_bindgen]
-pub struct Renderer {
-    solver: Solver,
-    viewport_info: ViewportInfo,
-    render_stats: RenderStatsDisplay,
-    camera: Camera,
-    draw_session: HashSet<CellPoint>,
-}
-#[wasm_bindgen]
-impl Renderer {
-    #[wasm_bindgen(getter)]
-    pub fn perf_stats(&self) -> PerfStats {
-        self.solver.perf_stats.clone()
-    }
-    #[wasm_bindgen(constructor)]
-    pub fn new(step_exp: u32) -> Self {
-        Self {
-            solver: Solver::new(step_exp, GOL_RULES),
-            viewport_info: ViewportInfo::default(),
-            render_stats: RenderStatsDisplay::default(),
-            camera: Camera::default(),
-            draw_session: HashSet::default(),
-        }
-    }
-    #[wasm_bindgen(getter)]
-    pub fn render_stats(&self) -> RenderStatsDisplay {
-        self.render_stats.clone()
-    }
-    pub fn next_step(&mut self) {
-        self.solver.next_step();
-    }
-    pub fn set_step_exp(&mut self, step_exp: u32) {
-        self.solver.set_step_exp(step_exp);
-    }
-    pub fn update_viewport(&mut self, viewport_info: ViewportInfo) {
-        self.viewport_info = viewport_info;
-    }
-    pub fn update_render_stats(&mut self, cursor: ScreenPoint) {
-        self.render_stats.cell_cursor = self.screen_to_cell(cursor);
-        self.render_stats.zoom_out_exp = self.camera.zoom_out_exp;
-        self.render_stats.rule = self.solver.rule()
-    }
-    pub fn render(&self) -> Vec<u8> {
-        let mut ans = ImageBitmap::new(self.viewport_info.canvas_dims);
-        self.draw_visible_alives(self.solver.root, &self.solver.get_min_point(), &mut ans);
-        self.draw_grid(&mut ans);
-        ans.into_pixels()
-    }
-    pub fn end_draw_session(&mut self) {
-        self.draw_session.clear();
-    }
-    pub fn clear_grid(&mut self) {
-        self.solver = Solver::new(self.solver.step_exp(), self.solver.rule());
-    }
-    pub fn load_pattern(&mut self, pattern: String) {
-        self.load_rle_pattern(pattern);
-    }
-    pub fn set_rule(&mut self, b: Vec<usize>, s: Vec<usize>) {
-        self.solver.set_rule(b, s);
-    }
-    pub fn handle_zoom(&mut self, delta: i32, cursor: ScreenPoint) {
-        let new_zoom_out_exp = (self.camera.zoom_out_exp as i32 + delta).max(0) as u32;
-        let world_cursor = self.screen_to_world(cursor);
-        let new_zoom_out = Integer::from(1) << new_zoom_out_exp;
-        let old_zoom_out = Integer::from(1) << self.camera.zoom_out_exp;
-        self.camera.centre = WorldPoint::new(
-            (&world_cursor.x)
-                .div_round(&new_zoom_out, RoundingMode::Floor)
-                .0
-                - (&world_cursor.x)
-                    .div_round(&old_zoom_out, RoundingMode::Floor)
-                    .0
-                + &self.camera.centre.x,
-            -(&world_cursor.y)
-                .div_round(&new_zoom_out, RoundingMode::Floor)
-                .0
-                + (&world_cursor.y)
-                    .div_round(&old_zoom_out, RoundingMode::Floor)
-                    .0
-                + &self.camera.centre.y,
-        );
-        self.camera.zoom_out_exp = new_zoom_out_exp;
-    }
-    pub fn handle_pan(&mut self, delta: ScreenPoint) {
-        self.camera.centre = WorldPoint::new(
-            Integer::from(delta.x) + &self.camera.centre.x,
-            Integer::from(delta.y) + &self.camera.centre.y,
-        );
-    }
-    pub fn handle_draw(&mut self, cursor: ScreenPoint) {
-        let cell_cursor = self.screen_to_cell(cursor);
-        if !self.draw_session.contains(&cell_cursor) {
-            self.draw_session.insert(cell_cursor.clone());
-            self.toggle_cell(&cell_cursor.clone()); //TODO: is a clone needed here conceptaully
-        }
-    }
+fn box_intersects_canvas(viewport: &Viewport, min: ScreenPoint, max: ScreenPoint) -> bool {
+    !(min.x >= viewport.canvas_dims.x || min.y >= viewport.canvas_dims.y || max.x < 0 || max.y < 0)
 }

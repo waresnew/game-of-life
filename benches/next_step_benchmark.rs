@@ -1,7 +1,9 @@
 use std::{collections::HashSet, hint::black_box};
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use game_of_life::renderer::{CellPoint, Renderer};
+use game_of_life::{
+    CellPoint, {GOL_RULES, Solver},
+};
 use malachite::Integer;
 use rand::{distr::Uniform, prelude::*};
 
@@ -16,14 +18,14 @@ fn random_rect(c: &mut Criterion) {
         alive.insert((Integer::from(x), Integer::from(y)));
     }
     let input: Vec<CellPoint> = alive.into_iter().map(CellPoint::from_tuple).collect();
-    let mut renderer = Renderer::new(12);
+    let mut solver = Solver::new(12, GOL_RULES);
     for p in input.clone() {
-        renderer.toggle_cell(&p);
+        solver.toggle_cell(&p);
     }
     c.bench_function("random 64x64 next_step", |b| {
         b.iter(|| {
-            renderer.next_step();
-            renderer.set_step_exp(black_box(12)); //reset ans
+            solver.next_step();
+            solver.set_step_exp(black_box(12)); //reset ans
         })
     });
 }

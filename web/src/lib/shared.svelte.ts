@@ -1,37 +1,26 @@
-import {
-	RenderStatsDisplay,
-	ScreenPoint as RustScreenPoint,
-	type PerfStats
-} from '$wasm/game_of_life.js';
-import { Renderer } from '$wasm/game_of_life.js';
-export const renderer = new Renderer(0);
+import { App, Stats, ScreenPoint as RustScreenPoint } from '$wasm/game_of_life.js';
+export const backend = new App(0);
 export type Point = [number, number];
+export { ScreenPoint as RustScreenPoint } from '$wasm/game_of_life.js';
 
 export const fpsCounters = {
 	frameCounter: 0,
 	prevFpsTime: 0
 };
 export function next_step() {
-	renderer.next_step();
+	backend.next_step();
 	uiState.generation += 2n ** BigInt(uiState.stepExp);
 }
 export let canvasDims: DOMRect;
 export function setCanvasDims(dims: DOMRect) {
 	canvasDims = dims;
 }
-let perfStats = $state(renderer.perf_stats);
-export function getPerfStats() {
-	return perfStats;
+let stats = $state(Stats.default());
+export function getStats() {
+	return stats;
 }
-export function updatePerfStats(stats: PerfStats) {
-	perfStats = stats;
-}
-let renderStats = $state(renderer.render_stats);
-export function getRenderStats() {
-	return renderStats;
-}
-export function updateRenderStats(stats: RenderStatsDisplay) {
-	renderStats = stats;
+export function updateStats(newStats: Stats) {
+	stats = newStats;
 }
 export const uiState = $state({
 	fps: 0,

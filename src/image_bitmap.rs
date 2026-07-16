@@ -1,4 +1,4 @@
-use crate::renderer::ScreenPoint;
+use crate::point::ScreenPoint;
 
 pub struct ImageBitmap {
     pixels: Vec<u8>,
