@@ -30,8 +30,7 @@ impl ScreenPoint {
 impl ScreenPoint {
     pub fn to_cell(&self, viewport: &Viewport) -> CellPoint {
         let world = self.to_world(viewport);
-        let cell_size = 1 << CELL_SIZE_EXP;
-        CellPoint::new(world.x.div_euclid(cell_size), world.y.div_euclid(cell_size))
+        CellPoint::new(world.x >> CELL_SIZE_EXP, world.y >> CELL_SIZE_EXP)
     }
     pub fn to_world(&self, viewport: &Viewport) -> WorldPoint {
         let zoom_out = 1 << viewport.camera.zoom_out_exp;
@@ -63,10 +62,9 @@ impl CellPoint {
     }
     pub fn to_screen(&self, viewport: &Viewport) -> ScreenPoint {
         let cell_size = 1 << CELL_SIZE_EXP;
-        let zoom_out = 1 << viewport.camera.zoom_out_exp;
-        let x = (self.x * cell_size).div_euclid(zoom_out) - viewport.camera.centre.x
+        let x = ((self.x * cell_size) >> viewport.camera.zoom_out_exp) - viewport.camera.centre.x
             + viewport.canvas_dims.x / 2;
-        let y = (-self.y * cell_size).div_euclid(zoom_out) - viewport.camera.centre.y
+        let y = ((-self.y * cell_size) >> viewport.camera.zoom_out_exp) - viewport.camera.centre.y
             + viewport.canvas_dims.y / 2;
         ScreenPoint::new(x, y)
     }

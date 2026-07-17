@@ -55,13 +55,12 @@ impl InputHandler {
     pub fn handle_zoom(&mut self, delta: i32, cursor: ScreenPoint) {
         let new_zoom_out_exp = (self.viewport.camera.zoom_out_exp as i32 + delta).max(0) as u32;
         let world_cursor = cursor.to_world(&self.viewport);
-        let new_zoom_out = 1 << new_zoom_out_exp;
-        let old_zoom_out = 1 << self.viewport.camera.zoom_out_exp;
         self.viewport.camera.centre = WorldPoint::new(
-            world_cursor.x.div_euclid(new_zoom_out) - world_cursor.x.div_euclid(old_zoom_out)
+            (world_cursor.x >> new_zoom_out_exp)
+                - (world_cursor.x >> self.viewport.camera.zoom_out_exp)
                 + self.viewport.camera.centre.x,
-            -world_cursor.y.div_euclid(new_zoom_out)
-                + world_cursor.y.div_euclid(old_zoom_out)
+            (-world_cursor.y >> new_zoom_out_exp)
+                + (world_cursor.y >> self.viewport.camera.zoom_out_exp)
                 + self.viewport.camera.centre.y,
         );
         self.viewport.camera.zoom_out_exp = new_zoom_out_exp;
