@@ -70,28 +70,29 @@ impl CellPoint {
         !(self.x > box_max.x || self.x < box_min.x || self.y > box_max.y || self.y < box_min.y)
     }
     pub fn to_screen(&self, viewport: &Viewport) -> ScreenPoint {
-        let cell_size = Integer::from(1) << CELL_SIZE_EXP;
-        let zoom_out = Integer::from(1) << viewport.camera.zoom_out_exp;
-        let x = (&self.x * &cell_size)
-            .div_round(&zoom_out, RoundingMode::Floor)
-            .0
-            - &viewport.camera.centre.x
-            + Integer::from(viewport.canvas_dims.x / 2);
-        let y = (-&self.y * &cell_size)
-            .div_round(&zoom_out, RoundingMode::Floor)
-            .0
-            - &viewport.camera.centre.y
-            + Integer::from(viewport.canvas_dims.y / 2);
-        fn into_clamped_i64(n: Integer) -> i64 {
-            if n < i64::MIN {
-                i64::MIN
-            } else if n > i64::MAX {
-                i64::MAX
+        fn clamp_to_canvas(n: Integer, viewport: &Viewport) -> i64 {
+            let cutoff = viewport.canvas_dims.x.max(viewport.canvas_dims.y) * 4;
+            if n < -cutoff {
+                -cutoff
+            } else if n > cutoff {
+                cutoff
             } else {
                 i64::try_from(&n).unwrap()
             }
         }
-        ScreenPoint::new(into_clamped_i64(x), into_clamped_i64(y))
+        let x_pre_translate = clamp_to_canvas(
+            ((&self.x << CELL_SIZE_EXP) >> viewport.camera.zoom_out_exp)
+                - &viewport.camera.centre.x,
+            viewport,
+        );
+        let x = x_pre_translate + viewport.canvas_dims.x / 2;
+        let y_pre_translate = clamp_to_canvas(
+            ((-&self.y << CELL_SIZE_EXP) >> viewport.camera.zoom_out_exp)
+                - &viewport.camera.centre.y,
+            viewport,
+        );
+        let y = y_pre_translate + viewport.canvas_dims.y / 2;
+        ScreenPoint::new(x, y)
     }
 }
 #[derive(Default, PartialEq, PartialOrd, Clone)]
