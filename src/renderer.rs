@@ -110,17 +110,19 @@ fn render_alives(
     }
 }
 
+/// (tl,br)
 fn get_screen_bounding_box(
     viewport: &Viewport,
     point: &CellPoint,
-    size_exp: u32,
+    height: u32,
 ) -> (ScreenPoint, ScreenPoint) {
-    let cell_size = Integer::from(1) << size_exp;
-    let point1 = point.to_screen(viewport);
-    let point2 = CellPoint::new(&point.x + &cell_size, &point.y + &cell_size).to_screen(viewport);
+    let cell_size =
+        1 << (height as i64 + CELL_SIZE_EXP as i64 - viewport.camera.zoom_out_exp as i64).max(0); //FIXME:this will overflow
+    let point1 = point.to_screen(viewport); //still low x, high y in screen space
+    let point2 = ScreenPoint::new(point1.x + cell_size - 1, point1.y - (cell_size - 1));
     (
-        ScreenPoint::new(point1.x.min(point2.x), point1.y.min(point2.y)),
-        ScreenPoint::new(point1.x.max(point2.x), point1.y.max(point2.y)),
+        ScreenPoint::new(point1.x, point2.y),
+        ScreenPoint::new(point2.x, point1.y),
     )
 }
 fn box_intersects_canvas(viewport: &Viewport, min: ScreenPoint, max: ScreenPoint) -> bool {
