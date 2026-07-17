@@ -1,10 +1,6 @@
 use std::collections::HashSet;
 
 use gloo_console::log;
-use malachite::{
-    Integer,
-    base::{num::arithmetic::traits::DivRound, rounding_modes::RoundingMode},
-};
 
 use crate::{
     point::{CellPoint, ScreenPoint, WorldPoint},
@@ -27,7 +23,7 @@ pub struct Camera {
 impl Default for Camera {
     fn default() -> Self {
         Self {
-            centre: WorldPoint::new(Integer::from(0), Integer::from(0)),
+            centre: WorldPoint::new(0, 0),
             zoom_out_exp: 0,
         }
     }
@@ -59,37 +55,28 @@ impl InputHandler {
     pub fn handle_zoom(&mut self, delta: i32, cursor: ScreenPoint) {
         let new_zoom_out_exp = (self.viewport.camera.zoom_out_exp as i32 + delta).max(0) as u32;
         let world_cursor = cursor.to_world(&self.viewport);
-        let new_zoom_out = Integer::from(1) << new_zoom_out_exp;
-        let old_zoom_out = Integer::from(1) << self.viewport.camera.zoom_out_exp;
+        let new_zoom_out = 1 << new_zoom_out_exp;
+        let old_zoom_out = 1 << self.viewport.camera.zoom_out_exp;
         self.viewport.camera.centre = WorldPoint::new(
-            (&world_cursor.x)
-                .div_round(&new_zoom_out, RoundingMode::Floor)
-                .0
-                - (&world_cursor.x)
-                    .div_round(&old_zoom_out, RoundingMode::Floor)
-                    .0
-                + &self.viewport.camera.centre.x,
-            -(&world_cursor.y)
-                .div_round(&new_zoom_out, RoundingMode::Floor)
-                .0
-                + (&world_cursor.y)
-                    .div_round(&old_zoom_out, RoundingMode::Floor)
-                    .0
-                + &self.viewport.camera.centre.y,
+            world_cursor.x.div_euclid(new_zoom_out) - world_cursor.x.div_euclid(old_zoom_out)
+                + self.viewport.camera.centre.x,
+            -world_cursor.y.div_euclid(new_zoom_out)
+                + world_cursor.y.div_euclid(old_zoom_out)
+                + self.viewport.camera.centre.y,
         );
         self.viewport.camera.zoom_out_exp = new_zoom_out_exp;
     }
     pub fn handle_pan(&mut self, delta: ScreenPoint) {
         self.viewport.camera.centre = WorldPoint::new(
-            Integer::from(delta.x) + &self.viewport.camera.centre.x,
-            Integer::from(delta.y) + &self.viewport.camera.centre.y,
+            delta.x + self.viewport.camera.centre.x,
+            delta.y + self.viewport.camera.centre.y,
         );
     }
     pub fn handle_draw(&mut self, cursor: ScreenPoint, solver: &mut Solver) {
         let cell_cursor = cursor.to_cell(&self.viewport);
         if !self.draw_session.contains(&cell_cursor) {
-            self.draw_session.insert(cell_cursor.clone());
-            solver.toggle_cell(&cell_cursor.clone()); //TODO: is a clone needed here conceptaully
+            self.draw_session.insert(cell_cursor);
+            solver.toggle_cell(cell_cursor);
         }
     }
 }

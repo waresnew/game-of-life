@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { uiState, next_step, backend } from '$lib/shared.svelte';
 	function changeStepExp(delta: number) {
-		uiState.stepExp = Math.max(0, uiState.stepExp + delta);
+		uiState.stepExp = Math.min(backend.max_height() + 1 - 2, Math.max(0, uiState.stepExp + delta));
 		backend.set_step_exp(uiState.stepExp);
 	}
 	function play() {

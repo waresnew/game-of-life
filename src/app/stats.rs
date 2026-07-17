@@ -1,4 +1,3 @@
-use malachite::Integer;
 use wasm_bindgen::prelude::*;
 
 use crate::{
@@ -25,7 +24,7 @@ impl Stats {
     #[wasm_bindgen]
     pub fn default() -> Self {
         Self {
-            cell_cursor: CellPoint::new(Integer::from(0), Integer::from(0)),
+            cell_cursor: CellPoint::new(0, 0),
             zoom_out_exp: 0,
             rule: GOL_RULES,
             solver_stats: SolverStats::default(),
@@ -75,9 +74,5 @@ impl Stats {
         (self.solver_stats.cache_hits * 100)
             .checked_div(total)
             .unwrap_or_default()
-    }
-    #[wasm_bindgen(getter)]
-    pub fn quadtree_height(&self) -> u32 {
-        self.solver_stats.height
     }
 }

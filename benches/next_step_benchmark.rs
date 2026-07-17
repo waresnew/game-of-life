@@ -4,23 +4,22 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use game_of_life::{
     CellPoint, {GOL_RULES, Solver},
 };
-use malachite::Integer;
 use rand::{distr::Uniform, prelude::*};
 
 fn random_rect(c: &mut Criterion) {
     let seed = 1234;
-    let mut alive: HashSet<(Integer, Integer)> = HashSet::new();
+    let mut alive: HashSet<(i128, i128)> = HashSet::new();
     let mut rng = SmallRng::seed_from_u64(seed);
     let distr = Uniform::new(-32, 32).unwrap();
     while alive.len() < 2048 {
         let x = rng.sample(distr);
         let y = rng.sample(distr);
-        alive.insert((Integer::from(x), Integer::from(y)));
+        alive.insert((x, y));
     }
     let input: Vec<CellPoint> = alive.into_iter().map(CellPoint::from_tuple).collect();
     let mut solver = Solver::new(12, GOL_RULES);
     for p in input.clone() {
-        solver.toggle_cell(&p);
+        solver.toggle_cell(p);
     }
     c.bench_function("random 64x64 next_step", |b| {
         b.iter(|| {

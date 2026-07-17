@@ -6,7 +6,7 @@ use crate::{
     input_handler::InputHandler,
     point::ScreenPoint,
     renderer,
-    solver::{GOL_RULES, Solver},
+    solver::{GOL_RULES, INITIAL_HEIGHT, Solver},
 };
 mod stats;
 pub const CELL_SIZE_EXP: u32 = 5;
@@ -50,7 +50,7 @@ impl App {
             self.input_handler.viewport(),
             self.solver.root,
             &self.solver.pool,
-            &self.solver.get_min_point(),
+            self.solver.get_min_point(),
         )
     }
     pub fn end_draw_session(&mut self) {
@@ -71,6 +71,9 @@ impl App {
     }
     pub fn handle_zoom(&mut self, delta: i32, cursor: ScreenPoint) {
         self.input_handler.handle_zoom(delta, cursor);
+    }
+    pub fn max_height(&self) -> u32 {
+        INITIAL_HEIGHT
     }
 }
 

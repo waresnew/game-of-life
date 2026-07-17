@@ -1,5 +1,4 @@
 use gloo_console::log;
-use malachite::Integer;
 
 mod image_bitmap;
 use crate::{
@@ -14,7 +13,7 @@ pub fn render_to_image(
     viewport: &Viewport,
     root: usize,
     pool: &QuadtreePool,
-    min: &CellPoint,
+    min: CellPoint,
 ) -> Vec<u8> {
     let mut image = ImageBitmap::new(viewport.canvas_dims);
     render_alives(viewport, root, pool, min, &mut image);
@@ -32,30 +31,26 @@ fn render_grid(viewport: &Viewport, ans: &mut ImageBitmap) {
     let max = ScreenPoint::new(viewport.canvas_dims.x, 0).to_cell(viewport);
     let mut x = min.x;
     while x <= max.x {
-        let transformed_x = CellPoint::new(x.clone(), Integer::from(0))
-            .to_screen(viewport)
-            .x;
+        let transformed_x = CellPoint::new(x, 0).to_screen(viewport).x;
         for y in 0..viewport.canvas_dims.y {
             ans.fill_pixel(ScreenPoint::new(transformed_x, y), GRID_COLOUR);
         }
-        x += Integer::from(1);
+        x += 1;
     }
     let mut y = min.y;
     while y <= max.y {
-        let transformed_y = CellPoint::new(Integer::from(0), y.clone())
-            .to_screen(viewport)
-            .y;
+        let transformed_y = CellPoint::new(0, y).to_screen(viewport).y;
         for x in 0..viewport.canvas_dims.x {
             ans.fill_pixel(ScreenPoint::new(x, transformed_y), GRID_COLOUR);
         }
-        y += Integer::from(1);
+        y += 1;
     }
 }
 fn render_alives(
     viewport: &Viewport,
     id: usize,
     pool: &QuadtreePool,
-    min: &CellPoint,
+    min: CellPoint,
     ans: &mut ImageBitmap,
 ) {
     //2^x mult/div
@@ -77,19 +72,19 @@ fn render_alives(
                 }
                 return;
             }
-            let mid = Integer::from(1) << (root.height - 1);
+            let mid = 1 << (root.height - 1);
             render_alives(
                 viewport,
                 root.tl,
                 pool,
-                &CellPoint::new(min.x.clone(), &min.y + &mid),
+                CellPoint::new(min.x, min.y + mid),
                 ans,
             );
             render_alives(
                 viewport,
                 root.tr,
                 pool,
-                &CellPoint::new(&min.x + &mid, &min.y + &mid),
+                CellPoint::new(min.x + mid, min.y + mid),
                 ans,
             );
             render_alives(viewport, root.bl, pool, min, ans);
@@ -97,7 +92,7 @@ fn render_alives(
                 viewport,
                 root.br,
                 pool,
-                &CellPoint::new(&min.x + &mid, min.y.clone()),
+                CellPoint::new(min.x + mid, min.y),
                 ans,
             );
         }
@@ -113,12 +108,12 @@ fn render_alives(
 
 fn get_screen_bounding_box(
     viewport: &Viewport,
-    point: &CellPoint,
+    point: CellPoint,
     size_exp: u32,
 ) -> (ScreenPoint, ScreenPoint) {
-    let cell_size = Integer::from(1) << size_exp;
+    let cell_size = 1 << size_exp;
     let point1 = point.to_screen(viewport);
-    let point2 = CellPoint::new(&point.x + &cell_size, &point.y + &cell_size).to_screen(viewport);
+    let point2 = CellPoint::new(point.x + cell_size, point.y + cell_size).to_screen(viewport);
     (
         ScreenPoint::new(point1.x.min(point2.x), point1.y.min(point2.y)),
         ScreenPoint::new(point1.x.max(point2.x), point1.y.max(point2.y)),

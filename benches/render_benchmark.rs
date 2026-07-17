@@ -4,14 +4,13 @@ use game_of_life::{
     app::CELL_SIZE_EXP,
     {GOL_RULES, Solver},
 };
-use malachite::Integer;
 
 fn filled_rect(c: &mut Criterion) {
     let mut solver = Solver::new(0, GOL_RULES);
-    const CANVAS_SIZE: i64 = 512;
+    const CANVAS_SIZE: i128 = 512;
     for i in -256..=256 {
         for j in -256..=256 {
-            solver.toggle_cell(&CellPoint::new(Integer::from(i), Integer::from(j)));
+            solver.toggle_cell(CellPoint::new(i, j));
         }
     }
     let canvas_dims = ScreenPoint::new(CANVAS_SIZE, CANVAS_SIZE);
@@ -28,7 +27,7 @@ fn filled_rect(c: &mut Criterion) {
                 &viewport,
                 solver.root,
                 &solver.pool,
-                &solver.get_min_point(),
+                solver.get_min_point(),
             )
         })
     });

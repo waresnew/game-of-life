@@ -38,7 +38,7 @@ impl ImageBitmap {
             for dy in 0..size {
                 let x = tl.x + dx;
                 let y = tl.y + dy;
-                if y >= self.height as i64 || x >= self.width as i64 || y < 0 || x < 0 {
+                if y >= self.height as i128 || x >= self.width as i128 || y < 0 || x < 0 {
                     continue;
                 }
                 let pos = usize::try_from(y).unwrap() * self.width + usize::try_from(x).unwrap();
@@ -50,7 +50,7 @@ impl ImageBitmap {
         }
     }
     pub fn fill_pixel(&mut self, p: ScreenPoint, colour: Rgb) {
-        if p.x < 0 || p.y < 0 || p.x >= self.width as i64 || p.y >= self.height as i64 {
+        if p.x < 0 || p.y < 0 || p.x >= self.width as i128 || p.y >= self.height as i128 {
             return;
         }
         let pos = usize::try_from(p.y).unwrap() * self.width + usize::try_from(p.x).unwrap();

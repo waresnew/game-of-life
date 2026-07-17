@@ -4,7 +4,6 @@ use crate::{
     point::{CellPoint, WorldPoint},
     solver::Solver,
 };
-use malachite::Integer;
 use malachite::base::num::logic::traits::SignificantBits;
 use regex::regex;
 
@@ -20,7 +19,7 @@ impl InputHandler {
         let header_regex = regex!(r"^x = (\d+), y = (\d+), rule = [bB]?(\d+)\/[sS]?(\d+)");
         let (_, [width, height, borns, survives]) =
             header_regex.captures(content.remove(0)).unwrap().extract();
-        let (width, height): (i64, i64) = (width.parse().unwrap(), height.parse().unwrap());
+        let (width, height): (i128, i128) = (width.parse().unwrap(), height.parse().unwrap());
         solver.set_rule(
             borns
                 .chars()
@@ -33,7 +32,7 @@ impl InputHandler {
         );
         let mut x = -width / 2;
         let mut y = height / 2;
-        self.fit_camera_to_dims(&CellPoint::new(Integer::from(width), Integer::from(height)));
+        self.fit_camera_to_dims(CellPoint::new(width, height));
         let lines: Vec<String> = content.join("").split("$").map(|x| x.to_owned()).collect();
         for line in lines {
             let mut cnt_str = String::new();
@@ -51,7 +50,7 @@ impl InputHandler {
                     };
                     if c != 'b' {
                         for _ in 0..cnt {
-                            solver.toggle_cell(&CellPoint::new(Integer::from(x), Integer::from(y)));
+                            solver.toggle_cell(CellPoint::new(x, y));
                             x += 1;
                         }
                     } else {
@@ -68,15 +67,14 @@ impl InputHandler {
             x = -width / 2;
         }
     }
-    fn fit_camera_to_dims(&mut self, dims: &CellPoint) {
-        self.viewport.camera.centre = WorldPoint::new(Integer::from(0), Integer::from(0));
-        let cell_size = Integer::from(1) << CELL_SIZE_EXP;
-        self.viewport.camera.zoom_out_exp = (((&dims.x * &cell_size)
-            / Integer::from(self.viewport.canvas_dims.x))
-        .max((&dims.y * &cell_size) / Integer::from(self.viewport.canvas_dims.y))
-        .significant_bits()
-        .max(1)
-        .min(u32::MAX as u64)
+    fn fit_camera_to_dims(&mut self, dims: CellPoint) {
+        self.viewport.camera.centre = WorldPoint::new(0, 0);
+        let cell_size = 1 << CELL_SIZE_EXP;
+        self.viewport.camera.zoom_out_exp = (((dims.x * cell_size) / self.viewport.canvas_dims.x)
+            .max((dims.y * cell_size) / self.viewport.canvas_dims.y)
+            .significant_bits()
+            .max(1)
+            .min(u32::MAX as u64)
             + 1) as u32;
     }
 }
